@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{% if is_rtl %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ dashboard_ui.manager_login }}</title>
+    <link rel="icon" type="image/jpeg" href="{% static 'images/rawda.jpeg' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="auth-body{% if is_rtl %} rtl{% endif %}">
+    <main class="auth-card">
+        <a
+            href="{% if current_language == 'ar' %}{{ switch_to_en_url }}{% else %}{{ switch_to_ar_url }}{% endif %}"
+            class="auth-language-toggle"
+        >
+            {{ dashboard_ui.language_toggle }}
+        </a>
+        <span class="eyebrow">{{ dashboard_ui.private_access }}</span>
+        <h1>{{ dashboard_ui.manager_login }}</h1>
+        <p>{{ dashboard_ui.dashboard_intro }}</p>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+                <label>
+                    <span>{{ field.label }}</span>
+                    {{ field }}
+                    {{ field.errors }}
+                </label>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">{{ dashboard_ui.sign_in }}</button>
+        </form>
+    </main>
+</body>
+</html>

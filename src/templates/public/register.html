@@ -1,0 +1,47 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.register }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="auth-card auth-card-wide">
+        <span class="eyebrow">{{ ui.register }}</span>
+        <h1>{{ ui.register_heading }}</h1>
+        <p>{{ ui.register_intro }}</p>
+        <form method="post" class="stack-form" data-register-form data-phone-check-url="{% url 'core:register-check-phone' %}" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="inline-field-grid">
+                <label>
+                    <span>{{ form.full_name.label }}</span>
+                    {{ form.full_name }}
+                    {{ form.full_name.errors }}
+                </label>
+                {% with field=form.username %}
+                    {% include "partials/syrian_phone_field.html" %}
+                {% endwith %}
+            </div>
+            <div class="inline-field-grid">
+                <label>
+                    <span>{{ form.password1.label }}</span>
+                    {{ form.password1 }}
+                    {{ form.password1.errors }}
+                </label>
+                <label>
+                    <span>{{ form.password2.label }}</span>
+                    {{ form.password2 }}
+                    {{ form.password2.errors }}
+                </label>
+            </div>
+            {% with address_form=form hide_default_address_field=True %}
+                {% include "partials/customer_address_fields.html" %}
+            {% endwith %}
+            <button type="submit" class="btn btn-primary full-width">{{ ui.create_account }}</button>
+        </form>
+        <p class="auth-helper">
+            {{ ui.already_have_account }}
+            <a href="{% url 'core:login' %}">{{ ui.login }}</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

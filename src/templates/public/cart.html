@@ -1,0 +1,103 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.cart }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ ui.cart }}</span>
+        <h1>{{ ui.cart_heading }}</h1>
+        <p>{{ ui.currency_name }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if cart.items %}
+            <div class="cart-layout">
+                <section class="panel">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>{{ ui.category }}</th>
+                                    <th>{{ ui.qty }}</th>
+                                    <th>{{ ui.price }}</th>
+                                    <th>{{ ui.total }}</th>
+                                    <th>{{ ui.remove }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="product-category">{{ item.category_label }}</div>
+                                            <strong>{{ item.title }}</strong>
+                                            <div>{{ item.subtitle }}</div>
+                                        </td>
+                                        <td>
+                                            <form method="post" action="{% url 'catalog:cart-update' item.item_type item.item_id %}" class="qty-form">
+                                                {% csrf_token %}
+                                                <input type="number" name="quantity" min="0" value="{{ item.quantity }}">
+                                                <button type="submit" class="btn btn-secondary btn-small">{{ ui.update_cart }}</button>
+                                            </form>
+                                        </td>
+                                        <td>{{ item.display_unit_price }}</td>
+                                        <td>{{ item.display_line_total }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'catalog:cart-remove' item.item_type item.item_id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn-link-danger">{{ ui.remove }}</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <aside class="panel summary-card">
+                    <h2>{{ ui.subtotal }}</h2>
+                    <p class="summary-amount">{{ cart.display_subtotal }}</p>
+                    {% if cart.has_weight_items %}
+                        <p>{{ ui.weighted_estimate_notice }}</p>
+                    {% endif %}
+                    <form method="post" action="{% url 'catalog:checkout-service' %}" class="stack-form">
+                        {% csrf_token %}
+                        <fieldset class="choice-fieldset">
+                            <legend>{{ ui.fulfillment_method }}</legend>
+                            <label class="address-choice-card">
+                                <span class="address-choice-input">
+                                    <input type="radio" name="service_type" value="pickup" {% if checkout_service_type == "pickup" %}checked{% endif %}>
+                                    <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                </span>
+                                <span class="address-choice-body">
+                                    <strong>{{ ui.pickup }}</strong>
+                                    <span>{{ ui.pickup_help }}</span>
+                                </span>
+                            </label>
+                            <label class="address-choice-card">
+                                <span class="address-choice-input">
+                                    <input type="radio" name="service_type" value="delivery" {% if checkout_service_type == "delivery" %}checked{% endif %}>
+                                    <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                </span>
+                                <span class="address-choice-body">
+                                    <strong>{{ ui.delivery }}</strong>
+                                    <span>{{ ui.delivery_help }}</span>
+                                </span>
+                            </label>
+                        </fieldset>
+                        <button type="submit" class="btn btn-primary full-width">{{ ui.proceed_checkout }}</button>
+                    </form>
+                    <a href="{% url 'core:home' %}" class="btn btn-secondary full-width">{{ ui.continue_shopping }}</a>
+                </aside>
+            </div>
+        {% else %}
+            <section class="panel panel-narrow">
+                <h2>{{ ui.cart_empty }}</h2>
+                <a href="{% url 'core:home' %}" class="btn btn-primary">{{ ui.continue_shopping }}</a>
+            </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

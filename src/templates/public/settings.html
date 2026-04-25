@@ -1,0 +1,82 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.settings }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ ui.settings }}</span>
+        <h1>{{ ui.account_settings_heading }}</h1>
+        <p>{{ ui.account_settings_intro }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container account-grid">
+        <article class="panel account-panel">
+            <h2>{{ ui.personal_information }}</h2>
+            <form method="post" action="{% url 'core:settings-profile' %}" class="stack-form">
+                {% csrf_token %}
+                {{ profile_form.non_field_errors }}
+                {% for field in profile_form %}
+                    {% if field.name == "phone_number" %}
+                        {% include "partials/syrian_phone_field.html" %}
+                    {% else %}
+                        <label>
+                            <span>{{ field.label }}</span>
+                            {{ field }}
+                            {{ field.errors }}
+                        </label>
+                    {% endif %}
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">{{ ui.save_profile }}</button>
+            </form>
+        </article>
+        <article class="panel account-panel">
+            <h2>{{ ui.delivery_addresses }}</h2>
+            <div class="address-list">
+                {% for address in addresses %}
+                    <div class="address-card">
+                        <div class="address-card-header">
+                            <strong>{{ address.area.name }}</strong>
+                            {% if address.is_default %}
+                                <span class="badge">{{ ui.default_badge }}</span>
+                            {% endif %}
+                        </div>
+                        {% if address.sub_area %}<p>{{ ui.sub_area }}: {{ address.sub_area.name }}</p>{% endif %}
+                        <p>{{ address.street_address }}</p>
+                        {% if address.building %}<p>{{ ui.building }}: {{ address.building }}</p>{% endif %}
+                        {% if address.floor %}<p>{{ ui.floor }}: {{ address.floor }}</p>{% endif %}
+                        {% if address.apartment %}<p>{{ ui.apartment }}: {{ address.apartment }}</p>{% endif %}
+                        {% if address.nearby_landmark %}<p>{{ ui.nearby_landmark }}: {{ address.nearby_landmark }}</p>{% endif %}
+                        {% if address.notes %}<p>{{ address.notes }}</p>{% endif %}
+                        <div class="table-actions">
+                            <a href="{% url 'core:address-edit' address.pk %}" class="text-link">{{ ui.edit_address }}</a>
+                            <form method="post" action="{% url 'core:address-delete' address.pk %}">
+                                {% csrf_token %}
+                                <button type="submit">{{ ui.delete_address }}</button>
+                            </form>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>{{ ui.no_saved_addresses }}</p>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="section section-alt">
+    <div class="container">
+        <article class="panel account-panel panel-narrow">
+            <h2>{{ ui.add_new_address }}</h2>
+            <form method="post" action="{% url 'core:address-add' %}" class="stack-form">
+                {% csrf_token %}
+                {{ address_form.non_field_errors }}
+                {% include "partials/customer_address_fields.html" %}
+                <button type="submit" class="btn btn-primary">{{ ui.save_address }}</button>
+            </form>
+        </article>
+    </div>
+</section>
+{% endblock %}

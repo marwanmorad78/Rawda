@@ -1,0 +1,84 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.invoice }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ ui.invoice }}</span>
+        <h1>{{ ui.invoice_heading }}</h1>
+        <p>{{ ui.currency_name }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if cart.items %}
+            <section class="panel invoice-panel">
+                <div class="invoice-meta">
+                    <div>
+                        <h2>{{ site_settings.display_store_name|default:"Al Rawda Center" }}</h2>
+                        <p>{{ site_settings.display_address }}</p>
+                        <p>{{ site_settings.primary_phone }}</p>
+                    </div>
+                    <div>
+                        <p><strong>{{ ui.invoice_number }}:</strong> {{ invoice_number }}</p>
+                        <p><strong>{{ ui.invoice_date }}:</strong> {{ invoice_date|date:"Y-m-d H:i" }}</p>
+                        <p><strong>{{ ui.fulfillment_method }}:</strong> {% if is_delivery %}{{ ui.delivery }}{% else %}{{ ui.pickup }}{% endif %}</p>
+                        {% if is_delivery %}
+                            <p><strong>{{ ui.delivery_address }}:</strong> {{ address_snapshot }}</p>
+                            <p><a href="{% url 'catalog:checkout-address' %}">{{ ui.edit }}</a></p>
+                        {% endif %}
+                        <p><strong>{{ ui.delivery_fee }}:</strong> {% if is_pickup %}{{ ui.free_delivery }}{% elif is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ display_delivery_fee }}{% endif %}</p>
+                    </div>
+                </div>
+                {% if cart.has_weight_items %}
+                    <p class="invoice-note">{{ ui.weighted_estimate_notice }}</p>
+                {% endif %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ ui.category }}</th>
+                                <th>{{ ui.qty }}</th>
+                                <th>{{ ui.price }}</th>
+                                <th>{{ ui.total }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart.items %}
+                                <tr>
+                                    <td>
+                                        <div class="product-category">{{ item.category_label }}</div>
+                                        <strong>{{ item.title }}</strong>
+                                        {% if item.is_weight_based %}
+                                            <div>{{ ui.sold_by_weight }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.display_unit_price }}</td>
+                                    <td>{% if item.is_weight_based %}{{ item.display_line_total_range }}{% else %}{{ item.display_line_total }}{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="invoice-summary-grid">
+                    <p><strong>{{ ui.subtotal }}:</strong> {% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</p>
+                    <p><strong>{{ ui.delivery_fee }}:</strong> {% if is_pickup %}{{ ui.free_delivery }}{% elif is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ display_delivery_fee }}{% endif %}</p>
+                    <p class="invoice-total"><strong>{{ ui.grand_total }}:</strong> {{ display_total }}</p>
+                </div>
+                <form method="post" action="{% url 'catalog:checkout-confirm' %}" class="stack-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">{{ ui.confirm_order }}</button>
+                </form>
+            </section>
+        {% else %}
+            <section class="panel panel-narrow">
+                <h2>{{ ui.empty_invoice }}</h2>
+                <a href="{% url 'catalog:cart' %}" class="btn btn-primary">{{ ui.go_to_cart }}</a>
+            </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

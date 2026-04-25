@@ -1,0 +1,71 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.previous_orders }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ ui.previous_orders }}</span>
+        <h1>{{ ui.previous_orders_heading }}</h1>
+        <p>{{ ui.previous_orders_intro }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container info-grid">
+        <article class="panel">
+            <h2>{{ ui.previous_orders_heading }}</h2>
+            {% if orders %}
+                <div class="order-history-list">
+                    {% for order in orders %}
+                        <section class="order-history-card">
+                            <div class="address-card-header">
+                                <strong>{{ order.invoice_number }}</strong>
+                                <span>{{ order.created_at|date:"Y-m-d H:i" }}</span>
+                            </div>
+                            <p><strong>{{ ui.fulfillment_method }}:</strong> {% if order.service_type == "delivery" %}{{ ui.delivery }}{% else %}{{ ui.pickup }}{% endif %}</p>
+                            {% if order.service_type == "delivery" %}
+                                <p><strong>{{ ui.delivery_address }}:</strong> {{ order.address_snapshot }}</p>
+                            {% endif %}
+                            <p><strong>{{ ui.delivery_fee }}:</strong> {{ order.display_delivery_fee }}</p>
+                            <p><strong>{{ ui.grand_total }}:</strong> {{ order.display_total }}</p>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>{{ ui.category }}</th>
+                                            <th>{{ ui.qty }}</th>
+                                            <th>{{ ui.total }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in order.items.all %}
+                                            <tr>
+                                                <td>
+                                                    <div class="product-category">{{ item.category_label }}</div>
+                                                    <strong>{{ item.title }}</strong>
+                                                </td>
+                                                <td>{{ item.quantity }}</td>
+                                                <td>{{ item.display_line_total }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>{{ ui.previous_orders_empty }}</p>
+            {% endif %}
+        </article>
+        <article class="info-card">
+            <h2>{{ ui.store_information }}</h2>
+            <p><strong>{{ ui.address }}:</strong> {{ site_content.display_address|default:"Damascus" }}</p>
+            <p><strong>{{ ui.primary_phone }}:</strong> {{ site_content.primary_phone|default:"+963-000-000-000" }}</p>
+            {% if site_content.email %}<p><strong>{{ ui.email }}:</strong> {{ site_content.email }}</p>{% endif %}
+            <p><strong>{{ ui.hours }}:</strong> {{ site_content.display_working_hours_summary|default:ui.hours_default }}</p>
+        </article>
+    </div>
+</section>
+{% endblock %}

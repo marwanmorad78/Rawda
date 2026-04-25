@@ -1,0 +1,72 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ category.display_name }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ ui.category }}</span>
+        <h1>{{ category.display_name }}</h1>
+        <p>{{ category.display_description|default:ui.category_browse }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="product-grid">
+            {% for product in products %}
+                <article
+                    class="product-card"
+                    data-product-card
+                    data-product-title="{{ product.display_name }}"
+                    data-product-description="{{ product.display_short_description|default:ui.related_fallback }}"
+                    data-product-category="{{ category.display_name }}"
+                    data-product-price="{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}"
+                    data-product-action="{% url 'catalog:add-to-cart' product.slug %}"
+                    data-product-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+                >
+                    <div class="product-image">
+                        <a href="{{ product.get_absolute_url }}" data-product-trigger aria-label="{{ product.display_name }}">
+                            {% if product.primary_image %}
+                                <img src="{{ product.primary_image.url }}" alt="{{ product.display_name }}">
+                            {% elif product.external_image_url %}
+                                <img src="{{ product.external_image_url }}" alt="{{ product.display_name }}">
+                            {% else %}
+                                <div class="image-placeholder">{{ product.display_name|slice:":1" }}</div>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="product-content">
+                        <h3>{{ product.display_name }}</h3>
+                        <div class="product-meta">
+                            <strong>{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}</strong>
+                        </div>
+                        <form
+                            method="post"
+                            action="{% url 'catalog:add-to-cart' product.slug %}"
+                            class="inline-form"
+                            data-cart-form
+                            data-cart-item-title="{{ product.display_name }}"
+                            data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+                        >
+                            {% csrf_token %}
+                            <label class="quantity-field compact">
+                                <span>{{ ui.qty }}</span>
+                                <span class="quantity-stepper" data-quantity-control>
+                                    <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                                    <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                    <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                                </span>
+                            </label>
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-primary btn-small full-width">{{ ui.add_to_cart }}</button>
+                        </form>
+                    </div>
+                </article>
+            {% empty %}
+                <p>{{ ui.no_products }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

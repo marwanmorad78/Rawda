@@ -1,0 +1,87 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ product.display_name }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ product.category.display_name }}</span>
+        <h1>{{ product.display_name }}</h1>
+        <p>{{ product.display_short_description }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container detail-grid">
+        <div class="detail-media">
+            {% if product.primary_image %}
+                <img src="{{ product.primary_image.url }}" alt="{{ product.display_name }}">
+            {% elif product.external_image_url %}
+                <img src="{{ product.external_image_url }}" alt="{{ product.display_name }}">
+            {% else %}
+                <div class="image-placeholder large">{{ product.display_name|slice:":1" }}</div>
+            {% endif %}
+        </div>
+        <div class="detail-content">
+            <div class="price-box">
+                <span class="availability {% if product.is_available %}available{% else %}unavailable{% endif %}">
+                    {% if product.is_available %}{{ ui.available }}{% else %}{{ ui.unavailable }}{% endif %}
+                </span>
+                <strong>{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}</strong>
+            </div>
+            <p>{{ product.display_description|default:"No extended description has been added yet for this item." }}</p>
+            {% if product.effective_sold_by_weight %}
+                <p class="product-category">{{ ui.sold_by_weight }}</p>
+            {% endif %}
+            {% if product.sku %}<p><strong>SKU:</strong> {{ product.sku }}</p>{% endif %}
+            <form
+                method="post"
+                action="{% url 'catalog:add-to-cart' product.slug %}"
+                class="stack-form"
+                data-cart-form
+                data-cart-item-title="{{ product.display_name }}"
+                data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+            >
+                {% csrf_token %}
+                <label class="quantity-field">
+                    <span>{{ ui.qty }}</span>
+                    <span class="quantity-stepper" data-quantity-control>
+                        <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                        <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                        <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                    </span>
+                </label>
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <div class="hero-actions">
+                    <button type="submit" class="btn btn-primary">{{ ui.add_to_cart }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">{{ ui.related_products }}</span>
+            <h2>{{ ui.more_from }} {{ product.category.display_name }}</h2>
+        </div>
+        <div class="product-grid">
+            {% for item in related_products %}
+                <article class="product-card">
+                    <div class="product-content">
+                        <h3>{{ item.display_name }}</h3>
+                        <p>{{ item.display_short_description|default:ui.related_fallback }}</p>
+                        <div class="product-meta">
+                            <strong>{{ item.display_price }}{% if item.display_unit_label %} / {{ item.display_unit_label }}{% endif %}</strong>
+                            <a href="{{ item.get_absolute_url }}">{{ ui.view_details }}</a>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <p>{{ ui.related_empty }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

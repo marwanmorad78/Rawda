@@ -1,0 +1,58 @@
+<div
+    class="delivery-area-field-group"
+    data-delivery-area-group
+    data-subareas-url-template="{% url 'core:delivery-subareas' 0 %}"
+>
+    <label>
+        <span>{{ address_form.area.label }}</span>
+        {{ address_form.area }}
+        {{ address_form.area.errors }}
+    </label>
+    <label data-sub-area-wrapper{% if not address_form.sub_area.value and not address_form.sub_area.field.queryset %} hidden{% endif %}>
+        <span>{{ address_form.sub_area.label }}</span>
+        {{ address_form.sub_area }}
+        {{ address_form.sub_area.errors }}
+    </label>
+</div>
+<label>
+    <span>{{ address_form.street_address.label }}</span>
+    {{ address_form.street_address }}
+    {{ address_form.street_address.errors }}
+</label>
+<div class="inline-field-grid">
+    <label>
+        <span>{{ address_form.building.label }}</span>
+        {{ address_form.building }}
+        {{ address_form.building.errors }}
+    </label>
+    <label>
+        <span>{{ address_form.floor.label }}</span>
+        {{ address_form.floor }}
+        {{ address_form.floor.errors }}
+    </label>
+</div>
+<div class="inline-field-grid">
+    <label>
+        <span>{{ address_form.apartment.label }}</span>
+        {{ address_form.apartment }}
+        {{ address_form.apartment.errors }}
+    </label>
+    <label>
+        <span>{{ address_form.nearby_landmark.label }}</span>
+        {{ address_form.nearby_landmark }}
+        {{ address_form.nearby_landmark.errors }}
+    </label>
+</div>
+<label>
+    <span>{{ address_form.notes.label }}</span>
+    {{ address_form.notes }}
+    {{ address_form.notes.errors }}
+</label>
+{% if not hide_default_address_field %}
+    <label class="checkbox-field">
+        {{ address_form.is_default }}
+        <span class="choice-mark choice-mark-checkbox" aria-hidden="true"></span>
+        <span class="choice-copy">{{ address_form.is_default.label }}</span>
+    </label>
+    {{ address_form.is_default.errors }}
+{% endif %}

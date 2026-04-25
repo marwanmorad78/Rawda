@@ -1,0 +1,77 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.delivery_address }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ ui.cart }}</span>
+        <h1>{{ ui.select_delivery_address }}</h1>
+        <p>{{ ui.select_address_intro }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if addresses %}
+            <div class="cart-layout">
+                <section class="panel">
+                    <form method="post" class="stack-form">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        <div class="address-choice-list">
+                            {% for address in addresses %}
+                                <label class="address-choice-card">
+                                    <span class="address-choice-input">
+                                        <input
+                                            type="radio"
+                                            name="address"
+                                            value="{{ address.pk }}"
+                                            {% if selected_address_id|stringformat:"s" == address.pk|stringformat:"s" %}checked{% endif %}
+                                        >
+                                        <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                        </span>
+                                        <span class="address-choice-body">
+                                            <span class="address-card-header">
+                                            <strong>{{ address.area.name }}</strong>
+                                            {% if address.is_default %}
+                                                <span class="badge">{{ ui.default_badge }}</span>
+                                            {% endif %}
+                                        </span>
+                                        {% if address.sub_area %}<span>{{ ui.sub_area }}: {{ address.sub_area.name }}</span>{% endif %}
+                                        <span>{{ address.street_address }}</span>
+                                        {% if address.building %}<span>{{ ui.building }}: {{ address.building }}</span>{% endif %}
+                                        {% if address.floor %}<span>{{ ui.floor }}: {{ address.floor }}</span>{% endif %}
+                                        {% if address.apartment %}<span>{{ ui.apartment }}: {{ address.apartment }}</span>{% endif %}
+                                        {% if address.nearby_landmark %}<span>{{ ui.nearby_landmark }}: {{ address.nearby_landmark }}</span>{% endif %}
+                                        <span>{{ ui.delivery_fee }}: {{ address.display_delivery_fee }}</span>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {{ form.address.errors }}
+                        <div class="table-actions">
+                            <button type="submit" class="btn btn-primary">{{ ui.review_order }}</button>
+                            <a href="{% url 'core:settings' %}" class="btn btn-secondary">{{ ui.add_new_address }}</a>
+                        </div>
+                    </form>
+                </section>
+                <aside class="panel summary-card">
+                    <h2>{{ ui.subtotal }}</h2>
+                    <p class="summary-amount">{{ cart.display_subtotal }}</p>
+                    {% if cart.has_weight_items %}
+                        <p>{{ ui.weighted_estimate_notice }}</p>
+                    {% endif %}
+                    <a href="{% url 'catalog:cart' %}" class="btn btn-secondary full-width">{{ ui.go_to_cart }}</a>
+                </aside>
+            </div>
+        {% else %}
+            <section class="panel panel-narrow">
+                <h2>{{ ui.no_saved_addresses }}</h2>
+                <p>{{ ui.add_address_before_checkout }}</p>
+                <a href="{% url 'core:settings' %}" class="btn btn-primary">{{ ui.add_new_address }}</a>
+            </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

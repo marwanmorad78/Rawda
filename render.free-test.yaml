@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: al-rawda-center-free-test
+    runtime: python
+    region: frankfurt
+    plan: free
+    buildCommand: bash build.sh
+    preDeployCommand: uv run python src/manage.py migrate --noinput
+    startCommand: uv run gunicorn config.wsgi:application --chdir src --bind 0.0.0.0:$PORT
+    healthCheckPath: /
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: al-rawda-db-free
+          property: connectionString
+      - key: DJANGO_SERVE_MEDIA
+        value: "true"
+
+databases:
+  - name: al-rawda-db-free
+    region: frankfurt
+    plan: free
+    databaseName: al_rawda_center
+    ipAllowList: []

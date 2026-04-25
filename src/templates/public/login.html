@@ -1,0 +1,33 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.login }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="auth-card">
+        <span class="eyebrow">{{ ui.login }}</span>
+        <h1>{{ ui.login_heading }}</h1>
+        <p>{{ ui.login_intro }}</p>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+                {% if field.name == "username" %}
+                    {% include "partials/syrian_phone_field.html" %}
+                {% else %}
+                    <label>
+                        <span>{{ field.label }}</span>
+                        {{ field }}
+                        {{ field.errors }}
+                    </label>
+                {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary full-width">{{ ui.sign_in }}</button>
+        </form>
+        <p class="auth-helper">
+            {{ ui.need_account }}
+            <a href="{% url 'core:register' %}">{{ ui.register }}</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

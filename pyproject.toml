@@ -1,0 +1,30 @@
+[project]
+name = "al-rawda-center"
+version = "0.1.0"
+description = "Django + PostgreSQL storefront and private admin dashboard for Al Rawda Center."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=5.1,<5.3",
+    "gunicorn>=23.0.0",
+    "Pillow>=10.4.0",
+    "psycopg[binary]>=3.2.1",
+    "python-dotenv>=1.0.1",
+    "whitenoise>=6.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-browser-reload>=1.16.0",
+    "ruff>=0.11.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

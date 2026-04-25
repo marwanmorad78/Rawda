@@ -1,0 +1,240 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block title %}{{ site_content.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="home-hero" id="home">
+    <div class="container home-hero-layout{% if not request.user.is_staff %} home-hero-layout-public{% endif %}">
+        <div class="home-hero-copy">
+            <span class="eyebrow">{{ site_content.display_tagline|default:"Fresh groceries and daily essentials" }}</span>
+            <h1>{{ site_content.display_hero_title|default:site_content.display_store_name|default:"Al Rawda Center" }}</h1>
+            <p>{{ site_content.display_hero_subtitle|default:"Browse fresh products, daily essentials, and current offers from Al Rawda Center." }}</p>
+            <div class="hero-actions">
+                <a href="#categories" class="btn btn-primary">{{ ui.browse_categories }}</a>
+                <a href="#featured-products" class="btn btn-secondary">{{ ui.featured_products }}</a>
+            </div>
+        </div>
+
+        {% if request.user.is_staff %}
+            <div class="home-quick-panel" aria-label="{{ ui.browse_categories }}">
+                <a href="#offers" class="home-quick-option">
+                    <span>{{ ui.latest_offers }}</span>
+                    <strong>{{ promotions|length }}</strong>
+                </a>
+                <a href="#categories" class="home-quick-option">
+                    <span>{{ ui.browse_categories }}</span>
+                    <strong>{{ categories|length }}</strong>
+                </a>
+                <a href="#featured-products" class="home-quick-option">
+                    <span>{{ ui.featured_products }}</span>
+                    <strong>{{ featured_products|length }}</strong>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section home-offers-section" id="offers" data-animate="section">
+    <div class="container">
+        <div class="section-heading" data-animate="heading">
+            <span class="eyebrow">{{ ui.latest_offers }}</span>
+            <h2>{{ ui.offers_heading }}</h2>
+        </div>
+        {% if promotions %}
+            <div class="offers-carousel home-offers-carousel" data-carousel data-carousel-interval="4500">
+                {% if promotions|length > 1 %}
+                    <button type="button" class="offers-carousel-arrow offers-carousel-arrow-prev" data-carousel-prev aria-label="{{ ui.previous_offer }}">
+                        &#8249;
+                    </button>
+                {% endif %}
+                <div class="offers-carousel-stage">
+                    <div class="offers-carousel-track" data-carousel-track>
+                        {% for promo in promotions %}
+                            <a
+                                class="offer-slide{% if forloop.first %} is-active{% endif %}"
+                                href="{{ promo.cta_url|default:'#categories' }}"
+                                data-carousel-slide
+                                data-offer-title="{{ promo.display_title }}"
+                                data-offer-description="{{ promo.display_description|default:promo.display_subtitle }}"
+                                data-offer-price="{{ promo.display_price }}"
+                                data-offer-action="{{ promo.add_to_cart_url }}"
+                                data-offer-image="{% if promo.image %}{{ promo.image.url }}{% elif promo.external_image_url %}{{ promo.external_image_url }}{% endif %}"
+                                aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
+                            >
+                                {% if promo.image %}
+                                    <img src="{{ promo.image.url }}" alt="{{ promo.display_title }}">
+                                {% elif promo.external_image_url %}
+                                    <img src="{{ promo.external_image_url }}" alt="{{ promo.display_title }}">
+                                {% else %}
+                                    <div class="offer-slide-placeholder">{{ promo.display_title|slice:":1" }}</div>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if promotions|length > 1 %}
+                    <button type="button" class="offers-carousel-arrow offers-carousel-arrow-next" data-carousel-next aria-label="{{ ui.next_offer }}">
+                        &#8250;
+                    </button>
+                    <div class="offers-carousel-dots" data-carousel-dots>
+                        {% for promo in promotions %}
+                            <button
+                                type="button"
+                                class="offers-carousel-dot{% if forloop.first %} is-active{% endif %}"
+                                data-carousel-dot
+                                data-carousel-index="{{ forloop.counter0 }}"
+                                aria-label="{{ ui.go_to_offer }} {{ forloop.counter }}"
+                                aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                            ></button>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <section class="panel panel-narrow">
+                <h2>{{ ui.promotion_fallback_title }}</h2>
+                <p>{{ ui.promotion_fallback_text }}</p>
+            </section>
+        {% endif %}
+    </div>
+</section>
+
+<div class="offer-modal" data-offer-modal hidden>
+    <div class="offer-modal-backdrop" data-offer-modal-close></div>
+    <div class="offer-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="offer-modal-title">
+        <button type="button" class="offer-modal-close" data-offer-modal-close aria-label="{{ ui.close }}">
+            &times;
+        </button>
+        <div class="offer-modal-media">
+            <img src="" alt="" data-offer-modal-image hidden>
+            <div class="offer-modal-placeholder" data-offer-modal-placeholder></div>
+        </div>
+        <div class="offer-modal-body">
+            <span class="eyebrow">{{ ui.offer_details }}</span>
+            <h2 id="offer-modal-title" data-offer-modal-title></h2>
+            <p data-offer-modal-description></p>
+            <p class="offer-modal-price" data-offer-modal-price></p>
+            <form method="post" action="" data-offer-modal-form data-cart-form>
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="btn btn-primary">{{ ui.add_offer_to_cart }}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<section class="section section-alt home-catalog-section" id="categories" data-animate="section">
+    <div class="container">
+        <div class="section-heading" data-animate="heading">
+            <span class="eyebrow">{{ ui.browse_categories }}</span>
+            <h2>{{ ui.browse_heading }}</h2>
+        </div>
+        <div class="category-grid home-category-grid">
+            {% for category in categories %}
+                <a
+                    class="category-card home-category-card"
+                    id="category-{{ category.slug }}"
+                    href="{{ category.get_absolute_url }}"
+                    data-animate="card"
+                    data-home-category-card
+                    data-category-name="{{ category.display_name }}"
+                    data-category-slug="{{ category.slug }}"
+                    style="--stagger: {{ forloop.counter0 }};"
+                >
+                    <div class="home-category-media">
+                        {% if category.cover_image %}
+                            <img src="{{ category.cover_image.url }}" alt="{{ category.display_name }}">
+                        {% elif category.external_image_url %}
+                            <img src="{{ category.external_image_url }}" alt="{{ category.display_name }}">
+                        {% else %}
+                            <div class="home-category-fallback">{{ category.display_name|slice:":1" }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="home-category-body">
+                        <span class="home-card-kicker">{{ ui.explore }}</span>
+                        <h3>{{ category.display_name }}</h3>
+                        <p>{{ category.display_description|default:ui.category_fallback|truncatewords:16 }}</p>
+                        <span class="home-card-arrow" aria-hidden="true">&#8594;</span>
+                    </div>
+                </a>
+            {% empty %}
+                <section class="panel panel-narrow">
+                    <h2>{{ ui.no_categories }}</h2>
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section home-featured-section" id="featured-products" data-animate="section">
+    <div class="container">
+        <div class="section-heading" data-animate="heading">
+            <span class="eyebrow">{{ ui.featured_products }}</span>
+            <h2>{{ ui.featured_heading }}</h2>
+        </div>
+        <div class="product-grid home-product-grid">
+            {% for product in featured_products %}
+                <article
+                    class="product-card home-product-card"
+                    data-animate="card"
+                    data-product-card
+                    data-product-title="{{ product.display_name }}"
+                    data-product-description="{{ product.display_short_description|default:ui.product_fallback }}"
+                    data-product-category="{{ product.category.display_name }}"
+                    data-product-price="{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}"
+                    data-product-action="{% url 'catalog:add-to-cart' product.slug %}"
+                    data-product-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+                    style="--stagger: {{ forloop.counter0 }};"
+                >
+                    <div class="home-product-media">
+                        <a href="{{ product.get_absolute_url }}" aria-label="{{ product.display_name }}" data-product-trigger>
+                            {% if product.primary_image %}
+                                <img src="{{ product.primary_image.url }}" alt="{{ product.display_name }}">
+                            {% elif product.external_image_url %}
+                                <img src="{{ product.external_image_url }}" alt="{{ product.display_name }}">
+                            {% else %}
+                                <div class="image-placeholder">{{ product.display_name|slice:":1" }}</div>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="product-content home-product-content">
+                        <h3>{{ product.display_name }}</h3>
+                        <div class="home-product-footer">
+                            <div class="home-product-price">
+                                <strong>{{ product.display_price }}</strong>
+                                {% if product.display_unit_label %}<span>{{ product.display_unit_label }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <form
+                            method="post"
+                            action="{% url 'catalog:add-to-cart' product.slug %}"
+                            class="inline-form"
+                            data-cart-form
+                            data-cart-item-title="{{ product.display_name }}"
+                            data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+                        >
+                            {% csrf_token %}
+                            <label class="quantity-field compact">
+                                <span>{{ ui.qty }}</span>
+                                <span class="quantity-stepper" data-quantity-control>
+                                    <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                                    <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                    <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                                </span>
+                            </label>
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-primary btn-small full-width">{{ ui.add_to_cart }}</button>
+                        </form>
+                    </div>
+                </article>
+            {% empty %}
+                <section class="panel panel-narrow">
+                    <h2>{{ ui.no_featured }}</h2>
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

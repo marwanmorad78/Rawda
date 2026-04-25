@@ -1,0 +1,35 @@
+{% if field.is_hidden %}
+    {{ field }}
+{% elif field.field.widget.input_type == "checkbox" and field.name == "is_price_linked_to_dollar" %}
+    <label class="checkbox-field icon-toggle-field dollar-toggle-field">
+        {{ field }}
+        <span class="dollar-toggle-symbol" aria-hidden="true">
+            <svg viewBox="0 0 96 96" role="presentation" focusable="false">
+                <path d="M39 12c7 2 11 5 18 0 2-1 5 0 6 2 2 4 5 8 12 12 4 3 5 8 2 12l-8 9c6 8 9 18 9 29 0 21-14 35-30 35S18 97 18 76c0-11 4-21 10-29l-8-9c-3-4-2-9 2-12 7-4 10-8 12-12 1-2 4-3 6-2 7 5 11 2 17 0Z" />
+                <path d="M30 41c7-5 29-5 36 0" />
+                <path d="M31 39c4-10 12-15 17-15s13 5 17 15" />
+                <path d="M48 44v23" />
+                <path d="M57 48c0-3-4-6-9-6-5 0-9 3-9 7 0 4 3 6 9 7 6 1 9 3 9 7 0 4-4 7-9 7-5 0-9-3-9-6" />
+            </svg>
+        </span>
+        <span class="choice-copy">
+            <strong>{{ field.label }}</strong>
+            <small>Dollar pricing follows the current exchange rate.</small>
+        </span>
+    </label>
+    {{ field.errors }}
+{% elif field.field.widget.input_type == "checkbox" %}
+    <label class="checkbox-field">
+        {{ field }}
+        <span class="choice-mark choice-mark-checkbox" aria-hidden="true"></span>
+        <span class="choice-copy">{{ field.label }}</span>
+    </label>
+    {{ field.errors }}
+{% else %}
+    <label>
+        <span>{{ field.label }}</span>
+        {{ field }}
+        {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+        {{ field.errors }}
+    </label>
+{% endif %}

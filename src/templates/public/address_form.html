@@ -1,0 +1,23 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.edit_address }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="auth-card auth-card-wide">
+        <span class="eyebrow">{{ ui.edit_address }}</span>
+        <h1>{{ ui.edit_address }}</h1>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% with address_form=form %}
+                {% include "partials/customer_address_fields.html" %}
+            {% endwith %}
+            <div class="hero-actions">
+                <button type="submit" class="btn btn-primary">{{ ui.update_address }}</button>
+                <a href="{% url 'core:settings' %}" class="btn btn-secondary">{{ ui.back_to_settings }}</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

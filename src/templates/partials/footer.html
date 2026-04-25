@@ -1,0 +1,22 @@
+<footer class="site-footer">
+    <div class="container footer-grid">
+        <div>
+            <h3>{{ site_settings.display_store_name|default:"Al Rawda Center" }}</h3>
+            <p>{{ site_settings.display_about_text|default:"Trusted grocery products for the local community."|truncatewords:25 }}</p>
+        </div>
+        <div>
+            <h4>{{ ui.contact }}</h4>
+            <p>{{ site_settings.display_address|default:"Damascus" }}</p>
+            <p>{{ site_settings.primary_phone|default:"+963-000-000-000" }}</p>
+            {% if site_settings.email %}<p>{{ site_settings.email }}</p>{% endif %}
+        </div>
+        <div>
+            <h4>{{ ui.explore }}</h4>
+            <p><a href="{% url 'core:home' %}">{{ ui.home }}</a></p>
+            <p><a href="{% url 'core:about' %}">{{ ui.about }}</a></p>
+            {% if request.user.is_authenticated %}
+                <p><a href="{% url 'core:orders' %}">{{ ui.previous_orders }}</a></p>
+            {% endif %}
+        </div>
+    </div>
+</footer>

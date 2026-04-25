@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<section class="panel panel-narrow">
+    <h1>{{ page_title }}</h1>
+    <form method="post" class="stack-form" data-dashboard-delivery-area-form>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% include "partials/dashboard_form_field.html" with field=form.name %}
+        {% include "partials/dashboard_form_field.html" with field=form.has_sub_areas %}
+        <div data-main-delivery-fee-field>
+            {% include "partials/dashboard_form_field.html" with field=form.delivery_fee %}
+        </div>
+        {% include "partials/dashboard_form_field.html" with field=form.display_order %}
+        {% include "partials/dashboard_form_field.html" with field=form.is_active %}
+        {% include "partials/dashboard_delivery_sub_area_formset.html" %}
+        <button type="submit" class="btn btn-primary">{{ submit_label|default:dashboard_ui.save_changes }}</button>
+    </form>
+</section>
+{% endblock %}

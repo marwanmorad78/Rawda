@@ -1,0 +1,55 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <section class="panel">
+        <h1>{{ dashboard_ui.add_category }}</h1>
+        <form method="post" enctype="multipart/form-data" class="stack-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+                {% include "partials/dashboard_form_field.html" with field=field %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">{{ dashboard_ui.save_category }}</button>
+        </form>
+    </section>
+    <section class="panel">
+        <h2>{{ dashboard_ui.existing_categories }}</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ dashboard_ui.name }}</th>
+                        <th>{{ dashboard_ui.order }}</th>
+                        <th>{{ dashboard_ui.pricing_flags }}</th>
+                        <th>{{ dashboard_ui.status }}</th>
+                        <th>{{ dashboard_ui.actions }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>{{ item.display_name }}</td>
+                            <td>{{ item.display_order }}</td>
+                            <td>
+                                {% if item.sold_by_weight %}{{ dashboard_ui.sold_by_weight }}{% endif %}
+                                {% if item.is_price_linked_to_dollar %}{{ dashboard_ui.dollar_priced }}{% endif %}
+                            </td>
+                            <td>{% if item.is_active %}{{ dashboard_ui.active }}{% else %}{{ dashboard_ui.hidden }}{% endif %}</td>
+                            <td class="table-actions">
+                                <a href="{% url 'dashboard:category-edit' item.pk %}">{{ dashboard_ui.edit }}</a>
+                                <form method="post" action="{% url 'dashboard:category-delete' item.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit">{{ dashboard_ui.delete }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5">{{ dashboard_ui.no_categories }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

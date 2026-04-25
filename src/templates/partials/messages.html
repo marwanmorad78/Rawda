@@ -1,0 +1,7 @@
+{% if messages %}
+    <div class="container flash-stack">
+        {% for message in messages %}
+            <div class="flash {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}

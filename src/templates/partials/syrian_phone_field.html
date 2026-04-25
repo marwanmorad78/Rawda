@@ -1,0 +1,50 @@
+{% load static %}
+<label class="syrian-phone-field">
+    <span>{{ field.label }}</span>
+    <span
+        class="syrian-phone-control"
+        data-syrian-phone-control
+        style="position:relative;display:flex;align-items:stretch;width:100%;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247, 250, 255, 0.94));direction:ltr;"
+    >
+        <button
+            type="button"
+            class="syrian-phone-picker"
+            data-syrian-phone-toggle
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-label="{{ ui.syria }} +963"
+            style="appearance:none;-webkit-appearance:none;display:inline-flex;align-items:center;gap:0.6rem;min-width:7rem;padding:0.92rem 0.85rem 0.92rem 0.95rem;border:0;border-radius:0;border-inline-end:1px solid rgba(16, 79, 157, 0.12);background:linear-gradient(180deg, rgba(238, 246, 255, 0.94), rgba(248, 251, 255, 0.98));box-shadow:none;color:var(--blue-950);font-weight:700;white-space:nowrap;cursor:pointer;flex:0 0 auto;"
+        >
+            <img
+                src="{% static 'images/syria-flag.svg' %}"
+                alt=""
+                class="syrian-flag"
+                aria-hidden="true"
+                style="display:inline-block;flex:0 0 auto;width:1.55rem;height:1.05rem;border-radius:3px;border:1px solid rgba(17, 24, 39, 0.12);box-shadow:0 1px 1px rgba(17, 24, 39, 0.08);object-fit:cover;"
+            >
+            <span class="phone-code">+963</span>
+            <span class="phone-chevron" aria-hidden="true">▾</span>
+        </button>
+        {{ field }}
+        <span class="syrian-phone-menu" data-syrian-phone-menu hidden>
+            <button
+                type="button"
+                class="syrian-phone-option"
+                data-syrian-phone-option
+                role="option"
+                aria-selected="true"
+            >
+                <img
+                    src="{% static 'images/syria-flag.svg' %}"
+                    alt=""
+                    class="syrian-flag"
+                    aria-hidden="true"
+                    style="display:inline-block;flex:0 0 auto;width:1.55rem;height:1.05rem;border-radius:3px;border:1px solid rgba(17, 24, 39, 0.12);box-shadow:0 1px 1px rgba(17, 24, 39, 0.08);object-fit:cover;"
+                >
+                <span class="phone-country-name">{{ ui.syria }}</span>
+                <span class="phone-country-code">+963</span>
+            </button>
+        </span>
+    </span>
+    {{ field.errors }}
+</label>

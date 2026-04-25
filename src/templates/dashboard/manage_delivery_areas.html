@@ -1,0 +1,87 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <span class="eyebrow">{{ dashboard_ui.delivery_areas }}</span>
+        <h1>{{ dashboard_ui.add_delivery_area }}</h1>
+    </div>
+</div>
+
+<section class="panel">
+    <form method="post" class="dashboard-form" data-dashboard-delivery-area-form>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% include "partials/dashboard_form_field.html" with field=form.name %}
+        {% include "partials/dashboard_form_field.html" with field=form.has_sub_areas %}
+        <div data-main-delivery-fee-field>
+            {% include "partials/dashboard_form_field.html" with field=form.delivery_fee %}
+        </div>
+        {% include "partials/dashboard_form_field.html" with field=form.display_order %}
+        {% include "partials/dashboard_form_field.html" with field=form.is_active %}
+        {% include "partials/dashboard_delivery_sub_area_formset.html" %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{ dashboard_ui.save_delivery_area }}</button>
+        </div>
+    </form>
+</section>
+
+<section class="panel">
+    <h2>{{ dashboard_ui.existing_delivery_areas }}</h2>
+    {% if items %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ dashboard_ui.name }}</th>
+                        <th>{{ dashboard_ui.delivery_fee }}</th>
+                        <th>{{ dashboard_ui.order }}</th>
+                        <th>{{ dashboard_ui.status }}</th>
+                        <th>{{ dashboard_ui.actions }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{% if item.has_sub_areas %}{{ dashboard_ui.sub_area_pricing }}{% else %}{{ item.delivery_fee }}{% endif %}</td>
+                            <td>{{ item.display_order }}</td>
+                            <td>{% if item.is_active %}{{ dashboard_ui.active }}{% else %}{{ dashboard_ui.inactive }}{% endif %}</td>
+                            <td class="table-actions">
+                                <a href="{% url 'dashboard:delivery-area-edit' item.pk %}">{{ dashboard_ui.edit }}</a>
+                                <form method="post" action="{% url 'dashboard:delivery-area-delete' item.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit">{{ dashboard_ui.delete }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr class="sub-area-summary-row">
+                            <td colspan="5">
+                                <div class="sub-area-summary">
+                                    <strong>{{ dashboard_ui.sub_areas }}:</strong>
+                                    <ul class="sub-area-summary-list">
+                                        {% for sub_area in item.sub_areas.all %}
+                                            <li>
+                                                <span>{{ sub_area.name }}</span>
+                                                <span>
+                                                    {{ dashboard_ui.delivery_fee }} {{ sub_area.delivery_fee }}
+                                                    • {% if sub_area.is_active %}{{ dashboard_ui.active }}{% else %}{{ dashboard_ui.inactive }}{% endif %}
+                                                    • {{ dashboard_ui.order }} {{ sub_area.display_order }}
+                                                </span>
+                                            </li>
+                                        {% empty %}
+                                            <li><span class="muted-copy">{{ dashboard_ui.no_sub_areas }}</span></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>{{ dashboard_ui.no_delivery_areas }}</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% load static %}
+{# 
+Reusable backup of the removed immersive homepage hero scene.
+This template is intentionally not included by public/home.html.
+#}
+
+<div class="immersive-top-nav-shell">
+    <div class="immersive-top-nav">
+        <a href="{% url 'core:home' %}" class="immersive-top-brand">
+            <span class="immersive-top-brand-mark">
+                <img src="{% static 'images/rawda.jpeg' %}" alt="{{ site_settings.store_name|default:'Al Rawda Center' }}">
+            </span>
+            <span class="immersive-top-brand-copy">
+                <strong>{{ site_settings.display_store_name|default:"Al Rawda Center" }}</strong>
+                <small>{{ site_settings.display_tagline|default:"Fresh groceries and daily essentials" }}</small>
+            </span>
+        </a>
+        <nav class="immersive-top-links" aria-label="Primary">
+            <a href="{% url 'core:home' %}">{{ ui.home }}</a>
+            <a href="{% url 'core:about' %}">{{ ui.about }}</a>
+            <a href="{% url 'catalog:cart' %}">{{ ui.cart }}{% if cart_count %} ({{ cart_count }}){% endif %}</a>
+            <a href="{% url 'core:orders' %}">{{ ui.previous_orders }}</a>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'core:settings' %}">{{ ui.settings }}</a>
+                <form action="{% url 'core:logout' %}" method="post" class="immersive-top-link-form">
+                    {% csrf_token %}
+                    <button type="submit" class="immersive-top-link-button">{{ ui.logout }}</button>
+                </form>
+            {% else %}
+                <a href="{% url 'core:login' %}">{{ ui.login }}</a>
+                <a href="{% url 'core:register' %}">{{ ui.register }}</a>
+            {% endif %}
+            <a href="{% url 'core:set-language' %}?lang={% if current_language == 'ar' %}en{% else %}ar{% endif %}" class="immersive-top-lang">{{ ui.language_toggle }}</a>
+        </nav>
+    </div>
+</div>
+
+<section class="hero-section homepage-hero immersive-home-stage" id="home" data-store-hero>
+    <div class="hero-pin-stage">
+        <div class="hero-scene-media" aria-hidden="true"></div>
+        <div class="hero-scene-overlay" aria-hidden="true" data-hero-scene-overlay></div>
+        <div class="hero-scene-vignette" aria-hidden="true"></div>
+    </div>
+</section>
+
+<div class="immersive-cart-ui" data-hero-cart-scene data-immersive-cart-ui>
+    <div class="hero-category-cluster immersive-category-cluster" data-home-tab-bar>
+        {% for category in categories|slice:":5" %}
+            <button
+                type="button"
+                class="hero-category-chip immersive-orbit-chip orbit-slot-{{ forloop.counter }}{% if forloop.first %} is-active{% endif %}"
+                data-home-tab
+                data-tab-key="category-{{ category.slug }}"
+                data-category-match="{{ category.display_name }}|{{ category.slug }}"
+                data-fallback-id="categories"
+            >
+                <span class="immersive-orbit-media" aria-hidden="true">
+                    {% if category.cover_image %}
+                        <img src="{{ category.cover_image.url }}" alt="{{ category.display_name }}">
+                    {% elif category.external_image_url %}
+                        <img src="{{ category.external_image_url }}" alt="{{ category.display_name }}">
+                    {% else %}
+                        <span class="immersive-orbit-fallback">{{ category.display_name|slice:":1" }}</span>
+                    {% endif %}
+                </span>
+                <span class="immersive-orbit-label">{{ category.display_name }}</span>
+            </button>
+        {% endfor %}
+    </div>
+    <a href="{% url 'catalog:cart' %}" class="immersive-cart-frame" aria-label="Open cart">
+        <span class="immersive-cart-shadow" aria-hidden="true"></span>
+        <span class="immersive-cart-graphic">
+            <img src="{% static 'images/hero-cart-front-blue.png' %}" alt="" loading="eager" decoding="async">
+        </span>
+    </a>
+</div>

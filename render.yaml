@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: al-rawda-center
+    runtime: python
+    region: frankfurt
+    plan: starter
+    buildCommand: bash build.sh
+    preDeployCommand: uv run python src/manage.py migrate --noinput
+    startCommand: uv run gunicorn config.wsgi:application --chdir src --bind 0.0.0.0:$PORT
+    healthCheckPath: /
+    disk:
+      name: media
+      mountPath: /opt/render/project/src/src/media
+      sizeGB: 5
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: al-rawda-db
+          property: connectionString
+      - key: DJANGO_MEDIA_ROOT
+        value: /opt/render/project/src/src/media
+      - key: DJANGO_SERVE_MEDIA
+        value: "true"
+
+databases:
+  - name: al-rawda-db
+    region: frankfurt
+    plan: basic-256mb
+    databaseName: al_rawda_center
+    ipAllowList: []

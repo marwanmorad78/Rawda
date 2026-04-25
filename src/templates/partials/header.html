@@ -1,0 +1,30 @@
+{% load static %}
+<header class="site-header">
+    <div class="container header-tab-bar">
+        <a href="{% url 'core:home' %}" class="brand brand-compact">
+            <span class="brand-mark">
+                <img src="{% static 'images/rawda.jpeg' %}" alt="{{ site_settings.store_name|default:'Al Rawda Center' }}">
+            </span>
+            <span class="brand-copy">
+                <strong>{{ site_settings.display_store_name|default:"Al Rawda Center" }}</strong>
+            </span>
+        </a>
+        <nav class="site-tab-nav" aria-label="Primary navigation">
+            <a href="{% url 'core:home' %}" class="tab-link{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}">{{ ui.home }}</a>
+            <a href="{% url 'catalog:cart' %}" class="tab-link{% if request.resolver_match.url_name == 'cart' %} is-active{% endif %}">{{ ui.cart }}{% if cart_count %} <span class="tab-count">{{ cart_count }}</span>{% endif %}</a>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'core:orders' %}" class="tab-link{% if request.resolver_match.url_name == 'orders' %} is-active{% endif %}">{{ ui.previous_orders }}</a>
+                <a href="{% url 'core:settings' %}" class="tab-link{% if request.resolver_match.url_name == 'settings' %} is-active{% endif %}">{{ ui.settings }}</a>
+                <form action="{% url 'core:logout' %}" method="post" class="tab-form">
+                    {% csrf_token %}
+                    <button type="submit" class="tab-link nav-link-button">{{ ui.logout }}</button>
+                </form>
+            {% else %}
+                <a href="{% url 'core:login' %}" class="tab-link{% if request.resolver_match.url_name == 'login' %} is-active{% endif %}">{{ ui.login }}</a>
+                <a href="{% url 'core:register' %}" class="tab-link{% if request.resolver_match.url_name == 'register' %} is-active{% endif %}">{{ ui.register }}</a>
+            {% endif %}
+            <a href="{% url 'core:about' %}" class="tab-link{% if request.resolver_match.url_name == 'about' %} is-active{% endif %}">{{ ui.about }}</a>
+            <a href="{% url 'core:set-language' %}?lang={% if current_language == 'ar' %}en{% else %}ar{% endif %}" class="tab-link lang-toggle">{{ ui.language_toggle }}</a>
+        </nav>
+    </div>
+</header>

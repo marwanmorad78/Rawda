@@ -1,0 +1,92 @@
+<section class="sub-area-panel" data-dashboard-sub-area-formset>
+    <div class="sub-area-panel-header">
+        <h3>{{ dashboard_ui.sub_areas }}</h3>
+        <p>{{ dashboard_ui.sub_area_help }}</p>
+    </div>
+    {{ sub_area_formset.management_form }}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ dashboard_ui.name }}</th>
+                    <th>{{ dashboard_ui.delivery_fee }}</th>
+                    <th>{{ dashboard_ui.order }}</th>
+                    <th>{{ dashboard_ui.status }}</th>
+                    <th>{{ dashboard_ui.delete }}</th>
+                </tr>
+            </thead>
+            <tbody data-sub-area-rows>
+                {% for form in sub_area_formset %}
+                    <tr>
+                        <td>
+                            {{ form.id }}
+                            {{ form.name }}
+                            {{ form.name.errors }}
+                        </td>
+                        <td>
+                            {{ form.delivery_fee }}
+                            {{ form.delivery_fee.errors }}
+                        </td>
+                        <td>
+                            {{ form.display_order }}
+                            {{ form.display_order.errors }}
+                        </td>
+                        <td>
+                            <label class="checkbox-field compact-checkbox">
+                                {{ form.is_active }}
+                                <span class="choice-mark choice-mark-checkbox" aria-hidden="true"></span>
+                                <span class="choice-copy">{{ dashboard_ui.active }}</span>
+                            </label>
+                            {{ form.is_active.errors }}
+                        </td>
+                        <td>
+                            {% if form.instance.pk %}
+                                <label class="checkbox-field compact-checkbox delete-checkbox">
+                                    {{ form.DELETE }}
+                                    <span class="choice-mark choice-mark-checkbox" aria-hidden="true"></span>
+                                    <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                                </label>
+                                {{ form.DELETE.errors }}
+                            {% else %}
+                                <span class="muted-copy">{{ dashboard_ui.leave_blank_to_skip }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="sub-area-panel-actions">
+        <button type="button" class="btn btn-secondary sub-area-add-button" data-add-sub-area>
+            {{ dashboard_ui.add_sub_area }}
+        </button>
+    </div>
+    <template data-sub-area-empty-form>
+        <tr>
+            <td>
+                {{ sub_area_formset.empty_form.id }}
+                {{ sub_area_formset.empty_form.name }}
+                {{ sub_area_formset.empty_form.name.errors }}
+            </td>
+            <td>
+                {{ sub_area_formset.empty_form.delivery_fee }}
+                {{ sub_area_formset.empty_form.delivery_fee.errors }}
+            </td>
+            <td>
+                {{ sub_area_formset.empty_form.display_order }}
+                {{ sub_area_formset.empty_form.display_order.errors }}
+            </td>
+            <td>
+                <label class="checkbox-field compact-checkbox">
+                    {{ sub_area_formset.empty_form.is_active }}
+                    <span class="choice-mark choice-mark-checkbox" aria-hidden="true"></span>
+                    <span class="choice-copy">{{ dashboard_ui.active }}</span>
+                </label>
+                {{ sub_area_formset.empty_form.is_active.errors }}
+            </td>
+            <td>
+                <span class="muted-copy">{{ dashboard_ui.leave_blank_to_skip }}</span>
+            </td>
+        </tr>
+    </template>
+</section>

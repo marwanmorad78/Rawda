@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <span class="eyebrow">{{ dashboard_ui.overview }}</span>
+        <h1>{{ dashboard_ui.dashboard_title }}</h1>
+    </div>
+</div>
+<div class="stats-grid">
+    <article class="stat-card"><strong>{{ category_count }}</strong><span>{{ dashboard_ui.category_count }}</span></article>
+    <article class="stat-card"><strong>{{ product_count }}</strong><span>{{ dashboard_ui.product_count }}</span></article>
+    <article class="stat-card"><strong>{{ available_product_count }}</strong><span>{{ dashboard_ui.available_product_count }}</span></article>
+    <article class="stat-card"><strong>{{ promotion_count }}</strong><span>{{ dashboard_ui.promotion_count }}</span></article>
+    <article class="stat-card"><strong>{{ delivery_area_count }}</strong><span>{{ dashboard_ui.delivery_areas }}</span></article>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{% if is_rtl %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ site_settings.store_name|default:"Al Rawda Center" }}{% endblock %}</title>
+    <link rel="icon" type="image/jpeg" href="{% static 'images/rawda.jpeg' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/rawda.jpeg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=delivery-subareas-6">
+</head>
+<body class="{% if is_rtl %}rtl {% endif %}{% block body_class %}{% endblock %}">
+    {% include "partials/header.html" %}
+    {% include "partials/messages.html" %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <div class="offer-modal product-modal" data-product-modal hidden>
+        <div class="offer-modal-backdrop" data-product-modal-close></div>
+        <div class="offer-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+            <button type="button" class="offer-modal-close" data-product-modal-close aria-label="{{ ui.close }}">
+                &times;
+            </button>
+            <div class="offer-modal-media">
+                <img src="" alt="" data-product-modal-image hidden>
+                <div class="offer-modal-placeholder" data-product-modal-placeholder></div>
+            </div>
+            <div class="offer-modal-body">
+                <span class="eyebrow" data-product-modal-category></span>
+                <h2 id="product-modal-title" data-product-modal-title></h2>
+                <p data-product-modal-description></p>
+                <p class="offer-modal-price" data-product-modal-price></p>
+                <form method="post" action="" data-product-modal-form data-cart-form>
+                    {% csrf_token %}
+                    <label class="quantity-field">
+                        <span>{{ ui.qty }}</span>
+                        <span class="quantity-stepper" data-quantity-control>
+                            <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                            <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                            <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                        </span>
+                    </label>
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn-primary">{{ ui.add_to_cart }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <a
+        href="{% url 'catalog:cart' %}"
+        class="floating-cart-button{% if not cart_count %} is-empty{% endif %}"
+        aria-label="Open cart"
+        data-floating-cart
+        data-cart-count="{{ cart_count|default:0 }}"
+        data-cart-total="{{ cart_subtotal|default:'0' }}"
+    >
+        <span class="floating-cart-icon-wrap" aria-hidden="true">
+            <span class="floating-cart-icon">
+                <svg viewBox="0 0 64 64" role="presentation" focusable="false">
+                    <path d="M12 16h8l5 23h22l6-17H25" />
+                    <circle cx="30" cy="50" r="4" />
+                    <circle cx="47" cy="50" r="4" />
+                </svg>
+            </span>
+            <span class="floating-cart-cargo" data-floating-cart-cargo></span>
+        </span>
+        <span class="floating-cart-copy">
+            <span class="floating-cart-label">{{ ui.cart }}</span>
+            <span class="floating-cart-meta">
+                <span class="floating-cart-count" data-floating-cart-count>{{ cart_count|default:0 }}</span>
+                <span class="floating-cart-total" data-floating-cart-total>{{ cart_subtotal|default:'0' }}</span>
+            </span>
+        </span>
+    </a>
+    {% include "partials/footer.html" %}
+    {% block extra_scripts %}{% endblock %}
+    <script src="{% static 'js/site.js' %}?v=delivery-subareas-6"></script>
+</body>
+</html>

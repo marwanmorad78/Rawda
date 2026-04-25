@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{% if is_rtl %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ dashboard_ui.dashboard_title }}{% endblock %}</title>
+    <link rel="icon" type="image/jpeg" href="{% static 'images/rawda.jpeg' %}">
+    {% block extra_head %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=dashboard-area-pricing-10">
+</head>
+<body class="dashboard-body{% if is_rtl %} rtl{% endif %}">
+    <div class="dashboard-shell">
+        <aside class="dashboard-sidebar">
+            <a href="{% url 'dashboard:index' %}" class="dashboard-brand">
+                <img src="{% static 'images/rawda.jpeg' %}" alt="{{ site_settings.display_store_name|default:dashboard_ui.brand_name }}">
+                <span>{{ site_settings.display_store_name|default:dashboard_ui.brand_name }}</span>
+            </a>
+            <a
+                href="{% if current_language == 'ar' %}{{ switch_to_en_url }}{% else %}{{ switch_to_ar_url }}{% endif %}"
+                class="dashboard-language-toggle"
+            >
+                {{ dashboard_ui.language_toggle }}
+            </a>
+            <nav>
+                <a href="{% url 'dashboard:index' %}">{{ dashboard_ui.overview }}</a>
+                <a href="{% url 'dashboard:categories' %}">{{ dashboard_ui.categories }}</a>
+                <a href="{% url 'dashboard:products' %}">{{ dashboard_ui.products }}</a>
+                <a href="{% url 'dashboard:promotions' %}">{{ dashboard_ui.promotions }}</a>
+                <a href="{% url 'dashboard:delivery-areas' %}">{{ dashboard_ui.delivery_areas }}</a>
+                <a href="{% url 'dashboard:dollar-price' %}">{{ dashboard_ui.dollar_price_section }}</a>
+                <a href="{% url 'dashboard:settings' %}">{{ dashboard_ui.store_settings }}</a>
+            </nav>
+            <form action="{% url 'dashboard:logout' %}" method="post">
+                {% csrf_token %}
+                <button class="btn btn-secondary full-width" type="submit">{{ dashboard_ui.logout }}</button>
+            </form>
+        </aside>
+        <section class="dashboard-main">
+            {% include "partials/messages.html" %}
+            {% block content %}{% endblock %}
+        </section>
+    </div>
+    {% block extra_scripts %}{% endblock %}
+    <script src="{% static 'js/site.js' %}?v=dashboard-area-pricing-10"></script>
+</body>
+</html>
