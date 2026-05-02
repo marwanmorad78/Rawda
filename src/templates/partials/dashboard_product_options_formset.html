@@ -1,0 +1,50 @@
+<section class="product-options-panel" data-dashboard-product-options-panel{% if not form.has_options.value %} hidden{% endif %}>
+    <div class="sub-area-panel-header">
+        <div>
+            <h3>{{ dashboard_ui.product_options }}</h3>
+            <p>{{ dashboard_ui.product_options_help }}</p>
+        </div>
+    </div>
+    {{ option_formset.management_form }}
+    {{ option_formset.non_form_errors }}
+    <div class="dashboard-option-list">
+        {% for option_form in option_formset %}
+            <div class="dashboard-option-row">
+                {% for hidden in option_form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.name }}</span>
+                        {{ option_form.name }}
+                    </label>
+                    {{ option_form.name.errors }}
+                </div>
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.price }}</span>
+                        {{ option_form.price }}
+                    </label>
+                    {{ option_form.price.errors }}
+                </div>
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.order }}</span>
+                        {{ option_form.display_order }}
+                    </label>
+                    {{ option_form.display_order.errors }}
+                </div>
+                <label class="compact-checkbox">
+                    {{ option_form.is_default }}
+                    <span class="choice-copy">{{ dashboard_ui.default }}</span>
+                </label>
+                {% if option_form.DELETE %}
+                    <label class="compact-checkbox">
+                        {{ option_form.DELETE }}
+                        <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                    </label>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</section>

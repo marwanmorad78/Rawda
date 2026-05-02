@@ -3,22 +3,50 @@
 {% block content %}
 <section class="panel">
     <div class="dashboard-section-header">
-        <h1>{{ dashboard_ui.add_product }}</h1>
+        <h1>{{ dashboard_ui.existing_products }}</h1>
         <div class="excel-upload-actions">
-            <a class="btn btn-secondary" href="{% url 'dashboard:product-list' %}">{{ dashboard_ui.existing_products }}</a>
+            <a class="btn btn-primary" href="{% url 'dashboard:products' %}">{{ dashboard_ui.add_product }}</a>
             <button type="button" class="btn btn-secondary" data-excel-modal-open>{{ dashboard_ui.upload_products_excel }}</button>
             <a class="btn btn-secondary" href="{% url 'dashboard:product-excel-template' %}">{{ dashboard_ui.download_template }}</a>
         </div>
     </div>
-    <form method="post" enctype="multipart/form-data" class="stack-form">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {% for field in form %}
-            {% include "partials/dashboard_form_field.html" with field=field %}
-        {% endfor %}
-        {% include "partials/dashboard_product_options_formset.html" %}
-        <button type="submit" class="btn btn-primary">{{ dashboard_ui.save_product }}</button>
-    </form>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ dashboard_ui.name }}</th>
+                    <th>{{ dashboard_ui.category }}</th>
+                    <th>{{ dashboard_ui.price }}</th>
+                    <th>{{ dashboard_ui.pricing_flags }}</th>
+                    <th>{{ dashboard_ui.status }}</th>
+                    <th>{{ dashboard_ui.actions }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.display_name }}</td>
+                        <td>{{ item.category.display_name }}</td>
+                        <td>{{ item.display_price }}</td>
+                        <td>
+                            {% if item.effective_sold_by_weight %}{{ dashboard_ui.sold_by_weight }}{% endif %}
+                            {% if item.effective_is_price_linked_to_dollar %}{{ dashboard_ui.dollar_priced }}{% endif %}
+                        </td>
+                        <td>{% if item.is_available %}{{ dashboard_ui.available }}{% else %}{{ dashboard_ui.unavailable }}{% endif %}</td>
+                        <td class="table-actions">
+                            <a href="{% url 'dashboard:product-edit' item.pk %}">{{ dashboard_ui.edit }}</a>
+                            <form method="post" action="{% url 'dashboard:product-delete' item.pk %}">
+                                {% csrf_token %}
+                                <button type="submit">{{ dashboard_ui.delete }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">{{ dashboard_ui.no_products }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 <div class="dashboard-modal" data-excel-modal{% if not excel_errors and not upload_form.errors %} hidden{% endif %}>
     <button type="button" class="dashboard-modal-backdrop" data-excel-modal-close aria-label="{{ dashboard_ui.close_upload_form }}"></button>
@@ -36,7 +64,7 @@
         >
             {% csrf_token %}
             {{ upload_form.non_field_errors }}
-            <input type="hidden" name="next" value="dashboard:products">
+            <input type="hidden" name="next" value="dashboard:product-list">
             {% include "partials/dashboard_form_field.html" with field=upload_form.excel_file %}
             {% if excel_errors %}
                 <div class="excel-error-panel">

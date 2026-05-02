@@ -1,18 +1,27 @@
 {% extends "layouts/base.html" %}
 {% load static %}
 
-{% block title %}{{ site_content.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ site_content.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="home-hero" id="home">
     <div class="container home-hero-layout{% if not request.user.is_staff %} home-hero-layout-public{% endif %}">
         <div class="home-hero-copy">
-            <span class="eyebrow">{{ site_content.display_tagline|default:"Fresh groceries and daily essentials" }}</span>
-            <h1>{{ site_content.display_hero_title|default:site_content.display_store_name|default:"Al Rawda Center" }}</h1>
-            <p>{{ site_content.display_hero_subtitle|default:"Browse fresh products, daily essentials, and current offers from Al Rawda Center." }}</p>
+            <span class="eyebrow">{{ site_content.display_tagline|default:ui.tagline_default }}</span>
+            {% if request.user.is_authenticated %}
+                <h1>{{ ui.hero_customer_welcome_prefix }} {{ customer_first_name }} {{ ui.hero_customer_welcome_suffix }}</h1>
+            {% else %}
+                <h1>{{ ui.hero_guest_title }}</h1>
+                <p>{{ ui.hero_guest_prompt }}</p>
+            {% endif %}
             <div class="hero-actions">
-                <a href="#categories" class="btn btn-primary">{{ ui.browse_categories }}</a>
-                <a href="#featured-products" class="btn btn-secondary">{{ ui.featured_products }}</a>
+                {% if request.user.is_authenticated %}
+                    <a href="#featured-products" class="btn btn-primary">{{ ui.whats_new }}</a>
+                    <a href="#categories" class="btn btn-secondary">{{ ui.sections }}</a>
+                    <a href="#offers" class="btn btn-secondary">{{ ui.our_offers }}</a>
+                {% else %}
+                    <a href="{% url 'core:login' %}" class="btn btn-primary">{{ ui.login }}</a>
+                {% endif %}
             </div>
         </div>
 
@@ -115,7 +124,7 @@
             <h2 id="offer-modal-title" data-offer-modal-title></h2>
             <p data-offer-modal-description></p>
             <p class="offer-modal-price" data-offer-modal-price></p>
-            <form method="post" action="" data-offer-modal-form data-cart-form>
+            <form method="post" action="" data-offer-modal-form data-cart-form{% if not request.user.is_authenticated %} hidden{% endif %}>
                 {% csrf_token %}
                 <input type="hidden" name="quantity" value="1">
                 <input type="hidden" name="next" value="{{ request.path }}">
@@ -183,8 +192,10 @@
                     data-product-title="{{ product.display_name }}"
                     data-product-description="{{ product.display_short_description|default:ui.product_fallback }}"
                     data-product-category="{{ product.category.display_name }}"
-                    data-product-price="{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}"
+                    data-product-price="{{ product.display_price }}"
                     data-product-action="{% url 'catalog:add-to-cart' product.slug %}"
+                    data-product-url="{{ product.get_absolute_url }}"
+                    data-product-has-options="{{ product.has_options|yesno:'true,false' }}"
                     data-product-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
                     style="--stagger: {{ forloop.counter0 }};"
                 >
@@ -204,29 +215,47 @@
                         <div class="home-product-footer">
                             <div class="home-product-price">
                                 <strong>{{ product.display_price }}</strong>
-                                {% if product.display_unit_label %}<span>{{ product.display_unit_label }}</span>{% endif %}
                             </div>
                         </div>
-                        <form
-                            method="post"
-                            action="{% url 'catalog:add-to-cart' product.slug %}"
-                            class="inline-form"
-                            data-cart-form
-                            data-cart-item-title="{{ product.display_name }}"
-                            data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
-                        >
-                            {% csrf_token %}
-                            <label class="quantity-field compact">
-                                <span>{{ ui.qty }}</span>
-                                <span class="quantity-stepper" data-quantity-control>
-                                    <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
-                                    <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
-                                    <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
-                                </span>
-                            </label>
-                            <input type="hidden" name="next" value="{{ request.path }}">
-                            <button type="submit" class="btn btn-primary btn-small full-width">{{ ui.add_to_cart }}</button>
-                        </form>
+                        {% if not request.user.is_authenticated %}
+                            <button type="button" class="btn btn-primary btn-small full-width" data-product-trigger>{{ ui.view_details }}</button>
+                        {% elif product.has_options %}
+                            <div class="inline-form product-option-action">
+                                <div class="product-option-placeholder" style="min-height: 4.35rem;" aria-hidden="true"></div>
+                                <button type="button" class="btn btn-primary btn-small full-width" data-product-trigger>{{ ui.view_details }}</button>
+                            </div>
+                        {% else %}
+                            <form
+                                method="post"
+                                action="{% url 'catalog:add-to-cart' product.slug %}"
+                                class="inline-form"
+                                data-cart-form
+                                data-cart-item-title="{{ product.display_name }}"
+                                data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+                            >
+                                {% csrf_token %}
+                                <label class="quantity-field compact">
+                                    <span>{{ ui.qty }}</span>
+                                    <span class="quantity-stepper" data-quantity-control>
+                                        <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                                        <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                        <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                                    </span>
+                                </label>
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <button type="submit" class="btn btn-primary btn-small full-width">{{ ui.add_to_cart }}</button>
+                            </form>
+                        {% endif %}
+                        <div data-product-options-source hidden>
+                            {% for option in product.prefetched_options %}
+                                <span
+                                    data-option-id="{{ option.id }}"
+                                    data-option-name="{{ option.name }}"
+                                    data-option-price="{{ option.display_price }}"
+                                    data-option-default="{{ option.is_default|yesno:'true,false' }}"
+                                ></span>
+                            {% endfor %}
+                        </div>
                     </div>
                 </article>
             {% empty %}

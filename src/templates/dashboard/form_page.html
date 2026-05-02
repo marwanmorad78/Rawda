@@ -9,6 +9,9 @@
         {% for field in form %}
             {% include "partials/dashboard_form_field.html" with field=field %}
         {% endfor %}
+        {% if option_formset %}
+            {% include "partials/dashboard_product_options_formset.html" %}
+        {% endif %}
         <button type="submit" class="btn btn-primary">{{ submit_label|default:dashboard_ui.save_changes }}</button>
     </form>
 </section>

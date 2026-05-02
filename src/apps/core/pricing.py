@@ -32,12 +32,29 @@ def get_effective_product_price(product, site_settings=None):
     return base_price
 
 
+def get_effective_product_option_price(option, site_settings=None):
+    base_price = getattr(option, "price", Decimal("0")) or Decimal("0")
+    if product_uses_dollar_price(option.product):
+        return base_price * get_dollar_price(site_settings)
+    return base_price
+
+
 def set_product_display_price(product, language, site_settings=None):
-    effective_price = get_effective_product_price(product, site_settings)
+    option_prices = []
+    if getattr(product, "has_options", False):
+        options = getattr(product, "prefetched_options", None)
+        if options is None:
+            options = list(product.options.all())
+        for option in options:
+            option.effective_price = get_effective_product_option_price(option, site_settings)
+            option.display_price = format_syp(option.effective_price, language)
+            option_prices.append(option.effective_price)
+    effective_price = min(option_prices) if option_prices else get_effective_product_price(product, site_settings)
     product.effective_price = effective_price
     product.effective_is_price_linked_to_dollar = product_uses_dollar_price(product)
     product.effective_sold_by_weight = product_is_sold_by_weight(product)
     product.display_price = format_syp(effective_price, language)
+    product.display_price_is_starting_from = bool(option_prices)
     return product
 
 

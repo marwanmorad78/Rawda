@@ -1,11 +1,17 @@
 from django.contrib import admin
 
-from .models import Category, Product, ProductImage
+from .models import Category, Product, ProductImage, ProductOption
 
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 0
+
+
+class ProductOptionInline(admin.TabularInline):
+    model = ProductOption
+    extra = 1
+    fields = ("name", "price", "is_default", "display_order")
 
 
 @admin.register(Category)
@@ -29,13 +35,21 @@ class ProductAdmin(admin.ModelAdmin):
         "name",
         "category",
         "price",
+        "has_options",
         "price_link_mode",
         "sold_by_weight_mode",
         "is_available",
         "is_featured",
         "updated_at",
     )
-    list_filter = ("category", "price_link_mode", "sold_by_weight_mode", "is_available", "is_featured")
+    list_filter = (
+        "category",
+        "has_options",
+        "price_link_mode",
+        "sold_by_weight_mode",
+        "is_available",
+        "is_featured",
+    )
     search_fields = ("name", "sku")
     prepopulated_fields = {"slug": ("name",)}
-    inlines = [ProductImageInline]
+    inlines = [ProductOptionInline, ProductImageInline]

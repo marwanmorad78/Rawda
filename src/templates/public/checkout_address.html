@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ ui.delivery_address }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ ui.delivery_address }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="page-hero compact">
@@ -13,9 +13,9 @@
 
 <section class="section">
     <div class="container">
-        {% if addresses %}
-            <div class="cart-layout">
-                <section class="panel">
+        <div class="cart-layout">
+            <section class="panel">
+                {% if addresses %}
                     <form method="post" class="stack-form">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
@@ -52,26 +52,44 @@
                         {{ form.address.errors }}
                         <div class="table-actions">
                             <button type="submit" class="btn btn-primary">{{ ui.review_order }}</button>
-                            <a href="{% url 'core:settings' %}" class="btn btn-secondary">{{ ui.add_new_address }}</a>
+                            <button type="button" class="btn btn-secondary" data-checkout-address-modal-open>{{ ui.add_new_address }}</button>
                         </div>
                     </form>
-                </section>
-                <aside class="panel summary-card">
-                    <h2>{{ ui.subtotal }}</h2>
-                    <p class="summary-amount">{{ cart.display_subtotal }}</p>
-                    {% if cart.has_weight_items %}
-                        <p>{{ ui.weighted_estimate_notice }}</p>
-                    {% endif %}
-                    <a href="{% url 'catalog:cart' %}" class="btn btn-secondary full-width">{{ ui.go_to_cart }}</a>
-                </aside>
-            </div>
-        {% else %}
-            <section class="panel panel-narrow">
-                <h2>{{ ui.no_saved_addresses }}</h2>
-                <p>{{ ui.add_address_before_checkout }}</p>
-                <a href="{% url 'core:settings' %}" class="btn btn-primary">{{ ui.add_new_address }}</a>
+                {% else %}
+                    <div class="stack-form">
+                        <h2>{{ ui.no_saved_addresses }}</h2>
+                        <p>{{ ui.add_address_before_checkout }}</p>
+                        <button type="button" class="btn btn-primary" data-checkout-address-modal-open>{{ ui.add_new_address }}</button>
+                    </div>
+                {% endif %}
             </section>
-        {% endif %}
+            <aside class="panel summary-card">
+                <h2>{{ ui.subtotal }}</h2>
+                <p class="summary-amount">{{ cart.display_subtotal }}</p>
+                {% if cart.has_weight_items %}
+                    <p>{{ ui.weighted_estimate_notice }}</p>
+                {% endif %}
+                <a href="{% url 'catalog:cart' %}" class="btn btn-secondary full-width">{{ ui.go_to_cart }}</a>
+            </aside>
+        </div>
     </div>
 </section>
+
+<div class="dashboard-modal" data-checkout-address-modal{% if not is_address_modal_open %} hidden{% endif %}>
+    <button type="button" class="dashboard-modal-backdrop" data-checkout-address-modal-close aria-label="{{ ui.close }}"></button>
+    <section class="dashboard-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-address-modal-title">
+        <button type="button" class="dashboard-modal-close" data-checkout-address-modal-close aria-label="{{ ui.close }}">&times;</button>
+        <h2 id="checkout-address-modal-title">{{ ui.add_new_address }}</h2>
+        <p class="dashboard-muted">{{ ui.add_address_before_checkout }}</p>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            <input type="hidden" name="address_action" value="add">
+            {{ address_form.non_field_errors }}
+            {% with address_form=address_form hide_default_address_field=True %}
+                {% include "partials/customer_address_fields.html" %}
+            {% endwith %}
+            <button type="submit" class="btn btn-primary full-width">{{ ui.save_address }}</button>
+        </form>
+    </section>
+</div>
 {% endblock %}

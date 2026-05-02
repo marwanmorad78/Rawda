@@ -1,12 +1,12 @@
 <footer class="site-footer">
     <div class="container footer-grid">
         <div>
-            <h3>{{ site_settings.display_store_name|default:"Al Rawda Center" }}</h3>
-            <p>{{ site_settings.display_about_text|default:"Trusted grocery products for the local community."|truncatewords:25 }}</p>
+            <h3>{{ site_settings.display_store_name|default:ui.store_name_default }}</h3>
+            <p>{{ site_settings.display_about_text|default:ui.footer_about_default|truncatewords:25 }}</p>
         </div>
         <div>
             <h4>{{ ui.contact }}</h4>
-            <p>{{ site_settings.display_address|default:"Damascus" }}</p>
+            <p>{{ site_settings.display_address|default:ui.address_default }}</p>
             <p>{{ site_settings.primary_phone|default:"+963-000-000-000" }}</p>
             {% if site_settings.email %}<p>{{ site_settings.email }}</p>{% endif %}
         </div>

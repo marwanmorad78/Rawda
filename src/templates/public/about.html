@@ -1,13 +1,13 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ ui.about }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ ui.about }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="page-hero compact">
     <div class="container">
         <span class="eyebrow">{{ ui.about_heading }}</span>
-        <h1>{{ site_content.display_store_name|default:"Al Rawda Center" }}</h1>
-        <p>{{ site_content.display_tagline|default:"Fresh groceries and trusted daily essentials" }}</p>
+        <h1>{{ site_content.display_store_name|default:ui.store_name_default }}</h1>
+        <p>{{ site_content.display_tagline|default:ui.tagline_trusted_default }}</p>
     </div>
 </section>
 
@@ -15,15 +15,15 @@
     <div class="container info-grid">
         <article class="info-card">
             <h2>{{ ui.about_store }}</h2>
-            <p>{{ site_content.display_about_text|default:"Add your store story, values, and shopping experience details from the private manager dashboard." }}</p>
+            <p>{{ site_content.display_about_text|default:ui.about_text_default }}</p>
         </article>
         <article class="info-card">
             <h2>{{ ui.store_information }}</h2>
-            <p><strong>{{ ui.address }}:</strong> {{ site_content.display_address|default:"Damascus" }}</p>
+            <p><strong>{{ ui.address }}:</strong> {{ site_content.display_address|default:ui.address_default }}</p>
             <p><strong>{{ ui.primary_phone }}:</strong> {{ site_content.primary_phone|default:"+963-000-000-000" }}</p>
             {% if site_content.secondary_phone %}<p><strong>{{ ui.secondary_phone }}:</strong> {{ site_content.secondary_phone }}</p>{% endif %}
             {% if site_content.email %}<p><strong>{{ ui.email }}:</strong> {{ site_content.email }}</p>{% endif %}
-            <p><strong>{{ ui.hours }}:</strong> {{ site_content.display_working_hours_summary|default:"Update working hours from the dashboard." }}</p>
+            <p><strong>{{ ui.hours }}:</strong> {{ site_content.display_working_hours_summary|default:ui.working_hours_default }}</p>
         </article>
     </div>
 </section>

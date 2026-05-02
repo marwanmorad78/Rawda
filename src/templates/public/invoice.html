@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ ui.invoice }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ ui.invoice }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="page-hero compact">
@@ -17,7 +17,7 @@
             <section class="panel invoice-panel">
                 <div class="invoice-meta">
                     <div>
-                        <h2>{{ site_settings.display_store_name|default:"Al Rawda Center" }}</h2>
+                        <h2>{{ site_settings.display_store_name|default:ui.store_name_default }}</h2>
                         <p>{{ site_settings.display_address }}</p>
                         <p>{{ site_settings.primary_phone }}</p>
                     </div>

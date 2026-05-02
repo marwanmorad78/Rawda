@@ -18,6 +18,7 @@ from apps.core.forms import (
     normalize_phone_number,
 )
 from apps.core.localization import (
+    DEFAULT_LANGUAGE,
     format_price_range,
     format_syp,
     get_language,
@@ -92,6 +93,9 @@ class HomeView(TemplateView):
         language = get_language(self.request)
         site_content = get_localized_site_content(language)
         context["site_content"] = site_content
+        if self.request.user.is_authenticated:
+            customer_name = (self.request.user.first_name or self.request.user.username or "").strip()
+            context["customer_first_name"] = customer_name.split()[0] if customer_name else ""
         context["categories"] = localize_queryset(
             Category.objects.filter(is_active=True).order_by("display_order", "name"),
             language,
@@ -102,6 +106,7 @@ class HomeView(TemplateView):
             .select_related("category")[:8]
         )
         for product in featured_products:
+            product.prefetched_options = list(product.options.all())
             localize_instance(product.category, language, ["name", "description"])
             localize_instance(
                 product,
@@ -133,7 +138,7 @@ class AboutView(TemplateView):
 class RegisterView(CustomerContextMixin, FormView):
     template_name = "public/register.html"
     form_class = CustomerRegistrationForm
-    success_url = reverse_lazy("core:settings")
+    success_url = reverse_lazy("core:home")
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -204,7 +209,7 @@ class CustomerLoginView(CustomerContextMixin, LoginView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return self.get_redirect_url() or str(reverse_lazy("core:settings"))
+        return self.get_redirect_url() or str(reverse_lazy("core:home"))
 
 
 class CustomerLogoutView(LogoutView):
@@ -329,7 +334,7 @@ class PreviousOrdersView(CustomerContextMixin, LoginRequiredMixin, TemplateView)
 
 class DeliverySubAreaListView(View):
     def get(self, request, area_id, *args, **kwargs):
-        area = DeliveryArea.objects.filter(pk=area_id).prefetch_related("sub_areas").first()
+        area = DeliveryArea.objects.filter(pk=area_id, is_active=True).prefetch_related("sub_areas").first()
         if area is None:
             return JsonResponse({"sub_areas": []}, status=404)
         if not area.has_sub_areas:
@@ -343,7 +348,7 @@ class DeliverySubAreaListView(View):
 
 class SetLanguageView(View):
     def get(self, request, *args, **kwargs):
-        language = request.GET.get("lang", "en")
+        language = request.GET.get("lang", DEFAULT_LANGUAGE)
         if language in {"en", "ar"}:
             request.session["site_language"] = language
         return redirect(request.META.get("HTTP_REFERER", "core:home"))

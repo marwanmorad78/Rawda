@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ product.display_name }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ product.display_name }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="page-hero compact">
@@ -27,35 +27,68 @@
                 <span class="availability {% if product.is_available %}available{% else %}unavailable{% endif %}">
                     {% if product.is_available %}{{ ui.available }}{% else %}{{ ui.unavailable }}{% endif %}
                 </span>
-                <strong>{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}</strong>
+                <strong data-product-detail-price>
+                    {{ product.display_price }}
+                </strong>
             </div>
-            <p>{{ product.display_description|default:"No extended description has been added yet for this item." }}</p>
+            <p>{{ product.display_description|default:ui.product_description_empty }}</p>
             {% if product.effective_sold_by_weight %}
                 <p class="product-category">{{ ui.sold_by_weight }}</p>
             {% endif %}
-            {% if product.sku %}<p><strong>SKU:</strong> {{ product.sku }}</p>{% endif %}
-            <form
-                method="post"
-                action="{% url 'catalog:add-to-cart' product.slug %}"
-                class="stack-form"
-                data-cart-form
-                data-cart-item-title="{{ product.display_name }}"
-                data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
-            >
-                {% csrf_token %}
-                <label class="quantity-field">
-                    <span>{{ ui.qty }}</span>
-                    <span class="quantity-stepper" data-quantity-control>
-                        <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
-                        <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
-                        <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
-                    </span>
-                </label>
-                <input type="hidden" name="next" value="{{ request.path }}">
-                <div class="hero-actions">
-                    <button type="submit" class="btn btn-primary">{{ ui.add_to_cart }}</button>
-                </div>
-            </form>
+            {% if product.sku %}<p><strong>{{ ui.sku }}:</strong> {{ product.sku }}</p>{% endif %}
+            {% if request.user.is_authenticated %}
+                <form
+                    method="post"
+                    action="{% url 'catalog:add-to-cart' product.slug %}"
+                    class="stack-form"
+                    data-cart-form
+                    data-cart-item-title="{{ product.display_name }}"
+                    data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+                >
+                    {% csrf_token %}
+                    {% if product.has_options %}
+                        <fieldset class="product-options" data-product-options>
+                            <legend>{{ ui.product_options }}</legend>
+                            {% for option in product.prefetched_options %}
+                                <label class="product-option-card">
+                                    <input
+                                        type="radio"
+                                        name="option_id"
+                                        value="{{ option.id }}"
+                                        data-option-price="{{ option.display_price }}"
+                                        {% if option.is_default %}checked{% endif %}
+                                        required
+                                    >
+                                    <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                    <span class="choice-copy">
+                                        <strong>{{ option.name }}</strong>
+                                        <small>{{ option.display_price }}</small>
+                                    </span>
+                                </label>
+                            {% empty %}
+                                <p class="field-errors">{{ ui.product_options_unavailable }}</p>
+                            {% endfor %}
+                        </fieldset>
+                    {% endif %}
+                    <label class="quantity-field">
+                        <span>{{ ui.qty }}</span>
+                        <span class="quantity-stepper" data-quantity-control>
+                            <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                            <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                            <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                        </span>
+                    </label>
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <div class="hero-actions">
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            data-product-options-submit
+                            {% if product.has_options and not product.prefetched_options %}disabled{% endif %}
+                        >{{ ui.add_to_cart }}</button>
+                    </div>
+                </form>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -68,13 +101,33 @@
         </div>
         <div class="product-grid">
             {% for item in related_products %}
-                <article class="product-card">
+                <article
+                    class="product-card"
+                    data-product-card
+                    data-product-title="{{ item.display_name }}"
+                    data-product-description="{{ item.display_short_description|default:ui.related_fallback }}"
+                    data-product-category="{{ product.category.display_name }}"
+                    data-product-price="{{ item.display_price }}"
+                    data-product-action="{% url 'catalog:add-to-cart' item.slug %}"
+                    data-product-has-options="{{ item.has_options|yesno:'true,false' }}"
+                    data-product-image="{% if item.primary_image %}{{ item.primary_image.url }}{% elif item.external_image_url %}{{ item.external_image_url }}{% endif %}"
+                >
                     <div class="product-content">
                         <h3>{{ item.display_name }}</h3>
                         <p>{{ item.display_short_description|default:ui.related_fallback }}</p>
                         <div class="product-meta">
-                            <strong>{{ item.display_price }}{% if item.display_unit_label %} / {{ item.display_unit_label }}{% endif %}</strong>
-                            <a href="{{ item.get_absolute_url }}">{{ ui.view_details }}</a>
+                            <strong>{{ item.display_price }}</strong>
+                            <button type="button" class="btn btn-secondary btn-small" data-product-trigger>{{ ui.view_details }}</button>
+                        </div>
+                        <div data-product-options-source hidden>
+                            {% for option in item.prefetched_options %}
+                                <span
+                                    data-option-id="{{ option.id }}"
+                                    data-option-name="{{ option.name }}"
+                                    data-option-price="{{ option.display_price }}"
+                                    data-option-default="{{ option.is_default|yesno:'true,false' }}"
+                                ></span>
+                            {% endfor %}
                         </div>
                     </div>
                 </article>

@@ -1,5 +1,6 @@
 import re
 
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.urls import reverse
@@ -77,7 +78,7 @@ class Product(TimeStampedModel):
     short_description_ar = models.CharField(max_length=280, blank=True)
     description = models.TextField(blank=True)
     description_ar = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     price_link_mode = models.CharField(
         max_length=20,
         choices=BEHAVIOR_CHOICES,
@@ -92,6 +93,7 @@ class Product(TimeStampedModel):
         default=BEHAVIOR_INHERIT,
     )
     sold_by_weight = models.BooleanField(default=False)
+    has_options = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     sku = models.CharField(max_length=50, blank=True)
@@ -142,6 +144,28 @@ class Product(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+
+class ProductOption(TimeStampedModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="options")
+    name = models.CharField(max_length=120)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    is_default = models.BooleanField(default=False)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "name", "id"]
+        indexes = [models.Index(fields=["product", "display_order"])]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.is_default:
+            ProductOption.objects.filter(product=self.product, is_default=True).exclude(
+                pk=self.pk
+            ).update(is_default=False)
+
+    def __str__(self) -> str:
+        return f"{self.product.name} - {self.name}"
 
 
 class ProductImage(TimeStampedModel):

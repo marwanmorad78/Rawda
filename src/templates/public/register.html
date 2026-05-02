@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ ui.register }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ ui.register }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="section">

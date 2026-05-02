@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ category.display_name }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ category.display_name }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="page-hero compact">
@@ -19,10 +19,12 @@
                     class="product-card"
                     data-product-card
                     data-product-title="{{ product.display_name }}"
-                    data-product-description="{{ product.display_short_description|default:ui.related_fallback }}"
+                    data-product-description="{{ product.display_short_description}}"
                     data-product-category="{{ category.display_name }}"
-                    data-product-price="{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}"
+                    data-product-price="{{ product.display_price }}"
                     data-product-action="{% url 'catalog:add-to-cart' product.slug %}"
+                    data-product-url="{{ product.get_absolute_url }}"
+                    data-product-has-options="{{ product.has_options|yesno:'true,false' }}"
                     data-product-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
                 >
                     <div class="product-image">
@@ -39,28 +41,47 @@
                     <div class="product-content">
                         <h3>{{ product.display_name }}</h3>
                         <div class="product-meta">
-                            <strong>{{ product.display_price }}{% if product.display_unit_label %} / {{ product.display_unit_label }}{% endif %}</strong>
+                            <strong>{{ product.display_price }}</strong>
                         </div>
-                        <form
-                            method="post"
-                            action="{% url 'catalog:add-to-cart' product.slug %}"
-                            class="inline-form"
-                            data-cart-form
-                            data-cart-item-title="{{ product.display_name }}"
-                            data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
-                        >
-                            {% csrf_token %}
-                            <label class="quantity-field compact">
-                                <span>{{ ui.qty }}</span>
-                                <span class="quantity-stepper" data-quantity-control>
-                                    <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
-                                    <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
-                                    <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
-                                </span>
-                            </label>
-                            <input type="hidden" name="next" value="{{ request.path }}">
-                            <button type="submit" class="btn btn-primary btn-small full-width">{{ ui.add_to_cart }}</button>
-                        </form>
+                        {% if not request.user.is_authenticated %}
+                            <button type="button" class="btn btn-primary btn-small full-width" data-product-trigger>{{ ui.view_details }}</button>
+                        {% elif product.has_options %}
+                            <div class="inline-form product-option-action">
+                                <div class="product-option-placeholder" style="min-height: 4.35rem;" aria-hidden="true"></div>
+                                <button type="button" class="btn btn-primary btn-small full-width" data-product-trigger>{{ ui.view_details }}</button>
+                            </div>
+                        {% else %}
+                            <form
+                                method="post"
+                                action="{% url 'catalog:add-to-cart' product.slug %}"
+                                class="inline-form"
+                                data-cart-form
+                                data-cart-item-title="{{ product.display_name }}"
+                                data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
+                            >
+                                {% csrf_token %}
+                                <label class="quantity-field compact">
+                                    <span>{{ ui.qty }}</span>
+                                    <span class="quantity-stepper" data-quantity-control>
+                                        <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                                        <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                        <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                                    </span>
+                                </label>
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <button type="submit" class="btn btn-primary btn-small full-width">{{ ui.add_to_cart }}</button>
+                            </form>
+                        {% endif %}
+                        <div data-product-options-source hidden>
+                            {% for option in product.prefetched_options %}
+                                <span
+                                    data-option-id="{{ option.id }}"
+                                    data-option-name="{{ option.name }}"
+                                    data-option-price="{{ option.display_price }}"
+                                    data-option-default="{{ option.is_default|yesno:'true,false' }}"
+                                ></span>
+                            {% endfor %}
+                        </div>
                     </div>
                 </article>
             {% empty %}

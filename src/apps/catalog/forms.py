@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.core.localization import get_ui_strings
+from apps.core.localization import DEFAULT_LANGUAGE, get_ui_strings
 from apps.core.models import CustomerAddress
 
 
@@ -11,7 +11,7 @@ class CheckoutAddressForm(forms.Form):
         empty_label=None,
     )
 
-    def __init__(self, *args, addresses=None, language="en", **kwargs):
+    def __init__(self, *args, addresses=None, language=DEFAULT_LANGUAGE, **kwargs):
         self.ui = get_ui_strings(language)
         super().__init__(*args, **kwargs)
         self.fields["address"].label = self.ui.get("delivery_address", "Delivery address")

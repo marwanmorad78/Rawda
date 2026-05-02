@@ -18,6 +18,8 @@ const productModalDescription = productModal?.querySelector("[data-product-modal
 const productModalCategory = productModal?.querySelector("[data-product-modal-category]");
 const productModalPrice = productModal?.querySelector("[data-product-modal-price]");
 const productModalForm = productModal?.querySelector("[data-product-modal-form]");
+const productModalOptions = productModal?.querySelector("[data-product-modal-options]");
+const productModalSubmit = productModal?.querySelector("[data-product-modal-submit]");
 
 const floatingCart = document.querySelector("[data-floating-cart]");
 const floatingCartCount = floatingCart?.querySelector("[data-floating-cart-count]");
@@ -35,6 +37,9 @@ const homeTabBar = document.querySelector("[data-home-tab-bar]");
 const homeTabs = Array.from(document.querySelectorAll("[data-home-tab]"));
 const homeCategoryCards = Array.from(document.querySelectorAll("[data-home-category-card]"));
 const productCards = Array.from(document.querySelectorAll("[data-product-card]"));
+const productOptionInputs = Array.from(document.querySelectorAll("[data-product-options] input[name='option_id']"));
+const productDetailPrice = document.querySelector("[data-product-detail-price]");
+const productOptionsSubmit = document.querySelector("[data-product-options-submit]");
 const quantityControls = Array.from(document.querySelectorAll("[data-quantity-control]"));
 const registerForm = document.querySelector("[data-register-form]");
 const syrianPhoneInputs = Array.from(document.querySelectorAll("[data-syrian-phone-input]"));
@@ -42,6 +47,19 @@ const syrianPhoneControls = Array.from(document.querySelectorAll("[data-syrian-p
 const deliveryAreaGroups = Array.from(document.querySelectorAll("[data-delivery-area-group]"));
 const dashboardSubAreaFormsets = Array.from(document.querySelectorAll("[data-dashboard-sub-area-formset]"));
 const dashboardDeliveryAreaForms = Array.from(document.querySelectorAll("[data-dashboard-delivery-area-form]"));
+const dashboardDrawer = document.querySelector("[data-dashboard-drawer]");
+const dashboardDrawerToggle = document.querySelector("[data-dashboard-drawer-toggle]");
+const dashboardDrawerClosers = Array.from(document.querySelectorAll("[data-dashboard-drawer-close]"));
+const dashboardProductOptionsPanel = document.querySelector("[data-dashboard-product-options-panel]");
+const dashboardHasOptionsInput = document.querySelector('input[name="has_options"]');
+const dashboardProductBasePriceField = document.querySelector("[data-dashboard-product-base-price-field]");
+const dashboardProductBasePriceInput = dashboardProductBasePriceField?.querySelector("input, select, textarea");
+const excelModal = document.querySelector("[data-excel-modal]");
+const excelModalOpen = document.querySelector("[data-excel-modal-open]");
+const excelModalClosers = Array.from(document.querySelectorAll("[data-excel-modal-close]"));
+const checkoutAddressModal = document.querySelector("[data-checkout-address-modal]");
+const checkoutAddressModalOpen = document.querySelector("[data-checkout-address-modal-open]");
+const checkoutAddressModalClosers = Array.from(document.querySelectorAll("[data-checkout-address-modal-close]"));
 
 const cartState = {
     count: Number.parseInt(floatingCart?.dataset.cartCount || "0", 10) || 0,
@@ -57,6 +75,7 @@ const COMMON_PASSWORDS = new Set([
     "00000000",
     "qwerty123",
 ]);
+const ARABIC_NAME_PATTERN = /^[\u0621-\u064A\u064B-\u065F]+(?:\s+[\u0621-\u064A\u064B-\u065F]+)*$/;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const tabTargetCache = new WeakMap();
@@ -70,6 +89,7 @@ const registerMessages = {
         passwordMismatch: "Passwords do not match.",
         phoneInvalid: "يرجى التأكد من ادخال رقم صحيح",
         phoneTaken: "This phone number is already registered.",
+        nameArabicOnly: "Please enter the full name in Arabic only.",
         fixBeforeSubmit: "Please fix the highlighted information.",
     },
     ar: {
@@ -80,11 +100,14 @@ const registerMessages = {
         passwordMismatch: "كلمتا المرور غير متطابقتين.",
         phoneInvalid: "يرجى التأكد من ادخال رقم صحيح",
         phoneTaken: "رقم الهاتف مسجل مسبقاً.",
+        nameArabicOnly: "يرجى إدخال الاسم الكامل باللغة العربية فقط.",
         fixBeforeSubmit: "يرجى تصحيح المعلومات قبل المتابعة.",
     },
 };
 
 const getCurrentMessages = () => registerMessages[document.documentElement.lang] || registerMessages.en;
+const isArabicLanguage = () => document.documentElement.lang === "ar";
+const isArabicNameValue = (value) => ARABIC_NAME_PATTERN.test(String(value || "").trim());
 
 const debounce = (callback, delay = 300) => {
     let timeoutId = null;
@@ -92,6 +115,53 @@ const debounce = (callback, delay = 300) => {
         window.clearTimeout(timeoutId);
         timeoutId = window.setTimeout(() => callback(...args), delay);
     };
+};
+
+const setDashboardDrawerOpen = (isOpen) => {
+    if (!dashboardDrawer || !dashboardDrawerToggle) {
+        return;
+    }
+
+    document.body.classList.toggle("is-dashboard-drawer-open", isOpen);
+    dashboardDrawerToggle.setAttribute("aria-expanded", String(isOpen));
+    dashboardDrawerClosers.forEach((closer) => {
+        if (closer.classList.contains("dashboard-drawer-backdrop")) {
+            closer.hidden = !isOpen;
+        }
+    });
+};
+
+const syncDashboardProductOptionsPanel = () => {
+    if (!dashboardHasOptionsInput) {
+        return;
+    }
+    const hasOptions = dashboardHasOptionsInput.checked;
+    if (dashboardProductOptionsPanel) {
+        dashboardProductOptionsPanel.hidden = !hasOptions;
+    }
+    if (dashboardProductBasePriceField) {
+        dashboardProductBasePriceField.hidden = hasOptions;
+    }
+    if (dashboardProductBasePriceInput) {
+        dashboardProductBasePriceInput.disabled = hasOptions;
+        dashboardProductBasePriceInput.required = !hasOptions;
+    }
+};
+
+const setExcelModalOpen = (isOpen) => {
+    if (!excelModal) {
+        return;
+    }
+    excelModal.hidden = !isOpen;
+    document.body.classList.toggle("modal-open", isOpen);
+};
+
+const setCheckoutAddressModalOpen = (isOpen) => {
+    if (!checkoutAddressModal) {
+        return;
+    }
+    checkoutAddressModal.hidden = !isOpen;
+    document.body.classList.toggle("modal-open", isOpen);
 };
 
 const getQuantityValue = (input) => {
@@ -721,6 +791,51 @@ const openProductModal = (card) => {
     productModalForm.dataset.cartItemImage = image;
     setQuantityValue(productModalForm.querySelector('input[name="quantity"]'), 1);
 
+    if (productModalOptions && productModalSubmit) {
+        const optionNodes = Array.from(card.querySelectorAll("[data-product-options-source] [data-option-id]"));
+        productModalOptions.querySelectorAll(".product-option-card").forEach((option) => option.remove());
+        productModalOptions.hidden = optionNodes.length === 0;
+        productModalSubmit.disabled = optionNodes.length > 0;
+
+        optionNodes.forEach((optionNode) => {
+            const label = document.createElement("label");
+            label.className = "product-option-card";
+
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = "option_id";
+            input.value = optionNode.dataset.optionId || "";
+            input.required = true;
+            input.dataset.optionPrice = optionNode.dataset.optionPrice || "";
+            input.checked = optionNode.dataset.optionDefault === "true";
+
+            const mark = document.createElement("span");
+            mark.className = "choice-mark choice-mark-radio";
+            mark.setAttribute("aria-hidden", "true");
+
+            const copy = document.createElement("span");
+            copy.className = "choice-copy";
+            const name = document.createElement("strong");
+            name.textContent = optionNode.dataset.optionName || "";
+            const optionPrice = document.createElement("small");
+            optionPrice.textContent = optionNode.dataset.optionPrice || "";
+            copy.append(name, optionPrice);
+
+            input.addEventListener("change", () => {
+                productModalPrice.textContent = input.dataset.optionPrice || price;
+                productModalSubmit.disabled = false;
+            });
+
+            label.append(input, mark, copy);
+            productModalOptions.append(label);
+
+            if (input.checked) {
+                productModalPrice.textContent = input.dataset.optionPrice || price;
+                productModalSubmit.disabled = false;
+            }
+        });
+    }
+
     if (productModalDescription) {
         productModalDescription.textContent = description;
         productModalDescription.hidden = !description;
@@ -760,6 +875,8 @@ const closeProductModal = () => {
 const closeModals = () => {
     closeOfferModal();
     closeProductModal();
+    setExcelModalOpen(false);
+    setCheckoutAddressModalOpen(false);
 };
 
 const enhanceCartForm = (form) => {
@@ -851,6 +968,22 @@ const collectRegisterPasswordErrors = () => {
     return errors;
 };
 
+const collectRegisterNameErrors = () => {
+    if (!registerForm || !isArabicLanguage()) {
+        return [];
+    }
+
+    const messages = getCurrentMessages();
+    const nameInput = registerForm.querySelector('[name="full_name"]');
+    const name = String(nameInput?.value || "").trim();
+
+    if (name && !isArabicNameValue(name)) {
+        return [{ field: nameInput, message: messages.nameArabicOnly }];
+    }
+
+    return [];
+};
+
 const collectRegisterRequiredErrors = () => {
     if (!registerForm) {
         return [];
@@ -863,7 +996,7 @@ const collectRegisterRequiredErrors = () => {
 };
 
 const collectRegisterClientErrors = () => {
-    const errors = [...collectRegisterRequiredErrors(), ...collectRegisterPasswordErrors()];
+    const errors = [...collectRegisterRequiredErrors(), ...collectRegisterNameErrors(), ...collectRegisterPasswordErrors()];
     const messages = getCurrentMessages();
     const phoneInput = registerForm?.querySelector('[name="username"]');
 
@@ -888,6 +1021,7 @@ const showRegisterError = (error) => {
         return;
     }
 
+    setFieldValidationState(error.field, "invalid");
     showFieldToast(error.field, error.message);
 };
 
@@ -916,8 +1050,10 @@ const enhanceRegisterForm = () => {
     }
 
     const messages = getCurrentMessages();
+    const nameInput = registerForm.querySelector('[name="full_name"]');
     const phoneInput = registerForm.querySelector('[name="username"]');
     const passwordInputs = Array.from(registerForm.querySelectorAll('[name="password1"], [name="password2"]'));
+    let lastLiveNameErrorMessage = "";
     let lastLiveErrorMessage = "";
     let lastLivePhoneErrorMessage = "";
 
@@ -943,6 +1079,31 @@ const enhanceRegisterForm = () => {
     const updatePhoneValidationState = (state) => {
         setFieldValidationState(phoneInput, state);
     };
+
+    const updateNameValidationState = () => {
+        if (!nameInput || !isArabicLanguage()) {
+            return;
+        }
+
+        const name = String(nameInput.value || "").trim();
+        setFieldValidationState(nameInput, name ? (isArabicNameValue(name) ? "valid" : "invalid") : null);
+    };
+
+    const showLiveNameError = debounce(() => {
+        if (!nameInput || !isArabicLanguage()) {
+            return;
+        }
+
+        const errors = collectRegisterNameErrors();
+        const firstError = errors[0];
+        const nextMessage = firstError?.message || "";
+
+        if (nextMessage && nextMessage !== lastLiveNameErrorMessage) {
+            showRegisterError(firstError);
+        }
+
+        lastLiveNameErrorMessage = nextMessage;
+    }, 400);
 
     const showLivePasswordErrors = debounce(() => {
         const errors = collectRegisterPasswordErrors();
@@ -1023,7 +1184,20 @@ const enhanceRegisterForm = () => {
     }, 500);
 
     showRegisterServerErrors();
+    updateNameValidationState();
     updatePasswordValidationStates();
+    nameInput?.addEventListener("input", () => {
+        updateNameValidationState();
+        showLiveNameError();
+    });
+    nameInput?.addEventListener("blur", () => {
+        updateNameValidationState();
+        const errors = collectRegisterNameErrors();
+        if (errors.length) {
+            showRegisterError(errors[0]);
+            lastLiveNameErrorMessage = errors[0].message;
+        }
+    });
     passwordInputs.forEach((input) =>
         input.addEventListener("input", () => {
             updatePasswordValidationStates();
@@ -1079,7 +1253,9 @@ const enhanceRegisterForm = () => {
             const fieldErrors = payload.field_errors || {};
             const fieldName = Object.keys(fieldErrors).find((name) => name !== "__all__" && fieldErrors[name]?.length);
             if (fieldName) {
-                showFieldToast(registerForm.querySelector(`[name="${fieldName}"]`), fieldErrors[fieldName][0]);
+                const field = registerForm.querySelector(`[name="${fieldName}"]`);
+                setFieldValidationState(field, "invalid");
+                showFieldToast(field, fieldErrors[fieldName][0]);
                 return;
             }
 
@@ -1150,7 +1326,7 @@ carousels.forEach((carousel) => {
     const nextButton = carousel.querySelector("[data-carousel-next]");
     const intervalMs = Number(carousel.dataset.carouselInterval || 4500);
 
-    if (slides.length <= 1) {
+    if (!slides.length) {
         return;
     }
 
@@ -1208,6 +1384,31 @@ carousels.forEach((carousel) => {
         currentIndex = activeIndex;
     };
 
+    carousel.addEventListener("click", (event) => {
+        const slide = event.target.closest("[data-carousel-slide]");
+        if (!slide || !carousel.contains(slide)) {
+            return;
+        }
+
+        const clickedIndex = Number(slide.dataset.carouselIndex);
+        if (Number.isNaN(clickedIndex)) {
+            return;
+        }
+
+        event.preventDefault();
+        if (clickedIndex !== currentIndex) {
+            showSlide(clickedIndex);
+        }
+
+        openOfferModal(slide);
+        clearInterval(timerId);
+    });
+
+    if (slides.length <= 1) {
+        showSlide(currentIndex);
+        return;
+    }
+
     const startAutoPlay = () => {
         if (prefersReducedMotion.matches) {
             return;
@@ -1240,26 +1441,6 @@ carousels.forEach((carousel) => {
         startAutoPlay();
     });
 
-    carousel.addEventListener("click", (event) => {
-        const slide = event.target.closest("[data-carousel-slide]");
-        if (!slide || !carousel.contains(slide)) {
-            return;
-        }
-
-        const clickedIndex = Number(slide.dataset.carouselIndex);
-        if (Number.isNaN(clickedIndex)) {
-            return;
-        }
-
-        event.preventDefault();
-        if (clickedIndex !== currentIndex) {
-            showSlide(clickedIndex);
-        }
-
-        openOfferModal(slide);
-        clearInterval(timerId);
-    });
-
     carousel.addEventListener("mouseenter", () => clearInterval(timerId));
     carousel.addEventListener("mouseleave", startAutoPlay);
     carousel.addEventListener("focusin", () => clearInterval(timerId));
@@ -1279,7 +1460,7 @@ productModal?.querySelectorAll("[data-product-modal-close]").forEach((element) =
 
 productCards.forEach((card) => {
     card.addEventListener("click", (event) => {
-        if (event.target.closest("form, button")) {
+        if (event.target.closest("form") || (event.target.closest("button") && !event.target.closest("[data-product-trigger]"))) {
             return;
         }
 
@@ -1311,11 +1492,59 @@ quantityControls.forEach((control) => {
     });
 });
 
+productOptionInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+        if (productDetailPrice && input.dataset.optionPrice) {
+            productDetailPrice.textContent = input.dataset.optionPrice;
+        }
+        if (productOptionsSubmit) {
+            productOptionsSubmit.disabled = !productOptionInputs.some((option) => option.checked);
+        }
+    });
+});
+
+if (productOptionsSubmit && productOptionInputs.length) {
+    const checkedOption = productOptionInputs.find((option) => option.checked);
+    productOptionsSubmit.disabled = !checkedOption;
+    if (checkedOption && productDetailPrice && checkedOption.dataset.optionPrice) {
+        productDetailPrice.textContent = checkedOption.dataset.optionPrice;
+    }
+}
+
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
         closeModals();
+        setDashboardDrawerOpen(false);
     }
 });
+
+dashboardDrawerToggle?.addEventListener("click", () => {
+    const isOpen = document.body.classList.contains("is-dashboard-drawer-open");
+    setDashboardDrawerOpen(!isOpen);
+});
+
+dashboardDrawerClosers.forEach((closer) => {
+    closer.addEventListener("click", () => setDashboardDrawerOpen(false));
+});
+
+dashboardDrawer?.querySelectorAll("nav a").forEach((link) => {
+    link.addEventListener("click", () => setDashboardDrawerOpen(false));
+});
+
+dashboardHasOptionsInput?.addEventListener("change", syncDashboardProductOptionsPanel);
+syncDashboardProductOptionsPanel();
+
+excelModalOpen?.addEventListener("click", () => setExcelModalOpen(true));
+excelModalClosers.forEach((closer) => {
+    closer.addEventListener("click", () => setExcelModalOpen(false));
+});
+checkoutAddressModalOpen?.addEventListener("click", () => setCheckoutAddressModalOpen(true));
+checkoutAddressModalClosers.forEach((closer) => {
+    closer.addEventListener("click", () => setCheckoutAddressModalOpen(false));
+});
+if ((excelModal && !excelModal.hidden) || (checkoutAddressModal && !checkoutAddressModal.hidden)) {
+    document.body.classList.add("modal-open");
+}
 
 homeTabs.forEach((tab) => {
     tab.addEventListener("click", () => {

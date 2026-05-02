@@ -1,8 +1,11 @@
+from decimal import Decimal
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.forms import inlineformset_factory
 
-from apps.catalog.models import Category, Product
+from apps.catalog.models import Category, Product, ProductOption
+from apps.core.localization import DEFAULT_LANGUAGE
 from apps.core.models import DeliveryArea, DeliverySubArea, SiteSettings
 from apps.dashboard.localization import (
     get_dashboard_strings,
@@ -13,8 +16,9 @@ from apps.promotions.models import Promotion
 
 
 class DashboardLocalizedFormMixin:
-    def __init__(self, *args, language="en", **kwargs):
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, **kwargs):
         self.language = language
+        self.dashboard_ui = get_dashboard_strings(language)
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             label = get_field_label(field_name, self.language)
@@ -59,6 +63,7 @@ class ProductForm(DashboardLocalizedFormMixin, forms.ModelForm):
             "unit_label",
             "sold_by_weight_mode",
             "sold_by_weight",
+            "has_options",
             "is_available",
             "is_featured",
             "primary_image",
@@ -69,12 +74,46 @@ class ProductForm(DashboardLocalizedFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if "category" in self.fields and self.language == "ar":
             self.fields["category"].label_from_instance = lambda obj: obj.name_ar or obj.name
-        self.fields["is_price_linked_to_dollar"].help_text = (
-            "Used only when dollar price behavior is set to custom."
-        )
-        self.fields["sold_by_weight"].help_text = (
-            "Used only when kilo sale behavior is set to custom."
-        )
+        self.fields["price"].required = False
+        self.fields["is_price_linked_to_dollar"].help_text = self.dashboard_ui["custom_dollar_help"]
+        self.fields["sold_by_weight"].help_text = self.dashboard_ui["custom_kilo_help"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("has_options"):
+            cleaned_data["price"] = Decimal("0")
+        elif cleaned_data.get("price") is None:
+            self.add_error("price", self.fields["price"].error_messages["required"])
+        return cleaned_data
+
+
+class ProductExcelUploadForm(forms.Form):
+    excel_file = forms.FileField(
+        label="",
+        help_text="",
+    )
+
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, **kwargs):
+        self.language = language
+        self.dashboard_ui = get_dashboard_strings(language)
+        super().__init__(*args, **kwargs)
+        self.fields["excel_file"].label = self.dashboard_ui["products_excel_file"]
+        self.fields["excel_file"].help_text = self.dashboard_ui["products_excel_help"]
+
+    def clean_excel_file(self):
+        excel_file = self.cleaned_data["excel_file"]
+        if not excel_file.name.lower().endswith(".xlsx"):
+            raise forms.ValidationError(self.dashboard_ui["xlsx_only_error"])
+        return excel_file
+
+
+ProductOptionFormSet = inlineformset_factory(
+    Product,
+    ProductOption,
+    fields=("name", "price", "is_default", "display_order"),
+    extra=5,
+    can_delete=True,
+)
 
 
 class PromotionForm(DashboardLocalizedFormMixin, forms.ModelForm):
@@ -156,6 +195,13 @@ class DeliverySubAreaForm(DashboardLocalizedFormMixin, forms.ModelForm):
         self.fields["delivery_fee"].label = "Sub-area fee" if self.language == "en" else "رسم المنطقة الفرعية"
         self.fields["display_order"].label = "Sub-area order" if self.language == "en" else "ترتيب المنطقة الفرعية"
         self.fields["is_active"].label = "Sub-area active" if self.language == "en" else "تفعيل المنطقة الفرعية"
+
+
+        if self.language == "ar":
+            self.fields["name"].label = "اسم المنطقة الفرعية"
+            self.fields["delivery_fee"].label = "رسم المنطقة الفرعية"
+            self.fields["display_order"].label = "ترتيب المنطقة الفرعية"
+            self.fields["is_active"].label = "تفعيل المنطقة الفرعية"
 
 
 DeliverySubAreaFormSet = inlineformset_factory(

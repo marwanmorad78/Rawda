@@ -14,7 +14,7 @@
         </span>
         <span class="choice-copy">
             <strong>{{ field.label }}</strong>
-            <small>Dollar pricing follows the current exchange rate.</small>
+            <small>{{ dashboard_ui.dollar_pricing_help }}</small>
         </span>
     </label>
     {{ field.errors }}
@@ -26,7 +26,7 @@
     </label>
     {{ field.errors }}
 {% else %}
-    <label>
+    <label{% if field.name == "price" %} data-dashboard-product-base-price-field{% if form.has_options.value %} hidden{% endif %}{% endif %}>
         <span>{{ field.label }}</span>
         {{ field }}
         {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}

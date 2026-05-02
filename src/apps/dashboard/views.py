@@ -1,14 +1,20 @@
+from decimal import Decimal, InvalidOperation
+from io import BytesIO
+
 from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db import transaction
 from django.db.models import ProtectedError
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, DeleteView, TemplateView, UpdateView
+from openpyxl import Workbook, load_workbook
 
 from apps.catalog.models import Category, Product
-from apps.core.localization import localize_instance, localize_queryset
+from apps.core.localization import DEFAULT_LANGUAGE, localize_instance, localize_queryset
 from apps.core.models import DeliveryArea, DeliverySubArea, SiteSettings
 from apps.core.pricing import (
     get_active_site_settings,
@@ -21,12 +27,39 @@ from apps.dashboard.forms import (
     DeliverySubAreaFormSet,
     DollarPriceForm,
     ManagerLoginForm,
+    ProductExcelUploadForm,
+    ProductOptionFormSet,
     ProductForm,
     PromotionForm,
     SiteSettingsForm,
 )
+from apps.dashboard.localization import get_dashboard_strings
 from apps.dashboard.mixins import DashboardLocalizationMixin, StaffRequiredMixin
 from apps.promotions.models import Promotion
+
+
+PRODUCT_EXCEL_HEADERS = [
+    "product_name",
+    "category",
+    "short_description",
+    "description",
+    "price",
+    "price_link_mode",
+    "is_price_linked_to_dollar",
+    "sold_by_weight_mode",
+    "sold_by_weight",
+    "unit_label",
+    "is_available",
+    "is_featured",
+    "external_image_url",
+    "sku",
+]
+PRODUCT_EXCEL_REQUIRED_HEADERS = ["product_name", "category", "price"]
+BOOLEAN_COLUMNS = ["is_price_linked_to_dollar", "sold_by_weight", "is_available", "is_featured"]
+PRODUCT_MODE_COLUMNS = {
+    "price_link_mode": {Product.BEHAVIOR_INHERIT, Product.BEHAVIOR_CUSTOM},
+    "sold_by_weight_mode": {Product.BEHAVIOR_INHERIT, Product.BEHAVIOR_CUSTOM},
+}
 
 
 def get_dashboard_site_settings():
@@ -34,13 +67,271 @@ def get_dashboard_site_settings():
         pk=1,
         defaults={
             "store_name": "Al Rawda Center",
+            "store_name_ar": "مركز الروضة",
             "about_text": "Update your store information here.",
+            "about_text_ar": "حدث معلومات المتجر من هنا.",
             "address": "Damascus",
+            "address_ar": "دمشق",
             "primary_phone": "+963-000-000-000",
             "hero_title": "Fresh products for every home",
+            "hero_title_ar": "منتجات طازجة لكل بيت",
         },
     )
     return site_settings
+
+
+def normalize_excel_header(value):
+    return str(value or "").strip().lower()
+
+
+def normalize_excel_text(value):
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def parse_excel_boolean(value, default=False):
+    if value is None or value == "":
+        return default, None
+    if isinstance(value, bool):
+        return value, None
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "yes", "y", "1", "available"}:
+        return True, None
+    if normalized in {"false", "no", "n", "0", "unavailable"}:
+        return False, None
+    return default, "Use true or false."
+
+
+def parse_excel_decimal(value):
+    if value is None or value == "":
+        return None, "This field is required."
+    try:
+        parsed = Decimal(str(value).strip())
+    except (InvalidOperation, ValueError):
+        return None, "Enter a valid number."
+    if parsed < 0:
+        return None, "Price cannot be negative."
+    return parsed, None
+
+
+def get_product_excel_category_lookup():
+    lookup = {}
+    duplicate_names = set()
+    for category in Category.objects.all():
+        slug_key = (category.slug or "").strip().lower()
+        name_key = (category.name or "").strip().lower()
+        if slug_key:
+            lookup[slug_key] = category
+        if name_key:
+            if name_key in lookup:
+                duplicate_names.add(name_key)
+            else:
+                lookup[name_key] = category
+    return lookup, duplicate_names
+
+
+def get_product_manage_context(language, product_form=None, upload_form=None, excel_errors=None):
+    return {
+        "form": product_form or ProductForm(language=language),
+        "upload_form": upload_form or ProductExcelUploadForm(language=language),
+        "excel_errors": excel_errors or [],
+    }
+
+
+def get_product_list_context(language, upload_form=None, excel_errors=None):
+    site_settings = get_active_site_settings() or get_dashboard_site_settings()
+    items = list(Product.objects.select_related("category").all().order_by("name"))
+    for item in items:
+        localize_instance(item.category, language, ["name", "description"])
+        localize_instance(item, language, ["name", "short_description", "description", "unit_label"])
+        set_product_display_price(item, language, site_settings)
+    return {
+        "items": items,
+        "upload_form": upload_form or ProductExcelUploadForm(language=language),
+        "excel_errors": excel_errors or [],
+    }
+
+
+def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
+    dashboard_ui = get_dashboard_strings(language)
+    # Validate the entire workbook before importing so partial product batches are avoided.
+    try:
+        workbook = load_workbook(excel_file, read_only=True, data_only=True)
+    except Exception:
+        return [], [dashboard_ui["excel_read_error"]]
+
+    rows = workbook.active.iter_rows(values_only=True)
+    headers = [normalize_excel_header(value) for value in next(rows, [])]
+    header_positions = {header: index for index, header in enumerate(headers) if header}
+    missing_headers = [
+        header for header in PRODUCT_EXCEL_REQUIRED_HEADERS if header not in header_positions
+    ]
+    if missing_headers:
+        return [], [f"Missing required column: {', '.join(missing_headers)}"]
+
+    category_lookup, duplicate_names = get_product_excel_category_lookup()
+    valid_rows = []
+    errors = []
+    seen_import_keys = set()
+
+    for row_number, row_values in enumerate(rows, start=2):
+        row = {
+            header: row_values[index] if index < len(row_values) else None
+            for header, index in header_positions.items()
+        }
+        if not any(value not in (None, "") for value in row.values()):
+            continue
+
+        row_errors = []
+        product_name = normalize_excel_text(row.get("product_name"))
+        category_value = normalize_excel_text(row.get("category"))
+        sku = normalize_excel_text(row.get("sku"))
+
+        if not product_name:
+            row_errors.append("product_name is required.")
+
+        category = None
+        category_key = category_value.lower()
+        if not category_value:
+            row_errors.append("category is required.")
+        elif category_key in duplicate_names:
+            row_errors.append("category name is duplicated; use the category slug instead.")
+        else:
+            category = category_lookup.get(category_key)
+            if not category:
+                row_errors.append(f"category '{category_value}' does not exist.")
+
+        price, price_error = parse_excel_decimal(row.get("price"))
+        if price_error:
+            row_errors.append(f"price: {price_error}")
+
+        parsed_booleans = {}
+        for column in BOOLEAN_COLUMNS:
+            default = column == "is_available"
+            parsed_booleans[column], boolean_error = parse_excel_boolean(row.get(column), default)
+            if boolean_error:
+                row_errors.append(f"{column}: {boolean_error}")
+
+        parsed_modes = {}
+        for column, choices in PRODUCT_MODE_COLUMNS.items():
+            value = normalize_excel_text(row.get(column)) or Product.BEHAVIOR_INHERIT
+            if value not in choices:
+                row_errors.append(f"{column}: use inherit or custom.")
+            parsed_modes[column] = value
+
+        import_key = ("sku", sku.lower()) if sku else ("name", getattr(category, "id", None), product_name.lower())
+        if import_key in seen_import_keys:
+            row_errors.append("This product appears more than once in this file.")
+        seen_import_keys.add(import_key)
+
+        if sku and category is not None and product_name:
+            product_by_sku = Product.objects.filter(sku__iexact=sku).first()
+            product_by_name = Product.objects.filter(category=category, name__iexact=product_name).first()
+            if product_by_sku and product_by_name and product_by_sku.pk != product_by_name.pk:
+                row_errors.append(
+                    f"sku '{sku}' belongs to a different product than '{product_name}'."
+                )
+
+        if row_errors:
+            errors.append(f"Row {row_number}: {' '.join(row_errors)}")
+            continue
+
+        valid_rows.append(
+            {
+                "category": category,
+                "name": product_name,
+                "short_description": normalize_excel_text(row.get("short_description")),
+                "description": normalize_excel_text(row.get("description")),
+                "price": price,
+                "price_link_mode": parsed_modes["price_link_mode"],
+                "is_price_linked_to_dollar": parsed_booleans["is_price_linked_to_dollar"],
+                "sold_by_weight_mode": parsed_modes["sold_by_weight_mode"],
+                "sold_by_weight": parsed_booleans["sold_by_weight"],
+                "unit_label": normalize_excel_text(row.get("unit_label")) or "per item",
+                "is_available": parsed_booleans["is_available"],
+                "is_featured": parsed_booleans["is_featured"],
+                "external_image_url": normalize_excel_text(row.get("external_image_url")),
+                "sku": sku,
+            }
+        )
+
+    if not valid_rows and not errors:
+        errors.append("The uploaded workbook has no product rows.")
+
+    return valid_rows, errors
+
+
+def find_existing_product_for_import(row):
+    sku = (row.get("sku") or "").strip()
+    if sku:
+        existing_product = Product.objects.filter(sku__iexact=sku).first()
+        if existing_product is not None:
+            return existing_product
+    return Product.objects.filter(category=row["category"], name__iexact=row["name"]).first()
+
+
+def merge_duplicate_products_for_import():
+    duplicates_removed = 0
+    seen_keys = set()
+
+    for product in Product.objects.select_related("category").order_by("id"):
+        keys = []
+        if product.sku:
+            keys.append(("sku", product.sku.strip().lower()))
+        keys.append(("name", product.category_id, product.name.strip().lower()))
+
+        if any(key in seen_keys for key in keys):
+            product.delete()
+            duplicates_removed += 1
+            continue
+
+        seen_keys.update(keys)
+
+    return duplicates_removed
+
+
+def import_product_excel_rows(valid_rows):
+    # Existing products are matched by SKU when present, otherwise by category and product name.
+    created = 0
+    updated = 0
+    now = timezone.now()
+
+    with transaction.atomic():
+        merge_duplicate_products_for_import()
+        for row in valid_rows:
+            existing_product = find_existing_product_for_import(row)
+            if existing_product:
+                update_data = row.copy()
+                if not update_data["sku"]:
+                    update_data.pop("sku")
+                update_data["updated_at"] = now
+                Product.objects.filter(pk=existing_product.pk).update(**update_data)
+                updated += 1
+                continue
+            product = Product(**row)
+            product.save()
+            created += 1
+
+    return created, updated
+
+
+def product_options_have_rows(option_formset):
+    return any(
+        form.cleaned_data
+        and not form.cleaned_data.get("DELETE")
+        and form.cleaned_data.get("name")
+        and form.cleaned_data.get("price") is not None
+        for form in option_formset.forms
+    )
+
+
+def save_product_options(product, option_formset):
+    if not product.has_options:
+        product.options.all().delete()
+        return
+    option_formset.instance = product
+    option_formset.save()
 
 
 class ManagerLoginView(DashboardLocalizationMixin, LoginView):
@@ -123,46 +414,184 @@ class ProductManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateVi
     form_class = ProductForm
     success_url = reverse_lazy("dashboard:products")
 
+    def get_option_formset(self, data=None):
+        return ProductOptionFormSet(data=data, prefix="options")
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        language = self.get_language()
-        site_settings = get_active_site_settings() or get_dashboard_site_settings()
-        items = list(Product.objects.select_related("category").all().order_by("name"))
-        for item in items:
-            localize_instance(item.category, language, ["name", "description"])
-            localize_instance(item, language, ["name", "short_description", "description", "unit_label"])
-            set_product_display_price(item, language, site_settings)
-        context["items"] = items
+        context.update(get_product_manage_context(self.get_language(), product_form=context.get("form")))
+        context["option_formset"] = kwargs.get("option_formset") or self.get_option_formset()
         return context
 
-    def form_valid(self, form):
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        option_formset = self.get_option_formset(request.POST)
+        if form.is_valid() and option_formset.is_valid():
+            if form.cleaned_data.get("has_options") and not product_options_have_rows(option_formset):
+                option_formset._non_form_errors = option_formset.error_class(
+                    ["Add at least one option when product options are enabled."]
+                )
+            else:
+                return self.save_valid_product(form, option_formset)
+        return self.form_invalid(form, option_formset)
+
+    def save_valid_product(self, form, option_formset):
+        with transaction.atomic():
+            product = form.save()
+            save_product_options(product, option_formset)
         messages.success(self.request, self.get_dashboard_ui()["product_saved"])
-        return super().form_valid(form)
+        return redirect(self.success_url)
+
+    def form_invalid(self, form, option_formset=None):
+        context = self.get_context_data(form=form, option_formset=option_formset)
+        return self.render_to_response(context)
+
+
+class ProductListView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/product_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(get_product_list_context(self.get_language()))
+        return context
 
 
 class ProductUpdateView(DashboardLocalizationMixin, StaffRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
     template_name = "dashboard/form_page.html"
-    success_url = reverse_lazy("dashboard:products")
+    success_url = reverse_lazy("dashboard:product-list")
+
+    def get_option_formset(self, data=None):
+        return ProductOptionFormSet(data=data, instance=self.object, prefix="options")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = self.get_dashboard_ui()["edit_product"]
+        context["option_formset"] = kwargs.get("option_formset") or self.get_option_formset()
         return context
 
-    def form_valid(self, form):
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        option_formset = self.get_option_formset(request.POST)
+        if form.is_valid() and option_formset.is_valid():
+            if form.cleaned_data.get("has_options") and not product_options_have_rows(option_formset):
+                option_formset._non_form_errors = option_formset.error_class(
+                    ["Add at least one option when product options are enabled."]
+                )
+            else:
+                return self.save_valid_product(form, option_formset)
+        return self.form_invalid(form, option_formset)
+
+    def save_valid_product(self, form, option_formset):
+        with transaction.atomic():
+            product = form.save()
+            save_product_options(product, option_formset)
         messages.success(self.request, self.get_dashboard_ui()["product_updated"])
-        return super().form_valid(form)
+        return redirect(self.success_url)
+
+    def form_invalid(self, form, option_formset=None):
+        context = self.get_context_data(form=form, option_formset=option_formset)
+        return self.render_to_response(context)
 
 
 class ProductDeleteView(DashboardLocalizationMixin, StaffRequiredMixin, DeleteView):
     model = Product
-    success_url = reverse_lazy("dashboard:products")
+    success_url = reverse_lazy("dashboard:product-list")
 
     def post(self, request, *args, **kwargs):
         messages.success(request, self.get_dashboard_ui()["product_deleted"])
         return super().post(request, *args, **kwargs)
+
+
+class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Products"
+        worksheet.append(PRODUCT_EXCEL_HEADERS)
+        worksheet.append(
+            [
+                "Chocolate Cake",
+                "cakes",
+                "Rich chocolate cake",
+                "Rich chocolate cake",
+                "10.5",
+                "inherit",
+                "false",
+                "custom",
+                "false",
+                "piece",
+                "true",
+                "false",
+                "https://example.com/cake.jpg",
+                "CAKE-001",
+            ]
+        )
+        for column_cells in worksheet.columns:
+            header = column_cells[0].value or ""
+            worksheet.column_dimensions[column_cells[0].column_letter].width = max(len(header) + 4, 16)
+
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = 'attachment; filename="products-upload-template.xlsx"'
+        return response
+
+
+class ProductExcelUploadView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    template_name = "dashboard/manage_products.html"
+
+    def post(self, request, *args, **kwargs):
+        language = self.get_language()
+        dashboard_ui = get_dashboard_strings(language)
+        redirect_target = request.POST.get("next") or "dashboard:products"
+        if redirect_target not in {"dashboard:products", "dashboard:product-list"}:
+            redirect_target = "dashboard:products"
+        upload_form = ProductExcelUploadForm(request.POST, request.FILES, language=language)
+        if not upload_form.is_valid():
+            return self.render_upload_response(request, language, redirect_target, upload_form=upload_form)
+
+        merge_duplicate_products_for_import()
+        valid_rows, excel_errors = validate_product_excel_workbook(
+            upload_form.cleaned_data["excel_file"],
+            language,
+        )
+        if excel_errors:
+            messages.error(
+                request,
+                dashboard_ui["excel_import_complete"].format(
+                    created=0,
+                    updated=0,
+                    failed=len(excel_errors),
+                ),
+            )
+            return self.render_upload_response(
+                request,
+                language,
+                redirect_target,
+                upload_form=upload_form,
+                excel_errors=excel_errors,
+            )
+
+        created, updated = import_product_excel_rows(valid_rows)
+        messages.success(
+            request,
+            dashboard_ui["excel_import_complete"].format(created=created, updated=updated, failed=0),
+        )
+        return redirect(redirect_target)
+
+    def render_upload_response(self, request, language, redirect_target, upload_form=None, excel_errors=None):
+        if redirect_target == "dashboard:product-list":
+            context = get_product_list_context(language, upload_form=upload_form, excel_errors=excel_errors)
+            return render(request, "dashboard/product_list.html", context)
+        context = get_product_manage_context(language, upload_form=upload_form, excel_errors=excel_errors)
+        return render(request, self.template_name, context)
 
 
 class PromotionManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateView):

@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="{{ current_language }}" dir="{% if is_rtl %}rtl{% else %}ltr{% endif %}">
 <head>
@@ -7,11 +7,36 @@
     <title>{% block title %}{{ dashboard_ui.dashboard_title }}{% endblock %}</title>
     <link rel="icon" type="image/jpeg" href="{% static 'images/rawda.jpeg' %}">
     {% block extra_head %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=dashboard-area-pricing-10">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=option-price-align-1">
 </head>
 <body class="dashboard-body{% if is_rtl %} rtl{% endif %}">
+    <button
+        class="dashboard-drawer-toggle"
+        type="button"
+        data-dashboard-drawer-toggle
+        aria-controls="dashboard-sidebar"
+        aria-expanded="false"
+    >
+        <span class="dashboard-drawer-icon" aria-hidden="true"></span>
+        <span>{{ dashboard_ui.menu }}</span>
+    </button>
+    <button
+        class="dashboard-drawer-backdrop"
+        type="button"
+        data-dashboard-drawer-close
+        aria-label="{{ dashboard_ui.close_menu }}"
+        hidden
+    ></button>
     <div class="dashboard-shell">
-        <aside class="dashboard-sidebar">
+        <aside class="dashboard-sidebar" id="dashboard-sidebar" data-dashboard-drawer>
+            <button
+                class="dashboard-drawer-close"
+                type="button"
+                data-dashboard-drawer-close
+                aria-label="{{ dashboard_ui.close_menu }}"
+            >
+                &times;
+            </button>
             <a href="{% url 'dashboard:index' %}" class="dashboard-brand">
                 <img src="{% static 'images/rawda.jpeg' %}" alt="{{ site_settings.display_store_name|default:dashboard_ui.brand_name }}">
                 <span>{{ site_settings.display_store_name|default:dashboard_ui.brand_name }}</span>
@@ -42,6 +67,6 @@
         </section>
     </div>
     {% block extra_scripts %}{% endblock %}
-    <script src="{% static 'js/site.js' %}?v=dashboard-area-pricing-10"></script>
+    <script src="{% static 'js/site.js' %}?v=checkout-address-modal-1"></script>
 </body>
 </html>

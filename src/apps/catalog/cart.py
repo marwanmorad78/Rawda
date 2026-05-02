@@ -1,9 +1,10 @@
 from decimal import Decimal
 
-from apps.catalog.models import Product
+from apps.catalog.models import Product, ProductOption
 from apps.core.localization import format_price_range, format_syp, get_language, localize_instance
 from apps.core.pricing import (
     get_active_site_settings,
+    get_effective_product_option_price,
     get_effective_product_price,
     get_effective_promotion_price,
     product_is_sold_by_weight,
@@ -21,6 +22,7 @@ CART_RELATED_SESSION_KEYS = {
     CHECKOUT_SERVICE_SESSION_KEY,
 }
 PRODUCT_ITEM_TYPE = "product"
+PRODUCT_OPTION_ITEM_TYPE = "product-option"
 PROMOTION_ITEM_TYPE = "promotion"
 SERVICE_PICKUP = "pickup"
 SERVICE_DELIVERY = "delivery"
@@ -121,6 +123,10 @@ def add_product(request, product_id, quantity=1):
     add_item(request, PRODUCT_ITEM_TYPE, product_id, quantity)
 
 
+def add_product_option(request, option_id, quantity=1):
+    add_item(request, PRODUCT_OPTION_ITEM_TYPE, option_id, quantity)
+
+
 def add_promotion(request, promotion_id, quantity=1):
     add_item(request, PROMOTION_ITEM_TYPE, promotion_id, quantity)
 
@@ -131,11 +137,20 @@ def build_cart(request):
     cart = get_cart_data(request)
     parsed_items = [(parse_item_key(key), quantity) for key, quantity in cart.items()]
     product_ids = [item_id for (item_type, item_id), _ in parsed_items if item_type == PRODUCT_ITEM_TYPE]
+    option_ids = [
+        item_id for (item_type, item_id), _ in parsed_items if item_type == PRODUCT_OPTION_ITEM_TYPE
+    ]
     promotion_ids = [item_id for (item_type, item_id), _ in parsed_items if item_type == PROMOTION_ITEM_TYPE]
 
     products = Product.objects.filter(id__in=product_ids, is_available=True).select_related("category")
+    options = ProductOption.objects.filter(
+        id__in=option_ids,
+        product__is_available=True,
+        product__category__is_active=True,
+    ).select_related("product", "product__category")
     promotions = Promotion.objects.filter(id__in=promotion_ids)
     products_by_id = {product.id: product for product in products}
+    options_by_id = {option.id: option for option in options}
     promotions_by_id = {promotion.id: promotion for promotion in promotions}
     items = []
     subtotal = Decimal("0")
@@ -145,6 +160,8 @@ def build_cart(request):
         if item_type == PRODUCT_ITEM_TYPE:
             product = products_by_id.get(item_id)
             if not product:
+                continue
+            if product.has_options:
                 continue
             localize_instance(product.category, language, ["name", "description"])
             localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
@@ -161,6 +178,42 @@ def build_cart(request):
                     "title": product.display_name,
                     "subtitle": product.display_short_description,
                     "category_label": product.category.display_name,
+                    "quantity": quantity,
+                    "unit_label": product.display_unit_label,
+                    "unit_price": effective_price,
+                    "line_total": line_total,
+                    "line_total_min": line_total,
+                    "line_total_max": line_total_max,
+                    "is_weight_based": is_weight_based,
+                    "display_unit_price": format_syp(effective_price, language),
+                    "display_line_total": format_syp(line_total, language),
+                    "display_line_total_range": format_price_range(line_total, line_total_max, language),
+                }
+            )
+            continue
+
+        if item_type == PRODUCT_OPTION_ITEM_TYPE:
+            option = options_by_id.get(item_id)
+            if not option:
+                continue
+            product = option.product
+            localize_instance(product.category, language, ["name", "description"])
+            localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
+            effective_price = get_effective_product_option_price(option, site_settings)
+            line_total = effective_price * quantity
+            is_weight_based = product_is_sold_by_weight(product)
+            line_total_max = line_total * WEIGHT_RANGE_FACTOR if is_weight_based else line_total
+            subtotal += line_total
+            subtotal_max += line_total_max
+            title = f"{product.display_name} - {option.name}"
+            items.append(
+                {
+                    "item_type": PRODUCT_OPTION_ITEM_TYPE,
+                    "item_id": option.id,
+                    "title": title,
+                    "subtitle": product.display_short_description,
+                    "category_label": product.category.display_name,
+                    "option_label": option.name,
                     "quantity": quantity,
                     "unit_label": product.display_unit_label,
                     "unit_price": effective_price,

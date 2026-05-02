@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ ui.previous_orders }} | {{ site_settings.display_store_name|default:"Al Rawda Center" }}{% endblock %}
+{% block title %}{{ ui.previous_orders }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
 
 {% block content %}
 <section class="page-hero compact">
@@ -61,7 +61,7 @@
         </article>
         <article class="info-card">
             <h2>{{ ui.store_information }}</h2>
-            <p><strong>{{ ui.address }}:</strong> {{ site_content.display_address|default:"Damascus" }}</p>
+            <p><strong>{{ ui.address }}:</strong> {{ site_content.display_address|default:ui.address_default }}</p>
             <p><strong>{{ ui.primary_phone }}:</strong> {{ site_content.primary_phone|default:"+963-000-000-000" }}</p>
             {% if site_content.email %}<p><strong>{{ ui.email }}:</strong> {{ site_content.email }}</p>{% endif %}
             <p><strong>{{ ui.hours }}:</strong> {{ site_content.display_working_hours_summary|default:ui.hours_default }}</p>

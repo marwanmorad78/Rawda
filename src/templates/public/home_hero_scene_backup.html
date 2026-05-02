@@ -8,14 +8,14 @@ This template is intentionally not included by public/home.html.
     <div class="immersive-top-nav">
         <a href="{% url 'core:home' %}" class="immersive-top-brand">
             <span class="immersive-top-brand-mark">
-                <img src="{% static 'images/rawda.jpeg' %}" alt="{{ site_settings.store_name|default:'Al Rawda Center' }}">
+                <img src="{% static 'images/rawda.jpeg' %}" alt="{{ site_settings.display_store_name|default:ui.store_name_default }}">
             </span>
             <span class="immersive-top-brand-copy">
-                <strong>{{ site_settings.display_store_name|default:"Al Rawda Center" }}</strong>
-                <small>{{ site_settings.display_tagline|default:"Fresh groceries and daily essentials" }}</small>
+                <strong>{{ site_settings.display_store_name|default:ui.store_name_default }}</strong>
+                <small>{{ site_settings.display_tagline|default:ui.tagline_default }}</small>
             </span>
         </a>
-        <nav class="immersive-top-links" aria-label="Primary">
+        <nav class="immersive-top-links" aria-label="{{ ui.primary_navigation }}">
             <a href="{% url 'core:home' %}">{{ ui.home }}</a>
             <a href="{% url 'core:about' %}">{{ ui.about }}</a>
             <a href="{% url 'catalog:cart' %}">{{ ui.cart }}{% if cart_count %} ({{ cart_count }}){% endif %}</a>
@@ -67,7 +67,7 @@ This template is intentionally not included by public/home.html.
             </button>
         {% endfor %}
     </div>
-    <a href="{% url 'catalog:cart' %}" class="immersive-cart-frame" aria-label="Open cart">
+    <a href="{% url 'catalog:cart' %}" class="immersive-cart-frame" aria-label="{{ ui.open_cart }}">
         <span class="immersive-cart-shadow" aria-hidden="true"></span>
         <span class="immersive-cart-graphic">
             <img src="{% static 'images/hero-cart-front-blue.png' %}" alt="" loading="eager" decoding="async">

@@ -6,12 +6,13 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.db.models import Q
 from django.utils.text import slugify
 
-from apps.core.localization import get_ui_strings
+from apps.core.localization import DEFAULT_LANGUAGE, get_ui_strings
 from apps.core.models import CustomerAddress, CustomerProfile, DeliveryArea, DeliverySubArea
 
 
 SYRIA_COUNTRY_CODE = "963"
 SYRIA_MOBILE_NUMBER_RE = re.compile(r"^9\d{8}$")
+ARABIC_NAME_RE = re.compile(r"^[\u0621-\u064A\u064B-\u065F]+(?:\s+[\u0621-\u064A\u064B-\u065F]+)*$")
 
 
 def normalize_phone_number(value):
@@ -82,7 +83,7 @@ def generate_customer_username(full_name):
 
 
 class LocalizedCustomerFormMixin:
-    def __init__(self, *args, language="en", **kwargs):
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, **kwargs):
         self.language = language
         self.ui = get_ui_strings(language)
         super().__init__(*args, **kwargs)
@@ -221,6 +222,7 @@ class CustomerRegistrationForm(DeliverySubAreaSelectionMixin, LocalizedCustomerF
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["area"].queryset = DeliveryArea.objects.filter(is_active=True)
+        self.fields["area"].empty_label = self.ui["area_name_placeholder"]
         self.configure_sub_area_field()
 
     def clean_username(self):
@@ -228,6 +230,12 @@ class CustomerRegistrationForm(DeliverySubAreaSelectionMixin, LocalizedCustomerF
         if phone_number_exists(phone_number):
             raise forms.ValidationError(self.ui["phone_number_taken"])
         return phone_number
+
+    def clean_full_name(self):
+        full_name = " ".join((self.cleaned_data.get("full_name") or "").split())
+        if self.language == "ar" and full_name and not ARABIC_NAME_RE.fullmatch(full_name):
+            raise forms.ValidationError(self.ui["full_name_arabic_only"])
+        return full_name
 
     def clean(self):
         cleaned_data = super().clean()
@@ -325,7 +333,7 @@ class CustomerAddressForm(DeliverySubAreaSelectionMixin, LocalizedCustomerFormMi
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["area"].queryset = DeliveryArea.objects.filter(is_active=True)
-        self.fields["area"].empty_label = None
+        self.fields["area"].empty_label = self.ui["area_name_placeholder"]
         self.configure_sub_area_field()
 
     def clean(self):

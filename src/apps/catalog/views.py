@@ -9,6 +9,7 @@ from django.views.generic import DetailView, TemplateView
 
 from apps.catalog.cart import (
     add_product,
+    add_product_option,
     add_promotion,
     build_cart,
     clear_cart,
@@ -22,12 +23,13 @@ from apps.catalog.cart import (
 )
 from apps.catalog.checkout import build_checkout_summary, create_order_from_checkout, get_address_delivery_fee
 from apps.catalog.forms import CheckoutAddressForm
+from apps.core.forms import CustomerAddressForm
 from apps.core.localization import format_syp, get_language, get_ui_strings, localize_instance, localize_queryset
 from apps.core.models import CustomerOrder, CustomerProfile
 from apps.core.pricing import get_active_site_settings, set_product_display_price
 from apps.promotions.models import Promotion
 
-from .models import Category, Product
+from .models import Category, Product, ProductOption
 
 
 def parse_quantity(value, default=1):
@@ -89,6 +91,7 @@ class CategoryDetailView(DetailView):
         site_settings = get_active_site_settings()
         products = list(self.object.products.filter(is_available=True))
         for product in products:
+            product.prefetched_options = list(product.options.all())
             localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
             set_product_display_price(product, language, site_settings)
         context["products"] = products
@@ -111,6 +114,7 @@ class ProductDetailView(DetailView):
         site_settings = get_active_site_settings()
         localize_instance(product.category, language, ["name", "description"])
         product = localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
+        product.prefetched_options = list(product.options.all())
         set_product_display_price(product, language, site_settings)
         return product
 
@@ -127,26 +131,47 @@ class ProductDetailView(DetailView):
             ["name", "short_description", "description", "unit_label"],
         )
         for item in context["related_products"]:
+            item.prefetched_options = list(item.options.all())
             set_product_display_price(item, language, site_settings)
         return context
 
 
-class AddToCartView(View):
+class AddToCartView(LoginRequiredMixin, View):
+    login_url = "core:login"
+
     def post(self, request, slug):
         product = get_object_or_404(Product, slug=slug, is_available=True)
         quantity = max(parse_quantity(request.POST.get("quantity", 1), default=1), 1)
-        add_product(request, product.id, quantity)
         language = get_language(request)
         ui = get_ui_strings(language)
         product = localize_instance(product, language, ["name"])
-        message = f"{product.display_name}: {ui['cart_added']}"
+        selected_option = None
+        if product.has_options:
+            selected_option = ProductOption.objects.filter(
+                pk=request.POST.get("option_id"),
+                product=product,
+            ).first()
+            if selected_option is None:
+                message = ui.get("select_product_option", "Please select an option before adding to cart.")
+                if wants_json_response(request):
+                    return JsonResponse({"ok": False, "message": message}, status=400)
+                messages.error(request, message)
+                preserve_cart_for_next_request(request)
+                return redirect(request.POST.get("next") or product.get_absolute_url())
+            add_product_option(request, selected_option.id, quantity)
+        else:
+            add_product(request, product.id, quantity)
+        item_title = product.display_name
+        if selected_option is not None:
+            item_title = f"{item_title} - {selected_option.name}"
+        message = f"{item_title}: {ui['cart_added']}"
         if wants_json_response(request):
             cart = build_cart(request)
             return JsonResponse(
                 {
                     "ok": True,
                     "message": message,
-                    "item_title": product.display_name,
+                    "item_title": item_title,
                     "cart_count": cart["count"],
                     "cart_total": cart["display_subtotal"],
                     "cart_url": request.build_absolute_uri(reverse("catalog:cart")),
@@ -157,7 +182,9 @@ class AddToCartView(View):
         return redirect(request.POST.get("next") or product.get_absolute_url())
 
 
-class AddOfferToCartView(View):
+class AddOfferToCartView(LoginRequiredMixin, View):
+    login_url = "core:login"
+
     def post(self, request, slug):
         promotion = get_object_or_404(Promotion.active(), slug=slug)
         quantity = max(parse_quantity(request.POST.get("quantity", 1), default=1), 1)
@@ -183,8 +210,9 @@ class AddOfferToCartView(View):
         return redirect(request.POST.get("next") or "core:home")
 
 
-class CartDetailView(TemplateView):
+class CartDetailView(LoginRequiredMixin, TemplateView):
     template_name = "public/cart.html"
+    login_url = "core:login"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -193,7 +221,9 @@ class CartDetailView(TemplateView):
         return context
 
 
-class CheckoutServiceView(View):
+class CheckoutServiceView(LoginRequiredMixin, View):
+    login_url = "core:login"
+
     def post(self, request):
         cart = build_cart(request)
         if not cart["items"]:
@@ -203,10 +233,14 @@ class CheckoutServiceView(View):
             service_type = CustomerOrder.SERVICE_PICKUP
         set_checkout_service_type(request, service_type)
         preserve_cart_for_next_request(request)
+        if service_type == CustomerOrder.SERVICE_DELIVERY:
+            return redirect("catalog:checkout-address")
         return redirect("catalog:invoice")
 
 
-class CartUpdateView(View):
+class CartUpdateView(LoginRequiredMixin, View):
+    login_url = "core:login"
+
     def post(self, request, item_type, item_id):
         quantity = parse_quantity(request.POST.get("quantity", 1), default=1)
         update_item(request, item_type, item_id, quantity)
@@ -215,7 +249,9 @@ class CartUpdateView(View):
         return redirect("catalog:cart")
 
 
-class CartRemoveView(View):
+class CartRemoveView(LoginRequiredMixin, View):
+    login_url = "core:login"
+
     def post(self, request, item_type, item_id):
         remove_item(request, item_type, item_id)
         messages.success(request, get_ui_strings(get_language(request))["cart_removed"])
@@ -232,6 +268,35 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         initial = {"address": selected_address.pk} if selected_address is not None else {}
         return CheckoutAddressForm(data=data, addresses=addresses, language=get_language(request), initial=initial)
 
+    def get_address_form(self, data=None):
+        return CustomerAddressForm(data=data, language=get_language(self.request))
+
+    def render_address_step(
+        self,
+        request,
+        cart,
+        profile,
+        addresses,
+        form=None,
+        address_form=None,
+        selected_address_id=None,
+        is_address_modal_open=False,
+    ):
+        selected_address = get_selected_checkout_address(request, addresses)
+        return render(
+            request,
+            self.template_name,
+            {
+                "cart": cart,
+                "profile": profile,
+                "addresses": addresses,
+                "form": form or self.get_form(request, addresses),
+                "address_form": address_form or self.get_address_form(),
+                "selected_address_id": selected_address_id or (selected_address.pk if selected_address is not None else None),
+                "is_address_modal_open": is_address_modal_open,
+            },
+        )
+
     def get(self, request):
         cart = build_cart(request)
         if not cart["items"]:
@@ -241,19 +306,7 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         profile, addresses = get_checkout_addresses(request)
         addresses = addresses.filter(area__is_active=True)
         addresses = attach_address_delivery_fee_display(addresses, get_language(request))
-        selected_address = get_selected_checkout_address(request, addresses)
-        form = self.get_form(request, addresses)
-        return render(
-            request,
-            self.template_name,
-            {
-                "cart": cart,
-                "profile": profile,
-                "addresses": addresses,
-                "form": form,
-                "selected_address_id": selected_address.pk if selected_address is not None else None,
-            },
-        )
+        return self.render_address_step(request, cart, profile, addresses)
 
     def post(self, request):
         cart = build_cart(request)
@@ -264,21 +317,37 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         profile, addresses = get_checkout_addresses(request)
         addresses = addresses.filter(area__is_active=True)
         addresses = attach_address_delivery_fee_display(addresses, get_language(request))
+        if request.POST.get("address_action") == "add":
+            address_form = self.get_address_form(data=request.POST)
+            if address_form.is_valid():
+                address = address_form.save(profile=profile)
+                set_checkout_address(request, address.pk)
+                preserve_cart_for_next_request(request)
+                return redirect("catalog:invoice")
+            form = self.get_form(request, addresses)
+            return self.render_address_step(
+                request,
+                cart,
+                profile,
+                addresses,
+                form=form,
+                address_form=address_form,
+                selected_address_id=request.POST.get("address"),
+                is_address_modal_open=True,
+            )
         form = self.get_form(request, addresses, data=request.POST)
         if form.is_valid():
             address = form.cleaned_data["address"]
             set_checkout_address(request, address.pk)
+            preserve_cart_for_next_request(request)
             return redirect("catalog:invoice")
-        return render(
+        return self.render_address_step(
             request,
-            self.template_name,
-            {
-                "cart": cart,
-                "profile": profile,
-                "addresses": addresses,
-                "form": form,
-                "selected_address_id": request.POST.get("address"),
-            },
+            cart,
+            profile,
+            addresses,
+            form=form,
+            selected_address_id=request.POST.get("address"),
         )
 
 
@@ -296,6 +365,7 @@ class InvoiceView(LoginRequiredMixin, TemplateView):
             selected_address = get_selected_checkout_address(request, addresses)
             if selected_address is None:
                 messages.info(request, get_ui_strings(get_language(request))["add_address_before_checkout"])
+                preserve_cart_for_next_request(request)
                 return redirect("catalog:checkout-address")
             set_checkout_address(request, selected_address.pk)
             self.selected_address = selected_address
