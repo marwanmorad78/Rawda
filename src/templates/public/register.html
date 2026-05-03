@@ -22,16 +22,12 @@
                 {% endwith %}
             </div>
             <div class="inline-field-grid">
-                <label>
-                    <span>{{ form.password1.label }}</span>
-                    {{ form.password1 }}
-                    {{ form.password1.errors }}
-                </label>
-                <label>
-                    <span>{{ form.password2.label }}</span>
-                    {{ form.password2 }}
-                    {{ form.password2.errors }}
-                </label>
+                {% with field=form.password1 %}
+                    {% include "partials/password_field.html" %}
+                {% endwith %}
+                {% with field=form.password2 %}
+                    {% include "partials/password_field.html" %}
+                {% endwith %}
             </div>
             {% with address_form=form hide_default_address_field=True %}
                 {% include "partials/customer_address_fields.html" %}

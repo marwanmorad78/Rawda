@@ -37,16 +37,20 @@ const homeTabBar = document.querySelector("[data-home-tab-bar]");
 const homeTabs = Array.from(document.querySelectorAll("[data-home-tab]"));
 const homeCategoryCards = Array.from(document.querySelectorAll("[data-home-category-card]"));
 const productCards = Array.from(document.querySelectorAll("[data-product-card]"));
+const categoryProductSearches = Array.from(document.querySelectorAll("[data-category-product-search]"));
+const activeOrderStatusRegions = Array.from(document.querySelectorAll("[data-active-order-status-region]"));
 const productOptionInputs = Array.from(document.querySelectorAll("[data-product-options] input[name='option_id']"));
 const productDetailPrice = document.querySelector("[data-product-detail-price]");
 const productOptionsSubmit = document.querySelector("[data-product-options-submit]");
 const quantityControls = Array.from(document.querySelectorAll("[data-quantity-control]"));
 const registerForm = document.querySelector("[data-register-form]");
+const passwordVisibilityToggles = Array.from(document.querySelectorAll("[data-password-toggle]"));
 const syrianPhoneInputs = Array.from(document.querySelectorAll("[data-syrian-phone-input]"));
 const syrianPhoneControls = Array.from(document.querySelectorAll("[data-syrian-phone-control]"));
 const deliveryAreaGroups = Array.from(document.querySelectorAll("[data-delivery-area-group]"));
 const dashboardSubAreaFormsets = Array.from(document.querySelectorAll("[data-dashboard-sub-area-formset]"));
 const dashboardDeliveryAreaForms = Array.from(document.querySelectorAll("[data-dashboard-delivery-area-form]"));
+const expectedTimePresetButtons = Array.from(document.querySelectorAll("[data-time-preset]"));
 const dashboardDrawer = document.querySelector("[data-dashboard-drawer]");
 const dashboardDrawerToggle = document.querySelector("[data-dashboard-drawer-toggle]");
 const dashboardDrawerClosers = Array.from(document.querySelectorAll("[data-dashboard-drawer-close]"));
@@ -57,24 +61,20 @@ const dashboardProductBasePriceInput = dashboardProductBasePriceField?.querySele
 const excelModal = document.querySelector("[data-excel-modal]");
 const excelModalOpen = document.querySelector("[data-excel-modal-open]");
 const excelModalClosers = Array.from(document.querySelectorAll("[data-excel-modal-close]"));
-const checkoutAddressModal = document.querySelector("[data-checkout-address-modal]");
-const checkoutAddressModalOpen = document.querySelector("[data-checkout-address-modal-open]");
+const orderModals = Array.from(document.querySelectorAll("[data-order-modal]"));
+const orderModalOpeners = Array.from(document.querySelectorAll("[data-order-modal-open]"));
+const orderModalClosers = Array.from(document.querySelectorAll("[data-order-modal-close]"));
+const checkoutAddressModals = Array.from(document.querySelectorAll("[data-checkout-address-modal]"));
+const checkoutAddressModalOpeners = Array.from(document.querySelectorAll("[data-checkout-address-modal-open]"));
 const checkoutAddressModalClosers = Array.from(document.querySelectorAll("[data-checkout-address-modal-close]"));
+const checkoutAddressOptions = Array.from(document.querySelectorAll("[data-checkout-address-option]"));
+const checkoutDeliveryFee = document.querySelector("[data-checkout-delivery-fee]");
+const checkoutGrandTotal = document.querySelector("[data-checkout-grand-total]");
 
 const cartState = {
     count: Number.parseInt(floatingCart?.dataset.cartCount || "0", 10) || 0,
     total: floatingCart?.dataset.cartTotal || "0",
 };
-const COMMON_PASSWORDS = new Set([
-    "password",
-    "password123",
-    "12345678",
-    "123456789",
-    "1234567890",
-    "11111111",
-    "00000000",
-    "qwerty123",
-]);
 const ARABIC_NAME_PATTERN = /^[\u0621-\u064A\u064B-\u065F]+(?:\s+[\u0621-\u064A\u064B-\u065F]+)*$/;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -83,8 +83,6 @@ const tabTargetCache = new WeakMap();
 const registerMessages = {
     en: {
         required: (label) => `${label} is required.`,
-        passwordShort: "Password must contain at least 8 characters.",
-        passwordCommon: "This password is too common.",
         passwordNumeric: "Password cannot be entirely numeric.",
         passwordMismatch: "Passwords do not match.",
         phoneInvalid: "يرجى التأكد من ادخال رقم صحيح",
@@ -94,8 +92,6 @@ const registerMessages = {
     },
     ar: {
         required: (label) => `${label} مطلوب.`,
-        passwordShort: "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.",
-        passwordCommon: "كلمة المرور شائعة جداً.",
         passwordNumeric: "لا يمكن أن تكون كلمة المرور أرقاماً فقط.",
         passwordMismatch: "كلمتا المرور غير متطابقتين.",
         phoneInvalid: "يرجى التأكد من ادخال رقم صحيح",
@@ -153,15 +149,46 @@ const setExcelModalOpen = (isOpen) => {
         return;
     }
     excelModal.hidden = !isOpen;
-    document.body.classList.toggle("modal-open", isOpen);
+    syncModalOpenState();
 };
 
-const setCheckoutAddressModalOpen = (isOpen) => {
-    if (!checkoutAddressModal) {
+const syncModalOpenState = () => {
+    const hasOpenModal = Boolean(
+        (excelModal && !excelModal.hidden) ||
+            orderModals.some((modal) => !modal.hidden) ||
+            checkoutAddressModals.some((modal) => !modal.hidden),
+    );
+    document.body.classList.toggle("modal-open", hasOpenModal);
+};
+
+const setCheckoutAddressModalOpen = (isOpen, modal = checkoutAddressModals[0]) => {
+    if (!modal) {
         return;
     }
-    checkoutAddressModal.hidden = !isOpen;
-    document.body.classList.toggle("modal-open", isOpen);
+    modal.hidden = !isOpen;
+    syncModalOpenState();
+};
+
+const closeCheckoutAddressModals = () => {
+    checkoutAddressModals.forEach((modal) => {
+        modal.hidden = true;
+    });
+    syncModalOpenState();
+};
+
+const setOrderModalOpen = (isOpen, modal) => {
+    if (!modal) {
+        return;
+    }
+    modal.hidden = !isOpen;
+    syncModalOpenState();
+};
+
+const closeOrderModals = () => {
+    orderModals.forEach((modal) => {
+        modal.hidden = true;
+    });
+    syncModalOpenState();
 };
 
 const getQuantityValue = (input) => {
@@ -186,6 +213,92 @@ const normalizeLabel = (value) =>
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^\p{L}\p{N}]+/gu, " ")
         .trim();
+
+const enhanceCategoryProductSearch = (form) => {
+    const input = form?.querySelector("[data-category-product-search-input]");
+    const section = form?.closest("[data-category-product-section]");
+    const cards = Array.from(section?.querySelectorAll("[data-product-card]") || []);
+    const emptyMessage = section?.querySelector("[data-category-product-search-empty]");
+
+    if (!input || !cards.length) {
+        return;
+    }
+
+    const searchableTextByCard = new Map(
+        cards.map((card) => [
+            card,
+            normalizeLabel(
+                [
+                    card.dataset.productTitle,
+                    card.dataset.productDescription,
+                    card.dataset.productCategory,
+                    card.dataset.productPrice,
+                ].join(" "),
+            ),
+        ]),
+    );
+
+    const filterProducts = () => {
+        const query = normalizeLabel(input.value);
+        let visibleCount = 0;
+
+        cards.forEach((card) => {
+            const isMatch = !query || searchableTextByCard.get(card).includes(query);
+            card.hidden = !isMatch;
+            if (isMatch) {
+                visibleCount += 1;
+            }
+        });
+
+        if (emptyMessage) {
+            emptyMessage.hidden = !query || visibleCount > 0;
+        }
+    };
+
+    form.addEventListener("submit", (event) => event.preventDefault());
+    input.addEventListener("input", filterProducts);
+    filterProducts();
+};
+
+const enhanceActiveOrderStatusRegion = (region) => {
+    const url = region.dataset.activeOrderStatusUrl;
+    if (!url) {
+        return;
+    }
+
+    const refresh = async () => {
+        if (document.visibilityState === "hidden") {
+            return;
+        }
+
+        try {
+            const response = await window.fetch(url, {
+                headers: {
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            });
+            if (!response.ok) {
+                return;
+            }
+            const payload = await response.json();
+            if (payload.has_active_order && payload.html) {
+                const target = region.classList.contains("active-order-home")
+                    ? region.querySelector(".container") || region
+                    : region;
+                target.innerHTML = payload.html;
+                region.hidden = false;
+                return;
+            }
+            region.hidden = true;
+            region.innerHTML = "";
+        } catch (error) {
+            return;
+        }
+    };
+
+    window.setInterval(refresh, 15000);
+};
 
 const normalizeSyrianPhoneValue = (value) => {
     let digits = String(value || "").replace(/\D+/g, "");
@@ -230,6 +343,26 @@ const enhanceSyrianPhoneInput = (input) => {
     input.addEventListener("input", applyNormalization);
     input.addEventListener("blur", applyNormalization);
     input.form?.addEventListener("submit", applyNormalization);
+};
+
+const enhancePasswordVisibilityToggle = (toggle) => {
+    const field = toggle?.closest("[data-password-field]");
+    const input = field?.querySelector('input[type="password"], input[type="text"]');
+    if (!toggle || !input) {
+        return;
+    }
+
+    const showLabel = toggle.dataset.showLabel || "Show password";
+    const hideLabel = toggle.dataset.hideLabel || "Hide password";
+
+    toggle.addEventListener("click", () => {
+        const shouldShow = input.type === "password";
+        input.type = shouldShow ? "text" : "password";
+        toggle.classList.toggle("is-visible", shouldShow);
+        toggle.setAttribute("aria-label", shouldShow ? hideLabel : showLabel);
+        toggle.setAttribute("title", shouldShow ? hideLabel : showLabel);
+        input.focus();
+    });
 };
 
 const closeSyrianPhoneMenu = (control) => {
@@ -605,7 +738,8 @@ const showFieldToast = (field, message) => {
     }, 2600);
 };
 
-const getFieldValidationTarget = (field) => field?.closest("[data-syrian-phone-control]") || field;
+const getFieldValidationTarget = (field) =>
+    field?.closest("[data-syrian-phone-control]") || field?.closest("[data-password-field]") || field;
 
 const setFieldValidationState = (field, state) => {
     const target = getFieldValidationTarget(field);
@@ -644,8 +778,6 @@ const getPasswordValidationState = () => {
 
     const passwordValid = Boolean(
         password &&
-        password.length >= 8 &&
-        !COMMON_PASSWORDS.has(password.toLowerCase()) &&
         !/^\d+$/.test(password),
     );
 
@@ -876,7 +1008,8 @@ const closeModals = () => {
     closeOfferModal();
     closeProductModal();
     setExcelModalOpen(false);
-    setCheckoutAddressModalOpen(false);
+    closeOrderModals();
+    closeCheckoutAddressModals();
 };
 
 const enhanceCartForm = (form) => {
@@ -932,8 +1065,8 @@ const enhanceCartForm = (form) => {
 };
 
 const getFieldLabel = (field) => {
-    const label = field.closest("label");
-    return label?.querySelector("span")?.textContent?.trim() || field.name || "Field";
+    const wrapper = field.closest("[data-field-wrapper], label");
+    return wrapper?.querySelector(".field-label, span")?.textContent?.trim() || field.name || "Field";
 };
 
 const collectRegisterPasswordErrors = () => {
@@ -948,14 +1081,6 @@ const collectRegisterPasswordErrors = () => {
     const password = validationState?.passwordValue || "";
     const confirmPassword = validationState?.confirmValue || "";
     const errors = [];
-
-    if (password && password.length < 8) {
-        errors.push({ field: passwordInput, message: messages.passwordShort });
-    }
-
-    if (password && COMMON_PASSWORDS.has(password.toLowerCase())) {
-        errors.push({ field: passwordInput, message: messages.passwordCommon });
-    }
 
     if (password && /^\d+$/.test(password)) {
         errors.push({ field: passwordInput, message: messages.passwordNumeric });
@@ -1033,7 +1158,7 @@ const showRegisterServerErrors = () => {
     const errors = Array.from(registerForm.querySelectorAll(".errorlist"))
         .flatMap((list) => {
             list.classList.add("toast-hidden-error");
-            const field = list.closest("label")?.querySelector("input, select, textarea");
+            const field = list.closest("[data-field-wrapper], label")?.querySelector("input, select, textarea");
             return Array.from(list.querySelectorAll("li")).map((item) => ({
                 field,
                 message: item.textContent.trim(),
@@ -1270,11 +1395,22 @@ const enhanceRegisterForm = () => {
     });
 };
 
+passwordVisibilityToggles.forEach(enhancePasswordVisibilityToggle);
 syrianPhoneInputs.forEach(enhanceSyrianPhoneInput);
 syrianPhoneControls.forEach(enhanceSyrianPhoneControl);
 deliveryAreaGroups.forEach(enhanceDeliveryAreaGroup);
 dashboardSubAreaFormsets.forEach(enhanceDashboardSubAreaFormset);
 dashboardDeliveryAreaForms.forEach(enhanceDashboardDeliveryAreaForm);
+expectedTimePresetButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        const form = button.closest("form");
+        const input = form?.querySelector('input[name="expected_time_minutes"]');
+        if (input) {
+            input.value = button.dataset.timePreset || "";
+            input.focus();
+        }
+    });
+});
 
 document.addEventListener("click", (event) => {
     syrianPhoneControls.forEach((control) => {
@@ -1458,6 +1594,9 @@ productModal?.querySelectorAll("[data-product-modal-close]").forEach((element) =
     element.addEventListener("click", closeProductModal);
 });
 
+activeOrderStatusRegions.forEach(enhanceActiveOrderStatusRegion);
+categoryProductSearches.forEach(enhanceCategoryProductSearch);
+
 productCards.forEach((card) => {
     card.addEventListener("click", (event) => {
         if (event.target.closest("form") || (event.target.closest("button") && !event.target.closest("[data-product-trigger]"))) {
@@ -1538,13 +1677,61 @@ excelModalOpen?.addEventListener("click", () => setExcelModalOpen(true));
 excelModalClosers.forEach((closer) => {
     closer.addEventListener("click", () => setExcelModalOpen(false));
 });
-checkoutAddressModalOpen?.addEventListener("click", () => setCheckoutAddressModalOpen(true));
-checkoutAddressModalClosers.forEach((closer) => {
-    closer.addEventListener("click", () => setCheckoutAddressModalOpen(false));
+orderModalOpeners.forEach((opener) => {
+    opener.addEventListener("click", () => {
+        const targetSelector = opener.dataset.orderModalTarget;
+        const targetModal = targetSelector ? document.querySelector(targetSelector) : null;
+        setOrderModalOpen(true, targetModal);
+    });
 });
-if ((excelModal && !excelModal.hidden) || (checkoutAddressModal && !checkoutAddressModal.hidden)) {
-    document.body.classList.add("modal-open");
-}
+orderModalClosers.forEach((closer) => {
+    closer.addEventListener("click", () => {
+        setOrderModalOpen(false, closer.closest("[data-order-modal]"));
+    });
+});
+checkoutAddressModalOpeners.forEach((opener) => {
+    opener.addEventListener("click", () => {
+        const targetSelector = opener.dataset.checkoutAddressModalTarget;
+        const targetModal = targetSelector ? document.querySelector(targetSelector) : checkoutAddressModals[0];
+        setCheckoutAddressModalOpen(true, targetModal);
+    });
+});
+checkoutAddressModalClosers.forEach((closer) => {
+    closer.addEventListener("click", () => {
+        setCheckoutAddressModalOpen(false, closer.closest("[data-checkout-address-modal]"));
+    });
+});
+checkoutAddressOptions.forEach((input) => {
+    if (input.tagName === "SELECT") {
+        input.dataset.previousAddressValue = input.value;
+    }
+
+    const handleCheckoutAddressChange = () => {
+        const selectedOption = input.tagName === "SELECT" ? input.selectedOptions?.[0] : input;
+        if (input.tagName === "SELECT" && input.value === "__add_new__") {
+            const fallbackOption = Array.from(input.options).find((option) => option.value !== "__add_new__");
+            input.value = input.dataset.previousAddressValue || fallbackOption?.value || "";
+            if (input.value && !input.dataset.previousAddressValue) {
+                input.dataset.previousAddressValue = input.value;
+            }
+            setCheckoutAddressModalOpen(true);
+            return;
+        }
+        if (input.tagName === "SELECT") {
+            input.dataset.previousAddressValue = input.value;
+        }
+        if (checkoutDeliveryFee && selectedOption?.dataset.deliveryFeeDisplay) {
+            checkoutDeliveryFee.textContent = selectedOption.dataset.deliveryFeeDisplay;
+        }
+        if (checkoutGrandTotal && selectedOption?.dataset.grandTotalDisplay) {
+            checkoutGrandTotal.textContent = selectedOption.dataset.grandTotalDisplay;
+        }
+    };
+
+    input.addEventListener("input", handleCheckoutAddressChange);
+    input.addEventListener("change", handleCheckoutAddressChange);
+});
+syncModalOpenState();
 
 homeTabs.forEach((tab) => {
     tab.addEventListener("click", () => {

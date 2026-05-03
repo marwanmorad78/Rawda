@@ -15,11 +15,7 @@
                 {% if field.name == "username" %}
                     {% include "partials/syrian_phone_field.html" %}
                 {% else %}
-                    <label>
-                        <span>{{ field.label }}</span>
-                        {{ field }}
-                        {{ field.errors }}
-                    </label>
+                    {% include "partials/password_field.html" %}
                 {% endif %}
             {% endfor %}
             <button type="submit" class="btn btn-primary full-width">{{ ui.sign_in }}</button>

@@ -7,7 +7,7 @@
     <title>{% block title %}{{ dashboard_ui.dashboard_title }}{% endblock %}</title>
     <link rel="icon" type="image/jpeg" href="{% static 'images/rawda.jpeg' %}">
     {% block extra_head %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=option-price-align-1">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=order-modal-1">
 </head>
 <body class="dashboard-body{% if is_rtl %} rtl{% endif %}">
     <button
@@ -53,6 +53,9 @@
                 <a href="{% url 'dashboard:products' %}">{{ dashboard_ui.products }}</a>
                 <a href="{% url 'dashboard:promotions' %}">{{ dashboard_ui.promotions }}</a>
                 <a href="{% url 'dashboard:delivery-areas' %}">{{ dashboard_ui.delivery_areas }}</a>
+                <a href="{% url 'dashboard:customers' %}">{{ dashboard_ui.customers }}</a>
+                <a href="{% url 'dashboard:pending-orders' %}">{{ dashboard_ui.pending_orders }}</a>
+                <a href="{% url 'dashboard:orders' %}">{{ dashboard_ui.orders }}</a>
                 <a href="{% url 'dashboard:dollar-price' %}">{{ dashboard_ui.dollar_price_section }}</a>
                 <a href="{% url 'dashboard:settings' %}">{{ dashboard_ui.store_settings }}</a>
             </nav>
@@ -67,6 +70,6 @@
         </section>
     </div>
     {% block extra_scripts %}{% endblock %}
-    <script src="{% static 'js/site.js' %}?v=checkout-address-modal-1"></script>
+    <script src="{% static 'js/site.js' %}?v=order-modal-1"></script>
 </body>
 </html>

@@ -34,6 +34,60 @@ class ManagerLoginForm(DashboardLocalizedFormMixin, AuthenticationForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={"placeholder": "Password"}))
 
 
+class CustomerAccessPasswordForm(forms.Form):
+    password = forms.CharField(strip=False, widget=forms.PasswordInput)
+
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, **kwargs):
+        self.language = language
+        self.dashboard_ui = get_dashboard_strings(language)
+        super().__init__(*args, **kwargs)
+        self.fields["password"].label = self.dashboard_ui["customers_access_password"]
+        self.fields["password"].widget.attrs["placeholder"] = self.dashboard_ui["customers_access_password"]
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        if password != "rawda2026":
+            raise forms.ValidationError(self.dashboard_ui["customers_access_denied"])
+        return password
+
+
+class CustomerPasswordChangeForm(forms.Form):
+    new_password = forms.CharField(strip=False, widget=forms.PasswordInput)
+    confirm_password = forms.CharField(strip=False, widget=forms.PasswordInput)
+
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, **kwargs):
+        self.language = language
+        self.dashboard_ui = get_dashboard_strings(language)
+        super().__init__(*args, **kwargs)
+        self.fields["new_password"].label = self.dashboard_ui["new_password"]
+        self.fields["confirm_password"].label = self.dashboard_ui["confirm_password"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+        if new_password and confirm_password and new_password != confirm_password:
+            self.add_error("confirm_password", self.dashboard_ui["password_mismatch"])
+        return cleaned_data
+
+
+class OrderAcceptForm(forms.Form):
+    expected_time_minutes = forms.IntegerField(min_value=1, max_value=240)
+
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, suggested_minutes=20, **kwargs):
+        self.language = language
+        self.dashboard_ui = get_dashboard_strings(language)
+        super().__init__(*args, **kwargs)
+        self.fields["expected_time_minutes"].label = self.dashboard_ui["expected_time_label"]
+        self.fields["expected_time_minutes"].initial = suggested_minutes
+        self.fields["expected_time_minutes"].widget.attrs.update(
+            {
+                "inputmode": "numeric",
+                "placeholder": str(suggested_minutes),
+            }
+        )
+
+
 class CategoryForm(DashboardLocalizedFormMixin, forms.ModelForm):
     class Meta:
         model = Category

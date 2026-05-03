@@ -12,8 +12,8 @@
 </section>
 
 <section class="section">
-    <div class="container account-grid">
-        <article class="panel account-panel">
+    <div class="container account-grid account-settings-grid">
+        <article class="panel account-panel account-personal-panel">
             <h2>{{ ui.personal_information }}</h2>
             <form method="post" action="{% url 'core:settings-profile' %}" class="stack-form">
                 {% csrf_token %}
@@ -33,7 +33,17 @@
             </form>
         </article>
         <article class="panel account-panel">
-            <h2>{{ ui.delivery_addresses }}</h2>
+            <div class="account-panel-header">
+                <h2>{{ ui.delivery_addresses }}</h2>
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-checkout-address-modal-open
+                    data-checkout-address-modal-target="#settings-address-add-modal"
+                >
+                    {{ ui.add_new_address }}
+                </button>
+            </div>
             <div class="address-list">
                 {% for address in addresses %}
                     <div class="address-card">
@@ -51,7 +61,13 @@
                         {% if address.nearby_landmark %}<p>{{ ui.nearby_landmark }}: {{ address.nearby_landmark }}</p>{% endif %}
                         {% if address.notes %}<p>{{ address.notes }}</p>{% endif %}
                         <div class="table-actions">
-                            <a href="{% url 'core:address-edit' address.pk %}" class="text-link">{{ ui.edit_address }}</a>
+                            <button
+                                type="button"
+                                data-checkout-address-modal-open
+                                data-checkout-address-modal-target="#settings-address-edit-{{ address.pk }}"
+                            >
+                                {{ ui.edit_address }}
+                            </button>
                             <form method="post" action="{% url 'core:address-delete' address.pk %}">
                                 {% csrf_token %}
                                 <button type="submit">{{ ui.delete_address }}</button>
@@ -66,17 +82,35 @@
     </div>
 </section>
 
-<section class="section section-alt">
-    <div class="container">
-        <article class="panel account-panel panel-narrow">
-            <h2>{{ ui.add_new_address }}</h2>
-            <form method="post" action="{% url 'core:address-add' %}" class="stack-form">
+<div id="settings-address-add-modal" class="dashboard-modal" data-checkout-address-modal{% if not is_address_modal_open %} hidden{% endif %}>
+    <button type="button" class="dashboard-modal-backdrop" data-checkout-address-modal-close aria-label="{{ ui.close }}"></button>
+    <section class="dashboard-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-address-modal-title">
+        <button type="button" class="dashboard-modal-close" data-checkout-address-modal-close aria-label="{{ ui.close }}">&times;</button>
+        <h2 id="settings-address-modal-title">{{ ui.add_new_address }}</h2>
+        <form method="post" action="{% url 'core:address-add' %}" class="stack-form">
+            {% csrf_token %}
+            {{ address_form.non_field_errors }}
+            {% include "partials/customer_address_fields.html" %}
+            <button type="submit" class="btn btn-primary full-width">{{ ui.save_address }}</button>
+        </form>
+    </section>
+</div>
+
+{% for address in addresses %}
+    <div id="settings-address-edit-{{ address.pk }}" class="dashboard-modal" data-checkout-address-modal{% if open_edit_address_id != address.pk %} hidden{% endif %}>
+        <button type="button" class="dashboard-modal-backdrop" data-checkout-address-modal-close aria-label="{{ ui.close }}"></button>
+        <section class="dashboard-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-address-edit-title-{{ address.pk }}">
+            <button type="button" class="dashboard-modal-close" data-checkout-address-modal-close aria-label="{{ ui.close }}">&times;</button>
+            <h2 id="settings-address-edit-title-{{ address.pk }}">{{ ui.edit_address }}</h2>
+            <form method="post" action="{% url 'core:address-edit' address.pk %}" class="stack-form">
                 {% csrf_token %}
-                {{ address_form.non_field_errors }}
-                {% include "partials/customer_address_fields.html" %}
-                <button type="submit" class="btn btn-primary">{{ ui.save_address }}</button>
+                {{ address.edit_form.non_field_errors }}
+                {% with address_form=address.edit_form %}
+                    {% include "partials/customer_address_fields.html" %}
+                {% endwith %}
+                <button type="submit" class="btn btn-primary full-width">{{ ui.update_address }}</button>
             </form>
-        </article>
+        </section>
     </div>
-</section>
+{% endfor %}
 {% endblock %}

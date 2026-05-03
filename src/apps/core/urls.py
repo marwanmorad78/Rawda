@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     AboutView,
+    ActiveOrderStatusView,
     CustomerAddressCreateView,
     CustomerAddressDeleteView,
     DeliverySubAreaListView,
@@ -12,6 +13,7 @@ from .views import (
     CustomerSettingsView,
     HomeView,
     PreviousOrdersView,
+    ReorderView,
     RegisterPhoneCheckView,
     RegisterView,
     SetLanguageView,
@@ -33,5 +35,7 @@ urlpatterns = [
     path("account/settings/addresses/<int:pk>/delete/", CustomerAddressDeleteView.as_view(), name="address-delete"),
     path("delivery-areas/<int:area_id>/subareas/", DeliverySubAreaListView.as_view(), name="delivery-subareas"),
     path("orders/", PreviousOrdersView.as_view(), name="orders"),
+    path("orders/active-status/", ActiveOrderStatusView.as_view(), name="active-order-status"),
+    path("orders/<int:pk>/reorder/", ReorderView.as_view(), name="order-reorder"),
     path("language/", SetLanguageView.as_view(), name="set-language"),
 ]

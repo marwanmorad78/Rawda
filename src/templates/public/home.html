@@ -44,6 +44,14 @@
     </div>
 </section>
 
+{% if active_order %}
+<section class="section active-order-home" data-active-order-status-region data-active-order-status-url="{% url 'core:active-order-status' %}">
+    <div class="container">
+        {% include "partials/order_status_tracker.html" with order=active_order labels=ui heading=ui.active_order_heading %}
+    </div>
+</section>
+{% endif %}
+
 <section class="section home-offers-section" id="offers" data-animate="section">
     <div class="container">
         <div class="section-heading" data-animate="heading">

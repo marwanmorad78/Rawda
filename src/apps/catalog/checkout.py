@@ -83,7 +83,7 @@ def create_order_from_checkout(profile, address, checkout_summary):
         address=address,
         invoice_number=invoice_number,
         service_type=checkout_summary["service_type"],
-        status=CustomerOrder.STATUS_CONFIRMED,
+        status=CustomerOrder.STATUS_WAITING_ACCEPT,
         address_snapshot=checkout_summary["address_snapshot"],
         subtotal_min=checkout_summary["cart"]["subtotal_min"],
         subtotal_max=checkout_summary["cart"]["subtotal_max"],
@@ -96,6 +96,7 @@ def create_order_from_checkout(profile, address, checkout_summary):
             CustomerOrderItem(
                 order=order,
                 item_type=item["item_type"],
+                cart_item_id=item["item_id"],
                 title=item["title"],
                 category_label=item["category_label"],
                 quantity=item["quantity"],

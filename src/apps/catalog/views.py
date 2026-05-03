@@ -24,8 +24,9 @@ from apps.catalog.cart import (
 from apps.catalog.checkout import build_checkout_summary, create_order_from_checkout, get_address_delivery_fee
 from apps.catalog.forms import CheckoutAddressForm
 from apps.core.forms import CustomerAddressForm
-from apps.core.localization import format_syp, get_language, get_ui_strings, localize_instance, localize_queryset
+from apps.core.localization import format_price_range, format_syp, get_language, get_ui_strings, localize_instance, localize_queryset
 from apps.core.models import CustomerOrder, CustomerProfile
+from apps.core.order_status import attach_order_display, get_active_customer_order
 from apps.core.pricing import get_active_site_settings, set_product_display_price
 from apps.promotions.models import Promotion
 
@@ -67,9 +68,17 @@ def get_selected_checkout_address(request, addresses):
     return addresses.filter(is_default=True).first() or addresses.first()
 
 
-def attach_address_delivery_fee_display(addresses, language):
+def attach_address_delivery_fee_display(addresses, language, cart=None):
     for address in addresses:
-        address.display_delivery_fee = format_syp(get_address_delivery_fee(address), language)
+        delivery_fee = get_address_delivery_fee(address)
+        address.is_free_delivery = delivery_fee == 0
+        address.display_delivery_fee = format_syp(delivery_fee, language)
+        if cart is not None:
+            address.display_checkout_total = format_price_range(
+                cart["subtotal_min"] + delivery_fee,
+                cart["subtotal_max"] + delivery_fee,
+                language,
+            )
     return addresses
 
 
@@ -216,8 +225,20 @@ class CartDetailView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        language = get_language(self.request)
+        profile = CustomerProfile.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                "full_name": self.request.user.first_name or self.request.user.username,
+                "phone_number": self.request.user.username,
+            },
+        )[0]
+        active_order = get_active_customer_order(profile)
         context["cart"] = build_cart(self.request)
         context["checkout_service_type"] = get_checkout_service_type(self.request)
+        context["active_order"] = (
+            attach_order_display(active_order, get_ui_strings(language), language) if active_order else None
+        )
         return context
 
 
@@ -283,10 +304,16 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         is_address_modal_open=False,
     ):
         selected_address = get_selected_checkout_address(request, addresses)
+        checkout_summary = build_checkout_summary(
+            request,
+            selected_address,
+            CustomerOrder.SERVICE_DELIVERY,
+        )
         return render(
             request,
             self.template_name,
             {
+                **checkout_summary,
                 "cart": cart,
                 "profile": profile,
                 "addresses": addresses,
@@ -305,7 +332,7 @@ class CheckoutAddressView(LoginRequiredMixin, View):
             return redirect("catalog:invoice")
         profile, addresses = get_checkout_addresses(request)
         addresses = addresses.filter(area__is_active=True)
-        addresses = attach_address_delivery_fee_display(addresses, get_language(request))
+        addresses = attach_address_delivery_fee_display(addresses, get_language(request), cart)
         return self.render_address_step(request, cart, profile, addresses)
 
     def post(self, request):
@@ -316,14 +343,25 @@ class CheckoutAddressView(LoginRequiredMixin, View):
             return redirect("catalog:invoice")
         profile, addresses = get_checkout_addresses(request)
         addresses = addresses.filter(area__is_active=True)
-        addresses = attach_address_delivery_fee_display(addresses, get_language(request))
+        addresses = attach_address_delivery_fee_display(addresses, get_language(request), cart)
+        if request.POST.get("address") == "__add_new__":
+            form = self.get_form(request, addresses)
+            return self.render_address_step(
+                request,
+                cart,
+                profile,
+                addresses,
+                form=form,
+                selected_address_id=form.initial.get("address"),
+                is_address_modal_open=True,
+            )
         if request.POST.get("address_action") == "add":
             address_form = self.get_address_form(data=request.POST)
             if address_form.is_valid():
                 address = address_form.save(profile=profile)
                 set_checkout_address(request, address.pk)
                 preserve_cart_for_next_request(request)
-                return redirect("catalog:invoice")
+                return redirect("catalog:checkout-address")
             form = self.get_form(request, addresses)
             return self.render_address_step(
                 request,
@@ -339,8 +377,14 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         if form.is_valid():
             address = form.cleaned_data["address"]
             set_checkout_address(request, address.pk)
-            preserve_cart_for_next_request(request)
-            return redirect("catalog:invoice")
+            checkout_summary = build_checkout_summary(request, address, CustomerOrder.SERVICE_DELIVERY)
+            order = create_order_from_checkout(profile, address, checkout_summary)
+            clear_cart(request)
+            messages.success(
+                request,
+                get_ui_strings(get_language(request))["order_confirmed"].format(invoice_number=order.invoice_number),
+            )
+            return redirect("catalog:cart")
         return self.render_address_step(
             request,
             cart,
@@ -408,4 +452,4 @@ class CheckoutConfirmView(LoginRequiredMixin, View):
             request,
             get_ui_strings(get_language(request))["order_confirmed"].format(invoice_number=order.invoice_number),
         )
-        return redirect("core:orders")
+        return redirect("catalog:cart")

@@ -32,6 +32,6 @@ class CustomerAddressAdmin(admin.ModelAdmin):
 
 @admin.register(CustomerOrder)
 class CustomerOrderAdmin(admin.ModelAdmin):
-    list_display = ("invoice_number", "profile", "service_type", "delivery_fee", "status", "created_at")
+    list_display = ("invoice_number", "profile", "service_type", "delivery_fee", "status", "expected_time_minutes", "created_at")
     list_filter = ("service_type", "status")
     search_fields = ("invoice_number", "profile__full_name", "address_snapshot")

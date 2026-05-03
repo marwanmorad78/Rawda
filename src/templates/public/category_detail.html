@@ -13,7 +13,22 @@
 
 <section class="section">
     <div class="container">
-        <div class="product-grid">
+        {% if products %}
+        <div class="category-product-section" data-category-product-section>
+            <form class="category-product-search" role="search" data-category-product-search>
+                <label>
+                    <span>{{ ui.search_products }}</span>
+                    <input
+                        type="search"
+                        name="category_product_search"
+                        placeholder="{{ ui.search_products_placeholder }}"
+                        autocomplete="off"
+                        data-category-product-search-input
+                    >
+                </label>
+            </form>
+
+            <div class="product-grid">
             {% for product in products %}
                 <article
                     class="product-card"
@@ -84,10 +99,14 @@
                         </div>
                     </div>
                 </article>
-            {% empty %}
-                <p>{{ ui.no_products }}</p>
             {% endfor %}
+            </div>
+
+            <p class="category-product-search-empty muted-copy" data-category-product-search-empty hidden>{{ ui.no_matching_products }}</p>
         </div>
+        {% else %}
+            <p>{{ ui.no_products }}</p>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

@@ -1,0 +1,10 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<section class="panel">
+    <div class="dashboard-section-header">
+        <h1>{{ dashboard_ui.pending_orders }}</h1>
+    </div>
+    {% include "dashboard/partials/order_history.html" with orders=orders show_customer=True show_status=True show_modal_actions=True empty_message=dashboard_ui.no_pending_orders %}
+</section>
+{% endblock %}

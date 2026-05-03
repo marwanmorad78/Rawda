@@ -19,40 +19,63 @@
                     <form method="post" class="stack-form">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
-                        <div class="address-choice-list">
-                            {% for address in addresses %}
-                                <label class="address-choice-card">
-                                    <span class="address-choice-input">
-                                        <input
-                                            type="radio"
-                                            name="address"
-                                            value="{{ address.pk }}"
-                                            {% if selected_address_id|stringformat:"s" == address.pk|stringformat:"s" %}checked{% endif %}
-                                        >
-                                        <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
-                                        </span>
-                                        <span class="address-choice-body">
-                                            <span class="address-card-header">
-                                            <strong>{{ address.area.name }}</strong>
-                                            {% if address.is_default %}
-                                                <span class="badge">{{ ui.default_badge }}</span>
-                                            {% endif %}
-                                        </span>
-                                        {% if address.sub_area %}<span>{{ ui.sub_area }}: {{ address.sub_area.name }}</span>{% endif %}
-                                        <span>{{ address.street_address }}</span>
-                                        {% if address.building %}<span>{{ ui.building }}: {{ address.building }}</span>{% endif %}
-                                        {% if address.floor %}<span>{{ ui.floor }}: {{ address.floor }}</span>{% endif %}
-                                        {% if address.apartment %}<span>{{ ui.apartment }}: {{ address.apartment }}</span>{% endif %}
-                                        {% if address.nearby_landmark %}<span>{{ ui.nearby_landmark }}: {{ address.nearby_landmark }}</span>{% endif %}
-                                        <span>{{ ui.delivery_fee }}: {{ address.display_delivery_fee }}</span>
-                                    </span>
-                                </label>
-                            {% endfor %}
+                        <div class="checkout-address-select">
+                            <label for="checkout-address-select" class="field-label">{{ ui.delivery_address }}</label>
+                            <select id="checkout-address-select" name="address" data-checkout-address-option>
+                                {% for address in addresses %}
+                                    <option
+                                        value="{{ address.pk }}"
+                                        data-delivery-fee-display="{% if address.is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ address.display_delivery_fee }}{% endif %}"
+                                        data-grand-total-display="{{ address.display_checkout_total }}"
+                                        {% if selected_address_id|stringformat:"s" == address.pk|stringformat:"s" %}selected{% endif %}
+                                    >
+                                        {{ address.area.name }}{% if address.sub_area %} - {{ address.sub_area.name }}{% endif %} - {{ address.street_address }}{% if address.is_default %} ({{ ui.default_badge }}){% endif %}
+                                    </option>
+                                {% endfor %}
+                                <option value="__add_new__" data-checkout-add-address>{{ ui.add_new_address }}</option>
+                            </select>
                         </div>
                         {{ form.address.errors }}
+                        <div class="checkout-order-review">
+                            {% if cart.has_weight_items %}
+                                <p class="invoice-note">{{ ui.weighted_estimate_notice }}</p>
+                            {% endif %}
+                            <div class="table-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>{{ ui.category }}</th>
+                                            <th>{{ ui.qty }}</th>
+                                            <th>{{ ui.price }}</th>
+                                            <th>{{ ui.total }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in cart.items %}
+                                            <tr>
+                                                <td>
+                                                    <div class="product-category">{{ item.category_label }}</div>
+                                                    <strong>{{ item.title }}</strong>
+                                                    {% if item.is_weight_based %}
+                                                        <div>{{ ui.sold_by_weight }}</div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ item.quantity }}</td>
+                                                <td>{{ item.display_unit_price }}</td>
+                                                <td>{% if item.is_weight_based %}{{ item.display_line_total_range }}{% else %}{{ item.display_line_total }}{% endif %}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="invoice-summary-grid">
+                                <p><strong>{{ ui.subtotal }}:</strong> {% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</p>
+                                <p><strong>{{ ui.delivery_fee }}:</strong> <span data-checkout-delivery-fee>{% if is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ display_delivery_fee }}{% endif %}</span></p>
+                                <p class="invoice-total"><strong>{{ ui.grand_total }}:</strong> <span data-checkout-grand-total>{{ display_total }}</span></p>
+                            </div>
+                        </div>
                         <div class="table-actions">
-                            <button type="submit" class="btn btn-primary">{{ ui.review_order }}</button>
-                            <button type="button" class="btn btn-secondary" data-checkout-address-modal-open>{{ ui.add_new_address }}</button>
+                            <button type="submit" class="btn btn-primary">{{ ui.confirm_order }}</button>
                         </div>
                     </form>
                 {% else %}

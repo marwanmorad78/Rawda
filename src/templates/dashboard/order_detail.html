@@ -1,0 +1,81 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<section class="panel dashboard-order-detail">
+    <div class="dashboard-section-header">
+        <div>
+            <h1>{{ dashboard_ui.order }} {{ order.invoice_number }}</h1>
+            <p class="dashboard-muted">{{ order.created_at|date:"Y-m-d H:i" }}</p>
+        </div>
+        <a href="{% url 'dashboard:pending-orders' %}" class="btn btn-secondary btn-small">{{ dashboard_ui.pending_orders }}</a>
+    </div>
+
+    {% include "partials/order_status_tracker.html" with order=order labels=dashboard_ui heading=dashboard_ui.order_status %}
+
+    <div class="invoice-summary-grid">
+        <p><strong>{{ dashboard_ui.customer }}:</strong> {{ order.profile.full_name }}</p>
+        <p><strong>{{ dashboard_ui.phone_number }}:</strong> <span dir="ltr">{{ order.profile.phone_number }}</span></p>
+        <p><strong>{{ dashboard_ui.fulfillment_method }}:</strong> {% if order.service_type == "delivery" %}{{ dashboard_ui.delivery }}{% else %}{{ dashboard_ui.pickup }}{% endif %}</p>
+        <p><strong>{{ dashboard_ui.status }}:</strong> {{ order.display_status_label }}</p>
+        <p><strong>{{ dashboard_ui.created_at }}:</strong> {{ order.created_at|date:"Y-m-d H:i" }}</p>
+        {% if order.accepted_at %}
+            <p><strong>{{ dashboard_ui.accepted_at }}:</strong> {{ order.accepted_at|date:"Y-m-d H:i" }}</p>
+        {% endif %}
+        {% if order.expected_time_minutes %}
+            <p><strong>{{ dashboard_ui.expected_time_label }}:</strong> {{ order.display_expected_time }}</p>
+        {% endif %}
+        {% if order.service_type == "delivery" %}
+            <p><strong>{{ dashboard_ui.delivery_address }}:</strong> {{ order.address_snapshot }}</p>
+        {% endif %}
+        <p><strong>{{ dashboard_ui.delivery_fee }}:</strong> {{ order.display_delivery_fee }}</p>
+        <p><strong>{{ dashboard_ui.grand_total }}:</strong> {{ order.display_total }}</p>
+    </div>
+
+    {% if order.status == "waiting_accept" %}
+        <form method="post" action="{% url 'dashboard:pending-order-accept' order.pk %}" class="stack-form order-status-action-form">
+            {% csrf_token %}
+            {{ accept_form.as_p }}
+            <div class="expected-time-presets" aria-label="{{ dashboard_ui.expected_time_suggestions }}">
+                <button type="button" class="btn btn-secondary btn-small" data-time-preset="20">20</button>
+                <button type="button" class="btn btn-secondary btn-small" data-time-preset="25">25</button>
+                <button type="button" class="btn btn-secondary btn-small" data-time-preset="30">30</button>
+                <button type="button" class="btn btn-secondary btn-small" data-time-preset="35">35</button>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ dashboard_ui.accept_order }}</button>
+        </form>
+    {% elif order.next_status %}
+        <form method="post" action="{% url 'dashboard:pending-order-advance' order.pk %}" class="order-status-action-form">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="{{ order.next_status }}">
+            <button type="submit" class="btn btn-primary">
+                {{ dashboard_ui.move_to }} {{ order.next_status_label }}
+            </button>
+        </form>
+    {% endif %}
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ dashboard_ui.category }}</th>
+                    <th>{{ dashboard_ui.items }}</th>
+                    <th>{{ dashboard_ui.quantity }}</th>
+                    <th>{{ dashboard_ui.price }}</th>
+                    <th>{{ dashboard_ui.total }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.category_label }}</td>
+                        <td><strong>{{ item.title }}</strong></td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.display_unit_price }}</td>
+                        <td>{{ item.display_line_total }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

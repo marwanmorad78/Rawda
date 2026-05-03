@@ -1,0 +1,58 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <span class="eyebrow">{{ dashboard_ui.customer_details }}</span>
+        <h1>{{ customer.full_name }}</h1>
+    </div>
+</div>
+
+<div class="dashboard-grid dashboard-customer-grid">
+    <section class="panel">
+        <h2>{{ dashboard_ui.customer_information }}</h2>
+        <div class="invoice-summary-grid">
+            <p><strong>{{ dashboard_ui.name }}:</strong> {{ customer.full_name }}</p>
+            <p><strong>{{ dashboard_ui.phone_number }}:</strong> <span dir="ltr">{{ customer.phone_number }}</span></p>
+        </div>
+    </section>
+    <section class="panel">
+        <h2>{{ dashboard_ui.change_customer_password }}</h2>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            {{ password_form.non_field_errors }}
+            {% include "partials/dashboard_form_field.html" with field=password_form.new_password %}
+            {% include "partials/dashboard_form_field.html" with field=password_form.confirm_password %}
+            <button type="submit" class="btn btn-primary">{{ dashboard_ui.save_changes }}</button>
+        </form>
+    </section>
+</div>
+
+<section class="panel">
+    <h2>{{ dashboard_ui.saved_addresses }}</h2>
+    <div class="address-list">
+        {% for address in customer.addresses.all %}
+            <div class="address-card">
+                <div class="address-card-header">
+                    <strong>{{ address.area.name }}</strong>
+                    {% if address.is_default %}<span class="badge">{{ dashboard_ui.default }}</span>{% endif %}
+                </div>
+                {% if address.sub_area %}<p>{{ address.sub_area.name }}</p>{% endif %}
+                <p>{{ address.street_address }}</p>
+                {% if address.building %}<p>{{ address.building }}</p>{% endif %}
+                {% if address.floor %}<p>{{ address.floor }}</p>{% endif %}
+                {% if address.apartment %}<p>{{ address.apartment }}</p>{% endif %}
+                {% if address.nearby_landmark %}<p>{{ address.nearby_landmark }}</p>{% endif %}
+                {% if address.notes %}<p>{{ address.notes }}</p>{% endif %}
+            </div>
+        {% empty %}
+            <p>{{ dashboard_ui.no_saved_addresses }}</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="panel">
+    <h2>{{ dashboard_ui.orders }}</h2>
+    {% include "dashboard/partials/order_history.html" with orders=orders show_customer=False %}
+</section>
+{% endblock %}

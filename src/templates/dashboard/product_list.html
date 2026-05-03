@@ -10,6 +10,7 @@
             <a class="btn btn-secondary" href="{% url 'dashboard:product-excel-template' %}">{{ dashboard_ui.download_template }}</a>
         </div>
     </div>
+    {% include "dashboard/partials/search_form.html" with search_placeholder=dashboard_ui.search_products_placeholder %}
     <div class="table-wrap">
         <table>
             <thead>

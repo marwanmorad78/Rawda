@@ -4,9 +4,9 @@ from io import BytesIO
 from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db import transaction
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Q
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import View
@@ -15,7 +15,7 @@ from openpyxl import Workbook, load_workbook
 
 from apps.catalog.models import Category, Product
 from apps.core.localization import DEFAULT_LANGUAGE, localize_instance, localize_queryset
-from apps.core.models import DeliveryArea, DeliverySubArea, SiteSettings
+from apps.core.models import CustomerOrder, CustomerProfile, DeliveryArea, DeliverySubArea, SiteSettings
 from apps.core.pricing import (
     get_active_site_settings,
     set_product_display_price,
@@ -23,10 +23,13 @@ from apps.core.pricing import (
 )
 from apps.dashboard.forms import (
     CategoryForm,
+    CustomerAccessPasswordForm,
+    CustomerPasswordChangeForm,
     DeliveryAreaForm,
     DeliverySubAreaFormSet,
     DollarPriceForm,
     ManagerLoginForm,
+    OrderAcceptForm,
     ProductExcelUploadForm,
     ProductOptionFormSet,
     ProductForm,
@@ -35,6 +38,7 @@ from apps.dashboard.forms import (
 )
 from apps.dashboard.localization import get_dashboard_strings
 from apps.dashboard.mixins import DashboardLocalizationMixin, StaffRequiredMixin
+from apps.core.order_status import attach_order_display, attach_orders_display, suggested_expected_minutes
 from apps.promotions.models import Promotion
 
 
@@ -139,9 +143,19 @@ def get_product_manage_context(language, product_form=None, upload_form=None, ex
     }
 
 
-def get_product_list_context(language, upload_form=None, excel_errors=None):
+def get_product_list_context(language, upload_form=None, excel_errors=None, search_query=""):
     site_settings = get_active_site_settings() or get_dashboard_site_settings()
-    items = list(Product.objects.select_related("category").all().order_by("name"))
+    items_queryset = Product.objects.select_related("category").all().order_by("name")
+    if search_query:
+        items_queryset = items_queryset.filter(
+            Q(name__icontains=search_query)
+            | Q(name_ar__icontains=search_query)
+            | Q(short_description__icontains=search_query)
+            | Q(category__name__icontains=search_query)
+            | Q(category__name_ar__icontains=search_query)
+            | Q(sku__icontains=search_query)
+        )
+    items = list(items_queryset)
     for item in items:
         localize_instance(item.category, language, ["name", "description"])
         localize_instance(item, language, ["name", "short_description", "description", "unit_label"])
@@ -150,6 +164,7 @@ def get_product_list_context(language, upload_form=None, excel_errors=None):
         "items": items,
         "upload_form": upload_form or ProductExcelUploadForm(language=language),
         "excel_errors": excel_errors or [],
+        "search_query": search_query,
     }
 
 
@@ -361,7 +376,180 @@ class DashboardHomeView(DashboardLocalizationMixin, StaffRequiredMixin, Template
         context["available_product_count"] = Product.objects.filter(is_available=True).count()
         context["promotion_count"] = Promotion.objects.filter(is_active=True).count()
         context["delivery_area_count"] = DeliveryArea.objects.count()
+        context["customer_count"] = CustomerProfile.objects.count()
+        context["order_count"] = CustomerOrder.objects.count()
+        context["pending_order_count"] = CustomerOrder.objects.filter(status__in=CustomerOrder.ACTIVE_STATUSES).count()
         return context
+
+
+CUSTOMER_ACCESS_SESSION_KEY = "dashboard_customer_access_granted"
+
+
+def attach_dashboard_order_display(orders, language):
+    return attach_orders_display(orders, get_dashboard_strings(language), language)
+
+
+class CustomerAccessRequiredMixin:
+    def has_customer_access(self):
+        return bool(self.request.session.get(CUSTOMER_ACCESS_SESSION_KEY))
+
+
+class CustomerListView(CustomerAccessRequiredMixin, DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/customers.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["has_customer_access"] = self.has_customer_access()
+        context["access_form"] = kwargs.get("access_form") or CustomerAccessPasswordForm(language=self.get_language())
+        if context["has_customer_access"]:
+            search_query = self.request.GET.get("q", "").strip()
+            customers = CustomerProfile.objects.select_related("user").order_by("full_name", "phone_number")
+            if search_query:
+                customers = customers.filter(
+                    Q(full_name__icontains=search_query)
+                    | Q(phone_number__icontains=search_query)
+                    | Q(user__username__icontains=search_query)
+                )
+            context["customers"] = customers
+            context["search_query"] = search_query
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = CustomerAccessPasswordForm(request.POST, language=self.get_language())
+        if form.is_valid():
+            request.session[CUSTOMER_ACCESS_SESSION_KEY] = True
+            request.session.modified = True
+            messages.success(request, self.get_dashboard_ui()["customers_unlocked"])
+            return redirect("dashboard:customers")
+        return self.render_to_response(self.get_context_data(access_form=form))
+
+
+class CustomerDetailView(CustomerAccessRequiredMixin, DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/customer_detail.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self.has_customer_access():
+            return redirect("dashboard:customers")
+        self.customer = get_object_or_404(
+            CustomerProfile.objects.select_related("user").prefetch_related("addresses__area", "addresses__sub_area"),
+            pk=kwargs["pk"],
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        language = self.get_language()
+        orders = list(self.customer.orders.prefetch_related("items").all())
+        context["customer"] = self.customer
+        context["password_form"] = kwargs.get("password_form") or CustomerPasswordChangeForm(language=language)
+        context["orders"] = attach_dashboard_order_display(orders, language)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = CustomerPasswordChangeForm(request.POST, language=self.get_language())
+        if form.is_valid():
+            self.customer.user.set_password(form.cleaned_data["new_password"])
+            self.customer.user.save(update_fields=["password"])
+            messages.success(request, self.get_dashboard_ui()["customer_password_updated"])
+            return redirect("dashboard:customer-detail", pk=self.customer.pk)
+        return self.render_to_response(self.get_context_data(password_form=form))
+
+
+class DashboardOrdersView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/orders.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        orders = list(
+            CustomerOrder.objects.select_related("profile", "address").prefetch_related("items").all()
+        )
+        context["orders"] = attach_dashboard_order_display(orders, self.get_language())
+        suggested_minutes = suggested_expected_minutes()
+        for order in context["orders"]:
+            order.suggested_expected_minutes = suggested_minutes
+        return context
+
+
+class PendingOrdersView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/pending_orders.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        orders = list(
+            CustomerOrder.objects.select_related("profile", "address")
+            .prefetch_related("items")
+            .filter(status__in=CustomerOrder.ACTIVE_STATUSES)
+            .order_by("created_at", "id")
+        )
+        context["orders"] = attach_dashboard_order_display(orders, self.get_language())
+        return context
+
+
+class DashboardOrderDetailView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/order_detail.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.order = get_object_or_404(
+            CustomerOrder.objects.select_related("profile", "address").prefetch_related("items"),
+            pk=kwargs["pk"],
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        language = self.get_language()
+        context["order"] = attach_order_display(self.order, self.get_dashboard_ui(), language)
+        context["accept_form"] = kwargs.get("accept_form") or OrderAcceptForm(
+            language=language,
+            suggested_minutes=suggested_expected_minutes(),
+        )
+        return context
+
+
+class DashboardOrderAcceptView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        order = get_object_or_404(CustomerOrder, pk=pk, status=CustomerOrder.STATUS_WAITING_ACCEPT)
+        form = OrderAcceptForm(
+            request.POST,
+            language=self.get_language(),
+            suggested_minutes=suggested_expected_minutes(),
+        )
+        if not form.is_valid():
+            detail = DashboardOrderDetailView()
+            detail.setup(request, pk=pk)
+            detail.order = order
+            return detail.render_to_response(detail.get_context_data(accept_form=form))
+
+        order.status = CustomerOrder.STATUS_BEING_PREPARED
+        order.expected_time_minutes = form.cleaned_data["expected_time_minutes"]
+        order.accepted_at = timezone.now()
+        order.save(update_fields=["status", "expected_time_minutes", "accepted_at", "updated_at"])
+        messages.success(request, self.get_dashboard_ui()["order_accepted"])
+        return redirect("dashboard:pending-order-detail", pk=order.pk)
+
+
+class DashboardOrderAdvanceView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        order = get_object_or_404(CustomerOrder, pk=pk)
+        if order.status == CustomerOrder.STATUS_WAITING_ACCEPT:
+            messages.error(request, self.get_dashboard_ui()["invalid_order_status_change"])
+            return redirect("dashboard:pending-order-detail", pk=order.pk)
+        next_status = order.get_next_status()
+        requested_status = request.POST.get("status")
+        if not next_status or requested_status != next_status:
+            messages.error(request, self.get_dashboard_ui()["invalid_order_status_change"])
+            return redirect("dashboard:pending-order-detail", pk=order.pk)
+
+        order.status = next_status
+        update_fields = ["status", "updated_at"]
+        if next_status == CustomerOrder.STATUS_DONE:
+            order.completed_at = timezone.now()
+            update_fields.append("completed_at")
+        order.save(update_fields=update_fields)
+        messages.success(request, self.get_dashboard_ui()["order_status_updated"])
+        if order.status == CustomerOrder.STATUS_DONE:
+            return redirect("dashboard:orders")
+        return redirect("dashboard:pending-order-detail", pk=order.pk)
 
 
 class CategoryManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateView):
@@ -372,11 +560,22 @@ class CategoryManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateV
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         language = self.get_language()
+        search_query = self.request.GET.get("q", "").strip()
+        items = Category.objects.all().order_by("display_order", "name")
+        if search_query:
+            items = items.filter(
+                Q(name__icontains=search_query)
+                | Q(name_ar__icontains=search_query)
+                | Q(description__icontains=search_query)
+                | Q(description_ar__icontains=search_query)
+                | Q(slug__icontains=search_query)
+            )
         context["items"] = localize_queryset(
-            Category.objects.all().order_by("display_order", "name"),
+            items,
             language,
             ["name", "description"],
         )
+        context["search_query"] = search_query
         return context
 
     def form_valid(self, form):
@@ -452,7 +651,8 @@ class ProductListView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateVi
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(get_product_list_context(self.get_language()))
+        search_query = self.request.GET.get("q", "").strip()
+        context.update(get_product_list_context(self.get_language(), search_query=search_query))
         return context
 
 

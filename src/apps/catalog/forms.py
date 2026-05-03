@@ -7,7 +7,7 @@ from apps.core.models import CustomerAddress
 class CheckoutAddressForm(forms.Form):
     address = forms.ModelChoiceField(
         queryset=CustomerAddress.objects.none(),
-        widget=forms.RadioSelect,
+        widget=forms.Select,
         empty_label=None,
     )
 

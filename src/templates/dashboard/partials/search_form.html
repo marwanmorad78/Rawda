@@ -1,0 +1,15 @@
+<form method="get" class="dashboard-search-form">
+    <label>
+        <span>{{ dashboard_ui.search }}</span>
+        <input
+            type="search"
+            name="q"
+            value="{{ search_query }}"
+            placeholder="{{ search_placeholder|default:dashboard_ui.search_placeholder }}"
+        >
+    </label>
+    <button type="submit" class="btn btn-primary">{{ dashboard_ui.search }}</button>
+    {% if search_query %}
+        <a href="{{ request.path }}" class="btn btn-secondary">{{ dashboard_ui.clear_search }}</a>
+    {% endif %}
+</form>

@@ -195,15 +195,43 @@ class CustomerAddress(TimeStampedModel):
 class CustomerOrder(TimeStampedModel):
     SERVICE_PICKUP = "pickup"
     SERVICE_DELIVERY = "delivery"
-    STATUS_PENDING = "pending"
-    STATUS_CONFIRMED = "confirmed"
+    STATUS_WAITING_ACCEPT = "waiting_accept"
+    STATUS_BEING_PREPARED = "being_prepared"
+    STATUS_OUT_FOR_DELIVERY = "out_for_delivery"
+    STATUS_READY_TO_PICKUP = "ready_to_pickup"
+    STATUS_DONE = "done"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_PENDING = STATUS_WAITING_ACCEPT
+    STATUS_CONFIRMED = STATUS_DONE
     SERVICE_CHOICES = [
         (SERVICE_PICKUP, "Pickup"),
         (SERVICE_DELIVERY, "Delivery"),
     ]
     STATUS_CHOICES = [
-        (STATUS_PENDING, "Pending"),
-        (STATUS_CONFIRMED, "Confirmed"),
+        (STATUS_WAITING_ACCEPT, "Waiting for accept"),
+        (STATUS_BEING_PREPARED, "Being prepared"),
+        (STATUS_OUT_FOR_DELIVERY, "Out for delivery"),
+        (STATUS_READY_TO_PICKUP, "Ready to pick up"),
+        (STATUS_DONE, "Done"),
+        (STATUS_CANCELLED, "Cancelled"),
+    ]
+    ACTIVE_STATUSES = [
+        STATUS_WAITING_ACCEPT,
+        STATUS_BEING_PREPARED,
+        STATUS_OUT_FOR_DELIVERY,
+        STATUS_READY_TO_PICKUP,
+    ]
+    DELIVERY_STATUS_FLOW = [
+        STATUS_WAITING_ACCEPT,
+        STATUS_BEING_PREPARED,
+        STATUS_OUT_FOR_DELIVERY,
+        STATUS_DONE,
+    ]
+    PICKUP_STATUS_FLOW = [
+        STATUS_WAITING_ACCEPT,
+        STATUS_BEING_PREPARED,
+        STATUS_READY_TO_PICKUP,
+        STATUS_DONE,
     ]
 
     profile = models.ForeignKey(
@@ -224,7 +252,10 @@ class CustomerOrder(TimeStampedModel):
         choices=SERVICE_CHOICES,
         default=SERVICE_DELIVERY,
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_CONFIRMED)
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_WAITING_ACCEPT)
+    expected_time_minutes = models.PositiveIntegerField(blank=True, null=True)
+    accepted_at = models.DateTimeField(blank=True, null=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
     address_snapshot = models.TextField()
     subtotal_min = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     subtotal_max = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -238,6 +269,28 @@ class CustomerOrder(TimeStampedModel):
     def __str__(self) -> str:
         return self.invoice_number
 
+    @property
+    def order_type(self):
+        return self.service_type
+
+    @property
+    def is_active(self):
+        return self.status in self.ACTIVE_STATUSES
+
+    def get_status_flow(self):
+        if self.service_type == self.SERVICE_DELIVERY:
+            return self.DELIVERY_STATUS_FLOW
+        return self.PICKUP_STATUS_FLOW
+
+    def get_next_status(self):
+        flow = self.get_status_flow()
+        if self.status not in flow:
+            return None
+        next_index = flow.index(self.status) + 1
+        if next_index >= len(flow):
+            return None
+        return flow[next_index]
+
 
 class CustomerOrderItem(TimeStampedModel):
     order = models.ForeignKey(
@@ -246,6 +299,7 @@ class CustomerOrderItem(TimeStampedModel):
         related_name="items",
     )
     item_type = models.CharField(max_length=20)
+    cart_item_id = models.PositiveIntegerField(blank=True, null=True)
     title = models.CharField(max_length=180)
     category_label = models.CharField(max_length=120, blank=True)
     quantity = models.PositiveIntegerField(default=1)

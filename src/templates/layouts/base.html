@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     {% block extra_head %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=option-price-align-1">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=order-status-2">
 </head>
 <body class="{% if is_rtl %}rtl {% endif %}{% block body_class %}{% endblock %}">
     {% include "partials/header.html" %}
@@ -83,6 +83,6 @@
     {% endif %}
     {% include "partials/footer.html" %}
     {% block extra_scripts %}{% endblock %}
-    <script src="{% static 'js/site.js' %}?v=checkout-address-modal-1"></script>
+    <script src="{% static 'js/site.js' %}?v=order-status-2"></script>
 </body>
 </html>

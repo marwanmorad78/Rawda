@@ -2,13 +2,23 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import FormView, TemplateView, UpdateView
 
-from apps.catalog.models import Category, Product
+from apps.catalog.cart import (
+    PRODUCT_ITEM_TYPE,
+    PRODUCT_OPTION_ITEM_TYPE,
+    PROMOTION_ITEM_TYPE,
+    add_item,
+    preserve_cart_for_next_request,
+    set_checkout_service_type,
+)
+from apps.catalog.models import Category, Product, ProductOption
 from apps.core.forms import (
     CustomerAddressForm,
     CustomerLoginForm,
@@ -19,14 +29,13 @@ from apps.core.forms import (
 )
 from apps.core.localization import (
     DEFAULT_LANGUAGE,
-    format_price_range,
-    format_syp,
     get_language,
     get_ui_strings,
     localize_instance,
     localize_queryset,
 )
-from apps.core.models import CustomerAddress, CustomerProfile, DeliveryArea, SiteSettings
+from apps.core.models import CustomerAddress, CustomerOrder, CustomerProfile, DeliveryArea, SiteSettings
+from apps.core.order_status import attach_order_display, attach_orders_display, get_active_customer_order
 from apps.core.pricing import set_product_display_price, set_promotion_display_price
 from apps.promotions.models import Promotion
 
@@ -84,6 +93,20 @@ class CustomerContextMixin:
         }
         return CustomerProfile.objects.get_or_create(user=self.request.user, defaults=defaults)[0]
 
+    def get_settings_addresses(self, edit_form=None):
+        addresses = list(
+            self.get_customer_profile().addresses.select_related("area", "sub_area").all()
+        )
+        for address in addresses:
+            if edit_form is not None and edit_form.instance.pk == address.pk:
+                address.edit_form = edit_form
+            else:
+                address.edit_form = CustomerAddressForm(
+                    instance=address,
+                    language=self.get_language(),
+                )
+        return addresses
+
 
 class HomeView(TemplateView):
     template_name = "public/home.html"
@@ -96,6 +119,18 @@ class HomeView(TemplateView):
         if self.request.user.is_authenticated:
             customer_name = (self.request.user.first_name or self.request.user.username or "").strip()
             context["customer_first_name"] = customer_name.split()[0] if customer_name else ""
+            if not self.request.user.is_staff:
+                profile, _ = CustomerProfile.objects.get_or_create(
+                    user=self.request.user,
+                    defaults={
+                        "full_name": self.request.user.first_name or self.request.user.username,
+                        "phone_number": self.request.user.username,
+                    },
+                )
+                active_order = get_active_customer_order(profile)
+                context["active_order"] = (
+                    attach_order_display(active_order, get_ui_strings(language), language) if active_order else None
+                )
         context["categories"] = localize_queryset(
             Category.objects.filter(is_active=True).order_by("display_order", "name"),
             language,
@@ -124,6 +159,33 @@ class HomeView(TemplateView):
             set_promotion_display_price(promotion, language, site_content)
             promotion.add_to_cart_url = reverse("catalog:add-offer-to-cart", kwargs={"slug": promotion.slug})
         return context
+
+
+class ActiveOrderStatusView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        language = get_language(request)
+        profile, _ = CustomerProfile.objects.get_or_create(
+            user=request.user,
+            defaults={
+                "full_name": request.user.first_name or request.user.username,
+                "phone_number": request.user.username,
+            },
+        )
+        active_order = get_active_customer_order(profile)
+        if active_order is None:
+            return JsonResponse({"has_active_order": False, "html": ""})
+
+        order = attach_order_display(active_order, get_ui_strings(language), language)
+        html = render_to_string(
+            "partials/order_status_tracker.html",
+            {
+                "order": order,
+                "labels": get_ui_strings(language),
+                "heading": get_ui_strings(language)["active_order_heading"],
+            },
+            request=request,
+        )
+        return JsonResponse({"has_active_order": True, "html": html})
 
 
 class AboutView(TemplateView):
@@ -224,8 +286,10 @@ class CustomerSettingsView(CustomerContextMixin, LoginRequiredMixin, TemplateVie
         profile = self.get_customer_profile()
         context.setdefault("profile_form", CustomerProfileForm(instance=profile, language=self.get_language()))
         context.setdefault("address_form", CustomerAddressForm(language=self.get_language()))
+        context.setdefault("is_address_modal_open", False)
+        context.setdefault("open_edit_address_id", None)
         context["site_content"] = self.get_site_content()
-        context["addresses"] = profile.addresses.select_related("area", "sub_area").all()
+        context["addresses"] = self.get_settings_addresses()
         return context
 
 
@@ -248,8 +312,10 @@ class CustomerProfileUpdateView(CustomerContextMixin, LoginRequiredMixin, View):
             {
                 "profile_form": profile_form,
                 "address_form": address_form,
+                "is_address_modal_open": False,
+                "open_edit_address_id": None,
                 "site_content": self.get_site_content(),
-                "addresses": profile.addresses.select_related("area", "sub_area").all(),
+                "addresses": self.get_settings_addresses(),
             },
         )
 
@@ -269,8 +335,10 @@ class CustomerAddressCreateView(CustomerContextMixin, LoginRequiredMixin, View):
             {
                 "profile_form": profile_form,
                 "address_form": address_form,
+                "is_address_modal_open": True,
+                "open_edit_address_id": None,
                 "site_content": self.get_site_content(),
-                "addresses": profile.addresses.select_related("area", "sub_area").all(),
+                "addresses": self.get_settings_addresses(),
             },
         )
 
@@ -298,6 +366,23 @@ class CustomerAddressUpdateView(CustomerContextMixin, LoginRequiredMixin, Update
         messages.success(self.request, get_ui_strings(self.get_language())["address_updated"])
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        return render(
+            self.request,
+            "public/settings.html",
+            {
+                "profile_form": CustomerProfileForm(
+                    instance=self.get_customer_profile(),
+                    language=self.get_language(),
+                ),
+                "address_form": CustomerAddressForm(language=self.get_language()),
+                "is_address_modal_open": False,
+                "open_edit_address_id": form.instance.pk,
+                "site_content": self.get_site_content(),
+                "addresses": self.get_settings_addresses(edit_form=form),
+            },
+        )
+
 
 class CustomerAddressDeleteView(CustomerContextMixin, LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
@@ -322,14 +407,94 @@ class PreviousOrdersView(CustomerContextMixin, LoginRequiredMixin, TemplateView)
         profile = self.get_customer_profile()
         context["profile"] = profile
         language = self.get_language()
-        orders = list(profile.orders.select_related("address__area", "address__sub_area").prefetch_related("items").all())
-        for order in orders:
-            order.display_total = format_price_range(order.total_min, order.total_max, language)
-            order.display_delivery_fee = format_syp(order.delivery_fee, language)
-            for item in order.items.all():
-                item.display_line_total = format_price_range(item.line_total_min, item.line_total_max, language)
+        orders = list(
+            profile.orders.select_related("address__area", "address__sub_area")
+            .prefetch_related("items")
+            .filter(status=CustomerOrder.STATUS_DONE)
+        )
+        attach_orders_display(orders, get_ui_strings(language), language)
         context["orders"] = orders
         return context
+
+
+class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
+    def resolve_order_item(self, item):
+        if item.cart_item_id:
+            if item.item_type == PRODUCT_ITEM_TYPE:
+                exists = Product.objects.filter(
+                    pk=item.cart_item_id,
+                    is_available=True,
+                    category__is_active=True,
+                    has_options=False,
+                ).exists()
+                return (PRODUCT_ITEM_TYPE, item.cart_item_id) if exists else None
+            if item.item_type == PRODUCT_OPTION_ITEM_TYPE:
+                exists = ProductOption.objects.filter(
+                    pk=item.cart_item_id,
+                    product__is_available=True,
+                    product__category__is_active=True,
+                ).exists()
+                return (PRODUCT_OPTION_ITEM_TYPE, item.cart_item_id) if exists else None
+            if item.item_type == PROMOTION_ITEM_TYPE:
+                exists = Promotion.active().filter(pk=item.cart_item_id).exists()
+                return (PROMOTION_ITEM_TYPE, item.cart_item_id) if exists else None
+
+        title = (item.title or "").strip()
+        if not title:
+            return None
+
+        if item.item_type == PRODUCT_ITEM_TYPE:
+            product = Product.objects.filter(
+                Q(name__iexact=title) | Q(name_ar__iexact=title),
+                is_available=True,
+                category__is_active=True,
+                has_options=False,
+            ).first()
+            return (PRODUCT_ITEM_TYPE, product.pk) if product else None
+
+        if item.item_type == PRODUCT_OPTION_ITEM_TYPE:
+            product_title, _, option_name = title.partition(" - ")
+            option_query = ProductOption.objects.filter(
+                product__is_available=True,
+                product__category__is_active=True,
+            )
+            if option_name:
+                product_title = product_title.strip()
+                option_query = option_query.filter(name__iexact=option_name.strip()).filter(
+                    Q(product__name__iexact=product_title) | Q(product__name_ar__iexact=product_title)
+                )
+            else:
+                option_query = option_query.filter(name__iexact=title)
+            option = option_query.first()
+            return (PRODUCT_OPTION_ITEM_TYPE, option.pk) if option else None
+
+        if item.item_type == PROMOTION_ITEM_TYPE:
+            promotion = Promotion.active().filter(Q(title__iexact=title) | Q(title_ar__iexact=title)).first()
+            return (PROMOTION_ITEM_TYPE, promotion.pk) if promotion else None
+
+        return None
+
+    def post(self, request, pk, *args, **kwargs):
+        profile = self.get_customer_profile()
+        order = get_object_or_404(profile.orders.prefetch_related("items"), pk=pk)
+        added_count = 0
+
+        for item in order.items.all():
+            target = self.resolve_order_item(item)
+            if target is None:
+                continue
+            item_type, item_id = target
+            add_item(request, item_type, item_id, max(item.quantity, 1))
+            added_count += 1
+
+        ui = get_ui_strings(self.get_language())
+        if added_count:
+            set_checkout_service_type(request, order.service_type)
+            preserve_cart_for_next_request(request)
+            messages.success(request, ui["reorder_added"])
+        else:
+            messages.warning(request, ui["reorder_unavailable"])
+        return redirect("catalog:cart")
 
 
 class DeliverySubAreaListView(View):

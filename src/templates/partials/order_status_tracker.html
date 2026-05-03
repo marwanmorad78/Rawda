@@ -1,0 +1,22 @@
+<article class="order-status-card">
+    <div class="order-status-header">
+        <div>
+            <span class="eyebrow">{{ labels.order_status }}</span>
+            <h2>{{ heading }}</h2>
+            <p>{{ order.display_expected_time }}</p>
+        </div>
+        <div class="order-status-meta">
+            <strong>{{ order.invoice_number }}</strong>
+            <span>{% if order.service_type == "delivery" %}{{ labels.delivery }}{% else %}{{ labels.pickup }}{% endif %}</span>
+            <span>{{ order.display_total }}</span>
+        </div>
+    </div>
+    <ol class="order-status-track">
+        {% for step in order.status_steps %}
+            <li class="order-status-step is-{{ step.state }}">
+                <span class="order-status-circle" aria-hidden="true"></span>
+                <span class="order-status-label">{{ step.label }}</span>
+            </li>
+        {% endfor %}
+    </ol>
+</article>

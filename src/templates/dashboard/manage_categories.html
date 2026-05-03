@@ -15,6 +15,7 @@
     </section>
     <section class="panel">
         <h2>{{ dashboard_ui.existing_categories }}</h2>
+        {% include "dashboard/partials/search_form.html" with search_placeholder=dashboard_ui.search_categories_placeholder %}
         <div class="table-wrap">
             <table>
                 <thead>
