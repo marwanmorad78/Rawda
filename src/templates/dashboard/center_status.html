@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<section class="panel panel-narrow">
+    <div class="dashboard-section-header">
+        <div>
+            <span class="eyebrow">{{ dashboard_ui.center_status }}</span>
+            <h1>{{ dashboard_ui.center_status }}</h1>
+        </div>
+    </div>
+
+    <div class="center-status-summary">
+        {% if center_status.is_available %}
+            <strong>{{ dashboard_ui.available }}</strong>
+            <span>{{ dashboard_ui.center_available_summary }}</span>
+        {% else %}
+            <strong>{{ dashboard_ui.busy }}</strong>
+            <span>{{ dashboard_ui.busy_until }} {{ center_status.busy_until|date:"Y-m-d H:i" }}</span>
+            <span
+                data-dashboard-center-countdown
+                data-remaining-seconds="{{ remaining_seconds }}"
+                data-label="{{ dashboard_ui.remaining_time }}"
+            >
+                {{ dashboard_ui.remaining_time }} {{ remaining_minutes }} {{ dashboard_ui.minutes }}
+            </span>
+        {% endif %}
+    </div>
+
+    <form method="post" class="stack-form center-status-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">{{ dashboard_ui.save_changes }}</button>
+    </form>
+</section>
+{% endblock %}

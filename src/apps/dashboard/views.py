@@ -1,10 +1,11 @@
 from decimal import Decimal, InvalidOperation
+from datetime import datetime, time
 from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db import transaction
-from django.db.models import ProtectedError, Q
+from django.db.models import ProtectedError, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -13,9 +14,17 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, TemplateView, UpdateView
 from openpyxl import Workbook, load_workbook
 
-from apps.catalog.models import Category, Product
-from apps.core.localization import DEFAULT_LANGUAGE, localize_instance, localize_queryset
-from apps.core.models import CustomerOrder, CustomerProfile, DeliveryArea, DeliverySubArea, SiteSettings
+from apps.catalog.models import Category, Product, ProductOption
+from apps.core.localization import DEFAULT_LANGUAGE, format_syp, localize_instance, localize_queryset
+from apps.core.models import (
+    CenterStatus,
+    CustomerOrder,
+    CustomerOrderItem,
+    CustomerProfile,
+    DeliveryArea,
+    DeliverySubArea,
+    SiteSettings,
+)
 from apps.core.pricing import (
     get_active_site_settings,
     set_product_display_price,
@@ -23,8 +32,10 @@ from apps.core.pricing import (
 )
 from apps.dashboard.forms import (
     CategoryForm,
+    CenterStatusForm,
     CustomerAccessPasswordForm,
     CustomerPasswordChangeForm,
+    DeliveryAreaExcelUploadForm,
     DeliveryAreaForm,
     DeliverySubAreaFormSet,
     DollarPriceForm,
@@ -39,6 +50,7 @@ from apps.dashboard.forms import (
 from apps.dashboard.localization import get_dashboard_strings
 from apps.dashboard.mixins import DashboardLocalizationMixin, StaffRequiredMixin
 from apps.core.order_status import attach_order_display, attach_orders_display, suggested_expected_minutes
+from apps.core.services import mark_order_accepted, sync_center_status_and_auto_accept_waiting_orders
 from apps.promotions.models import Promotion
 
 
@@ -52,6 +64,7 @@ PRODUCT_EXCEL_HEADERS = [
     "is_price_linked_to_dollar",
     "sold_by_weight_mode",
     "sold_by_weight",
+    "has_options",
     "unit_label",
     "is_available",
     "is_featured",
@@ -59,11 +72,30 @@ PRODUCT_EXCEL_HEADERS = [
     "sku",
 ]
 PRODUCT_EXCEL_REQUIRED_HEADERS = ["product_name", "category", "price"]
-BOOLEAN_COLUMNS = ["is_price_linked_to_dollar", "sold_by_weight", "is_available", "is_featured"]
+PRODUCT_OPTION_EXCEL_HEADERS = [
+    "product_sku",
+    "option_name",
+    "price",
+    "is_default",
+    "display_order",
+]
+PRODUCT_OPTION_EXCEL_REQUIRED_HEADERS = ["product_sku", "option_name", "price"]
+BOOLEAN_COLUMNS = ["is_price_linked_to_dollar", "sold_by_weight", "has_options", "is_available", "is_featured"]
 PRODUCT_MODE_COLUMNS = {
     "price_link_mode": {Product.BEHAVIOR_INHERIT, Product.BEHAVIOR_CUSTOM},
     "sold_by_weight_mode": {Product.BEHAVIOR_INHERIT, Product.BEHAVIOR_CUSTOM},
 }
+DELIVERY_AREA_EXCEL_HEADERS = ["area_name", "has_sub_areas", "delivery_fee", "display_order", "is_active"]
+DELIVERY_AREA_EXCEL_REQUIRED_HEADERS = ["area_name"]
+DELIVERY_SUB_AREA_EXCEL_HEADERS = ["area_name", "sub_area_name", "delivery_fee", "display_order", "is_active"]
+DELIVERY_SUB_AREA_EXCEL_REQUIRED_HEADERS = ["area_name", "sub_area_name", "delivery_fee"]
+SALES_REPORT_STATUSES = [
+    CustomerOrder.STATUS_ACCEPTED,
+    CustomerOrder.STATUS_BEING_PREPARED,
+    CustomerOrder.STATUS_OUT_FOR_DELIVERY,
+    CustomerOrder.STATUS_READY_TO_PICKUP,
+    CustomerOrder.STATUS_DONE,
+]
 
 
 def get_dashboard_site_settings():
@@ -116,7 +148,36 @@ def parse_excel_decimal(value):
         return None, "Enter a valid number."
     if parsed < 0:
         return None, "Price cannot be negative."
+    if parsed != parsed.to_integral_value():
+        return None, "Enter a whole number without decimals."
     return parsed, None
+
+
+def parse_excel_integer(value, default=0):
+    if value is None or value == "":
+        return default, None
+    try:
+        parsed = int(str(value).strip())
+    except (TypeError, ValueError):
+        return default, "Enter a whole number."
+    if parsed < 0:
+        return default, "Enter zero or a positive number."
+    return parsed, None
+
+
+def build_sheet_rows(worksheet):
+    rows = worksheet.iter_rows(values_only=True)
+    headers = [normalize_excel_header(value) for value in next(rows, [])]
+    header_positions = {header: index for index, header in enumerate(headers) if header}
+    data_rows = []
+    for row_number, row_values in enumerate(rows, start=2):
+        row = {
+            header: row_values[index] if index < len(row_values) else None
+            for header, index in header_positions.items()
+        }
+        if any(value not in (None, "") for value in row.values()):
+            data_rows.append((row_number, row))
+    return header_positions, data_rows
 
 
 def get_product_excel_category_lookup():
@@ -137,6 +198,7 @@ def get_product_excel_category_lookup():
 
 def get_product_manage_context(language, product_form=None, upload_form=None, excel_errors=None):
     return {
+        "dashboard_ui": get_dashboard_strings(language),
         "form": product_form or ProductForm(language=language),
         "upload_form": upload_form or ProductExcelUploadForm(language=language),
         "excel_errors": excel_errors or [],
@@ -161,10 +223,21 @@ def get_product_list_context(language, upload_form=None, excel_errors=None, sear
         localize_instance(item, language, ["name", "short_description", "description", "unit_label"])
         set_product_display_price(item, language, site_settings)
     return {
+        "dashboard_ui": get_dashboard_strings(language),
         "items": items,
         "upload_form": upload_form or ProductExcelUploadForm(language=language),
         "excel_errors": excel_errors or [],
         "search_query": search_query,
+    }
+
+
+def get_delivery_area_manage_context(language, area_form=None, upload_form=None, excel_errors=None):
+    return {
+        "dashboard_ui": get_dashboard_strings(language),
+        "form": area_form or DeliveryAreaForm(language=language),
+        "upload_form": upload_form or DeliveryAreaExcelUploadForm(language=language),
+        "excel_errors": excel_errors or [],
+        "items": DeliveryArea.objects.prefetch_related("sub_areas").all(),
     }
 
 
@@ -176,9 +249,19 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
     except Exception:
         return [], [dashboard_ui["excel_read_error"]]
 
-    rows = workbook.active.iter_rows(values_only=True)
-    headers = [normalize_excel_header(value) for value in next(rows, [])]
-    header_positions = {header: index for index, header in enumerate(headers) if header}
+    products_sheet = workbook["Products"] if "Products" in workbook.sheetnames else workbook.active
+    header_positions, product_sheet_rows = build_sheet_rows(products_sheet)
+    option_header_positions = {}
+    option_sheet_rows = []
+    option_product_skus = set()
+    if "Options" in workbook.sheetnames:
+        option_header_positions, option_sheet_rows = build_sheet_rows(workbook["Options"])
+        if "product_sku" in option_header_positions:
+            option_product_skus = {
+                normalize_excel_text(row.get("product_sku")).lower()
+                for _, row in option_sheet_rows
+                if normalize_excel_text(row.get("product_sku"))
+            }
     missing_headers = [
         header for header in PRODUCT_EXCEL_REQUIRED_HEADERS if header not in header_positions
     ]
@@ -187,17 +270,11 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
 
     category_lookup, duplicate_names = get_product_excel_category_lookup()
     valid_rows = []
+    valid_options = []
     errors = []
     seen_import_keys = set()
 
-    for row_number, row_values in enumerate(rows, start=2):
-        row = {
-            header: row_values[index] if index < len(row_values) else None
-            for header, index in header_positions.items()
-        }
-        if not any(value not in (None, "") for value in row.values()):
-            continue
-
+    for row_number, row in product_sheet_rows:
         row_errors = []
         product_name = normalize_excel_text(row.get("product_name"))
         category_value = normalize_excel_text(row.get("category"))
@@ -217,16 +294,19 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             if not category:
                 row_errors.append(f"category '{category_value}' does not exist.")
 
-        price, price_error = parse_excel_decimal(row.get("price"))
-        if price_error:
-            row_errors.append(f"price: {price_error}")
-
         parsed_booleans = {}
         for column in BOOLEAN_COLUMNS:
             default = column == "is_available"
             parsed_booleans[column], boolean_error = parse_excel_boolean(row.get(column), default)
             if boolean_error:
                 row_errors.append(f"{column}: {boolean_error}")
+
+        has_options = parsed_booleans["has_options"] or bool(sku and sku.lower() in option_product_skus)
+        price, price_error = parse_excel_decimal(row.get("price"))
+        if price_error and has_options and row.get("price") in (None, ""):
+            price = Decimal("0")
+        elif price_error:
+            row_errors.append(f"price: {price_error}")
 
         parsed_modes = {}
         for column, choices in PRODUCT_MODE_COLUMNS.items():
@@ -252,29 +332,92 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             errors.append(f"Row {row_number}: {' '.join(row_errors)}")
             continue
 
-        valid_rows.append(
-            {
-                "category": category,
-                "name": product_name,
-                "short_description": normalize_excel_text(row.get("short_description")),
-                "description": normalize_excel_text(row.get("description")),
-                "price": price,
-                "price_link_mode": parsed_modes["price_link_mode"],
-                "is_price_linked_to_dollar": parsed_booleans["is_price_linked_to_dollar"],
-                "sold_by_weight_mode": parsed_modes["sold_by_weight_mode"],
-                "sold_by_weight": parsed_booleans["sold_by_weight"],
-                "unit_label": normalize_excel_text(row.get("unit_label")) or "per item",
-                "is_available": parsed_booleans["is_available"],
-                "is_featured": parsed_booleans["is_featured"],
-                "external_image_url": normalize_excel_text(row.get("external_image_url")),
-                "sku": sku,
-            }
-        )
+        row_data = {
+            "category": category,
+            "name": product_name,
+            "short_description": normalize_excel_text(row.get("short_description")),
+            "description": normalize_excel_text(row.get("description")),
+            "price": price,
+            "price_link_mode": parsed_modes["price_link_mode"],
+            "is_price_linked_to_dollar": parsed_booleans["is_price_linked_to_dollar"],
+            "sold_by_weight_mode": parsed_modes["sold_by_weight_mode"],
+            "sold_by_weight": parsed_booleans["sold_by_weight"],
+            "has_options": has_options,
+            "unit_label": normalize_excel_text(row.get("unit_label")) or "per item",
+            "is_available": parsed_booleans["is_available"],
+            "is_featured": parsed_booleans["is_featured"],
+            "external_image_url": normalize_excel_text(row.get("external_image_url")),
+            "sku": sku,
+        }
+        row_data["_import_keys"] = [import_key]
+        if sku:
+            row_data["_import_keys"].append(("name", getattr(category, "id", None), product_name.lower()))
+        valid_rows.append(row_data)
+
+    if "Options" in workbook.sheetnames:
+        if option_sheet_rows:
+            missing_option_headers = [
+                header for header in PRODUCT_OPTION_EXCEL_REQUIRED_HEADERS if header not in option_header_positions
+            ]
+            if missing_option_headers:
+                errors.append(f"Options sheet missing required column: {', '.join(missing_option_headers)}")
+
+        seen_option_keys = set()
+        known_product_keys = {
+            import_key
+            for valid_row in valid_rows
+            for import_key in valid_row.get("_import_keys", [])
+        }
+        for row_number, row in option_sheet_rows:
+            row_errors = []
+            product_sku = normalize_excel_text(row.get("product_sku"))
+            option_name = normalize_excel_text(row.get("option_name"))
+
+            if not product_sku:
+                row_errors.append("product_sku is required.")
+            if not option_name:
+                row_errors.append("option_name is required.")
+
+            price, price_error = parse_excel_decimal(row.get("price"))
+            if price_error:
+                row_errors.append(f"price: {price_error}")
+
+            is_default, boolean_error = parse_excel_boolean(row.get("is_default"), False)
+            if boolean_error:
+                row_errors.append(f"is_default: {boolean_error}")
+
+            display_order, display_order_error = parse_excel_integer(row.get("display_order"), 0)
+            if display_order_error:
+                row_errors.append(f"display_order: {display_order_error}")
+
+            product_key = ("sku", product_sku.lower()) if product_sku else None
+            if product_key and product_key not in known_product_keys and not Product.objects.filter(sku__iexact=product_sku).exists():
+                row_errors.append(f"product_sku '{product_sku}' does not match an imported or existing product.")
+
+            option_key = (product_key, option_name.lower())
+            if product_key and option_name:
+                if option_key in seen_option_keys:
+                    row_errors.append("This option appears more than once for the same product in this file.")
+                seen_option_keys.add(option_key)
+
+            if row_errors:
+                errors.append(f"Options row {row_number}: {' '.join(row_errors)}")
+                continue
+
+            valid_options.append(
+                {
+                    "product_key": product_key,
+                    "name": option_name,
+                    "price": price,
+                    "is_default": is_default,
+                    "display_order": display_order,
+                }
+            )
 
     if not valid_rows and not errors:
         errors.append("The uploaded workbook has no product rows.")
 
-    return valid_rows, errors
+    return {"products": valid_rows, "options": valid_options}, errors
 
 
 def find_existing_product_for_import(row):
@@ -306,15 +449,30 @@ def merge_duplicate_products_for_import():
     return duplicates_removed
 
 
+def resolve_imported_product(product_lookup, product_key):
+    product = product_lookup.get(product_key)
+    if product is not None:
+        return product
+    if product_key and product_key[0] == "sku":
+        return Product.objects.filter(sku__iexact=product_key[1]).first()
+    if product_key and product_key[0] == "name":
+        return Product.objects.filter(category_id=product_key[1], name__iexact=product_key[2]).first()
+    return None
+
+
 def import_product_excel_rows(valid_rows):
     # Existing products are matched by SKU when present, otherwise by category and product name.
+    product_rows = valid_rows["products"] if isinstance(valid_rows, dict) else valid_rows
+    option_rows = valid_rows.get("options", []) if isinstance(valid_rows, dict) else []
     created = 0
     updated = 0
     now = timezone.now()
 
     with transaction.atomic():
         merge_duplicate_products_for_import()
-        for row in valid_rows:
+        product_lookup = {}
+        for row in product_rows:
+            import_keys = row.pop("_import_keys", [])
             existing_product = find_existing_product_for_import(row)
             if existing_product:
                 update_data = row.copy()
@@ -322,11 +480,220 @@ def import_product_excel_rows(valid_rows):
                     update_data.pop("sku")
                 update_data["updated_at"] = now
                 Product.objects.filter(pk=existing_product.pk).update(**update_data)
+                product = Product.objects.get(pk=existing_product.pk)
                 updated += 1
+            else:
+                product = Product(**row)
+                product.save()
+                created += 1
+            for import_key in import_keys:
+                product_lookup[import_key] = product
+
+        option_products = set()
+        for row in option_rows:
+            product = resolve_imported_product(product_lookup, row["product_key"])
+            if product is None:
                 continue
-            product = Product(**row)
-            product.save()
-            created += 1
+            option_products.add(product.pk)
+            option_data = {
+                "price": row["price"],
+                "is_default": row["is_default"],
+                "display_order": row["display_order"],
+            }
+            if row["is_default"]:
+                product.options.update(is_default=False)
+            option = product.options.filter(name__iexact=row["name"]).first()
+            if option:
+                ProductOption.objects.filter(pk=option.pk).update(name=row["name"], **option_data)
+            else:
+                ProductOption.objects.create(product=product, name=row["name"], **option_data)
+
+        if option_products:
+            Product.objects.filter(pk__in=option_products).update(has_options=True, updated_at=now)
+
+    return created, updated
+
+
+def validate_delivery_area_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
+    dashboard_ui = get_dashboard_strings(language)
+    try:
+        workbook = load_workbook(excel_file, read_only=True, data_only=True)
+    except Exception:
+        return {}, [dashboard_ui["excel_read_error"]]
+
+    areas_sheet = workbook["Areas"] if "Areas" in workbook.sheetnames else workbook.active
+    area_header_positions, area_sheet_rows = build_sheet_rows(areas_sheet)
+    missing_headers = [
+        header for header in DELIVERY_AREA_EXCEL_REQUIRED_HEADERS if header not in area_header_positions
+    ]
+    if missing_headers:
+        return {}, [f"Areas sheet missing required column: {', '.join(missing_headers)}"]
+
+    valid_areas = []
+    valid_sub_areas = []
+    errors = []
+    seen_area_names = set()
+    known_area_names = {area.name.strip().lower() for area in DeliveryArea.objects.all()}
+    sub_header_positions = {}
+    sub_sheet_rows = []
+    sub_area_area_names = set()
+    if "SubAreas" in workbook.sheetnames:
+        sub_header_positions, sub_sheet_rows = build_sheet_rows(workbook["SubAreas"])
+        sub_area_area_names = {
+            normalize_excel_text(row.get("area_name")).lower()
+            for _, row in sub_sheet_rows
+            if normalize_excel_text(row.get("area_name"))
+        }
+
+    for row_number, row in area_sheet_rows:
+        row_errors = []
+        area_name = normalize_excel_text(row.get("area_name"))
+        if not area_name:
+            row_errors.append("area_name is required.")
+        area_key = area_name.lower()
+        if area_key in seen_area_names:
+            row_errors.append("This area appears more than once in this file.")
+        if area_key:
+            seen_area_names.add(area_key)
+            known_area_names.add(area_key)
+
+        has_sub_areas, boolean_error = parse_excel_boolean(row.get("has_sub_areas"), False)
+        if boolean_error:
+            row_errors.append(f"has_sub_areas: {boolean_error}")
+        has_sub_areas = has_sub_areas or bool(area_key and area_key in sub_area_area_names)
+
+        delivery_fee, fee_error = parse_excel_decimal(row.get("delivery_fee"))
+        if fee_error and has_sub_areas and row.get("delivery_fee") in (None, ""):
+            delivery_fee = Decimal("0")
+        elif fee_error:
+            row_errors.append(f"delivery_fee: {fee_error}")
+
+        display_order, order_error = parse_excel_integer(row.get("display_order"), 0)
+        if order_error:
+            row_errors.append(f"display_order: {order_error}")
+
+        is_active, active_error = parse_excel_boolean(row.get("is_active"), True)
+        if active_error:
+            row_errors.append(f"is_active: {active_error}")
+
+        if row_errors:
+            errors.append(f"Areas row {row_number}: {' '.join(row_errors)}")
+            continue
+
+        valid_areas.append(
+            {
+                "name": area_name,
+                "has_sub_areas": has_sub_areas,
+                "delivery_fee": delivery_fee,
+                "display_order": display_order,
+                "is_active": is_active,
+            }
+        )
+
+    if "SubAreas" in workbook.sheetnames:
+        if sub_sheet_rows:
+            missing_sub_headers = [
+                header for header in DELIVERY_SUB_AREA_EXCEL_REQUIRED_HEADERS if header not in sub_header_positions
+            ]
+            if missing_sub_headers:
+                errors.append(f"SubAreas sheet missing required column: {', '.join(missing_sub_headers)}")
+
+        seen_sub_area_keys = set()
+        for row_number, row in sub_sheet_rows:
+            row_errors = []
+            area_name = normalize_excel_text(row.get("area_name"))
+            sub_area_name = normalize_excel_text(row.get("sub_area_name"))
+            area_key = area_name.lower()
+
+            if not area_name:
+                row_errors.append("area_name is required.")
+            elif area_key not in known_area_names:
+                row_errors.append(f"area_name '{area_name}' does not match an imported or existing area.")
+            if not sub_area_name:
+                row_errors.append("sub_area_name is required.")
+
+            delivery_fee, fee_error = parse_excel_decimal(row.get("delivery_fee"))
+            if fee_error:
+                row_errors.append(f"delivery_fee: {fee_error}")
+
+            display_order, order_error = parse_excel_integer(row.get("display_order"), 0)
+            if order_error:
+                row_errors.append(f"display_order: {order_error}")
+
+            is_active, active_error = parse_excel_boolean(row.get("is_active"), True)
+            if active_error:
+                row_errors.append(f"is_active: {active_error}")
+
+            sub_key = (area_key, sub_area_name.lower())
+            if area_key and sub_area_name:
+                if sub_key in seen_sub_area_keys:
+                    row_errors.append("This sub-area appears more than once for the same area in this file.")
+                seen_sub_area_keys.add(sub_key)
+
+            if row_errors:
+                errors.append(f"SubAreas row {row_number}: {' '.join(row_errors)}")
+                continue
+
+            valid_sub_areas.append(
+                {
+                    "area_name": area_name,
+                    "name": sub_area_name,
+                    "delivery_fee": delivery_fee,
+                    "display_order": display_order,
+                    "is_active": is_active,
+                }
+            )
+
+    if not valid_areas and not errors:
+        errors.append("The uploaded workbook has no delivery area rows.")
+
+    return {"areas": valid_areas, "sub_areas": valid_sub_areas}, errors
+
+
+def import_delivery_area_excel_rows(valid_rows):
+    area_rows = valid_rows.get("areas", [])
+    sub_area_rows = valid_rows.get("sub_areas", [])
+    created = 0
+    updated = 0
+    area_lookup = {}
+    sub_area_area_names = {row["area_name"].strip().lower() for row in sub_area_rows}
+
+    with transaction.atomic():
+        for row in area_rows:
+            area_key = row["name"].strip().lower()
+            row_data = row.copy()
+            if area_key in sub_area_area_names:
+                row_data["has_sub_areas"] = True
+                row_data["delivery_fee"] = Decimal("0")
+            area = DeliveryArea.objects.filter(name__iexact=row["name"]).first()
+            if area:
+                for field, value in row_data.items():
+                    setattr(area, field, value)
+                area.save()
+                updated += 1
+            else:
+                area = DeliveryArea.objects.create(**row_data)
+                created += 1
+            area_lookup[area_key] = area
+
+        for row in sub_area_rows:
+            area_key = row["area_name"].strip().lower()
+            area = area_lookup.get(area_key) or DeliveryArea.objects.filter(name__iexact=row["area_name"]).first()
+            if area is None:
+                continue
+            area.has_sub_areas = True
+            area.delivery_fee = Decimal("0")
+            area.save(update_fields=["has_sub_areas", "delivery_fee", "updated_at"])
+            sub_area = area.sub_areas.filter(name__iexact=row["name"]).first()
+            sub_data = {
+                "delivery_fee": row["delivery_fee"],
+                "display_order": row["display_order"],
+                "is_active": row["is_active"],
+            }
+            if sub_area:
+                DeliverySubArea.objects.filter(pk=sub_area.pk).update(name=row["name"], **sub_data)
+            else:
+                DeliverySubArea.objects.create(area=area, name=row["name"], **sub_data)
 
     return created, updated
 
@@ -370,6 +737,7 @@ class DashboardHomeView(DashboardLocalizationMixin, StaffRequiredMixin, Template
     template_name = "dashboard/index.html"
 
     def get_context_data(self, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders(print_invoices=True)
         context = super().get_context_data(**kwargs)
         context["category_count"] = Category.objects.count()
         context["product_count"] = Product.objects.count()
@@ -382,11 +750,158 @@ class DashboardHomeView(DashboardLocalizationMixin, StaffRequiredMixin, Template
         return context
 
 
+class CenterStatusManageView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
+    template_name = "dashboard/center_status.html"
+
+    def get_center_status(self):
+        return CenterStatus.get_current().refresh_availability()
+
+    def get_context_data(self, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders(print_invoices=True)
+        context = super().get_context_data(**kwargs)
+        center_status = self.get_center_status()
+        remaining_seconds = max(int(center_status.remaining_busy_time().total_seconds()), 0)
+        remaining_minutes = (remaining_seconds + 59) // 60
+        context["center_status"] = center_status
+        context["remaining_seconds"] = remaining_seconds
+        context["remaining_minutes"] = remaining_minutes
+        context["form"] = kwargs.get("form") or CenterStatusForm(
+            instance=center_status,
+            language=self.get_language(),
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        center_status = self.get_center_status()
+        form = CenterStatusForm(request.POST, instance=center_status, language=self.get_language())
+        if form.is_valid():
+            form.save(user=request.user)
+            sync_center_status_and_auto_accept_waiting_orders(print_invoices=True)
+            messages.success(request, self.get_dashboard_ui()["center_status_updated"])
+            return redirect("dashboard:center-status")
+        return self.render_to_response(self.get_context_data(form=form))
+
+
 CUSTOMER_ACCESS_SESSION_KEY = "dashboard_customer_access_granted"
 
 
 def attach_dashboard_order_display(orders, language):
-    return attach_orders_display(orders, get_dashboard_strings(language), language)
+    return attach_orders_display(
+        orders,
+        get_dashboard_strings(language),
+        language,
+        print_auto_accepted_order=True,
+    )
+
+
+def parse_report_date(value):
+    if not value:
+        return None, None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date(), None
+    except ValueError:
+        return None, "Use YYYY-MM-DD."
+
+
+def get_sales_report_filters(request, dashboard_ui, require_dates=False):
+    single_day = (request.GET.get("single_day") or "").strip()
+    from_value = (request.GET.get("from_date") or "").strip()
+    to_value = (request.GET.get("to_date") or "").strip()
+    if single_day:
+        from_value = single_day
+        to_value = single_day
+
+    errors = []
+    from_date, from_error = parse_report_date(from_value)
+    to_date, to_error = parse_report_date(to_value)
+    if from_error:
+        errors.append(f"{dashboard_ui['sales_from_date']}: {from_error}")
+    if to_error:
+        errors.append(f"{dashboard_ui['sales_to_date']}: {to_error}")
+    if require_dates and not from_value:
+        errors.append(dashboard_ui["sales_from_date_required"])
+    if require_dates and not to_value:
+        errors.append(dashboard_ui["sales_to_date_required"])
+    if from_date and to_date and from_date > to_date:
+        errors.append(dashboard_ui["sales_date_order_error"])
+
+    return {
+        "from_date": from_value,
+        "to_date": to_value,
+        "single_day": single_day,
+        "from_date_obj": from_date,
+        "to_date_obj": to_date,
+        "errors": errors,
+    }
+
+
+def get_sales_report_orders(from_date, to_date):
+    start_at = timezone.make_aware(datetime.combine(from_date, time.min))
+    end_at = timezone.make_aware(datetime.combine(to_date, time.max))
+    return CustomerOrder.objects.filter(
+        status__in=SALES_REPORT_STATUSES,
+        created_at__gte=start_at,
+        created_at__lte=end_at,
+    )
+
+
+def get_order_day_filter(request, dashboard_ui):
+    day_value = (request.GET.get("order_day") or "").strip()
+    day, day_error = parse_report_date(day_value)
+    errors = []
+    if day_error:
+        errors.append(f"{dashboard_ui['orders_filter_day']}: {day_error}")
+    return {"day": day_value, "day_obj": day, "errors": errors}
+
+
+def filter_orders_by_day(queryset, day):
+    if day is None:
+        return queryset
+    start_at = timezone.make_aware(datetime.combine(day, time.min))
+    end_at = timezone.make_aware(datetime.combine(day, time.max))
+    return queryset.filter(created_at__gte=start_at, created_at__lte=end_at)
+
+
+def build_sales_report(from_date, to_date, language):
+    orders = get_sales_report_orders(from_date, to_date)
+    item_rows = (
+        CustomerOrderItem.objects.filter(order__in=orders)
+        .values("title", "category_label", "unit_price")
+        .annotate(quantity_sold=Sum("quantity"), total_product_price=Sum("line_total_max"))
+        .order_by("category_label", "title", "unit_price")
+    )
+    rows = []
+    for row in item_rows:
+        unit_price = row["unit_price"] or Decimal("0")
+        total_product_price = row["total_product_price"] or Decimal("0")
+        rows.append(
+            {
+                **row,
+                "display_unit_price": format_syp(unit_price, language),
+                "display_total_product_price": format_syp(total_product_price, language),
+            }
+        )
+
+    summary = orders.aggregate(grand_total=Sum("total_max"), delivery_total=Sum("delivery_fee"))
+    order_count = orders.count()
+    grand_total = summary["grand_total"] or Decimal("0")
+    delivery_total = summary["delivery_total"] or Decimal("0")
+    return {
+        "rows": rows,
+        "summary": {
+            "order_count": order_count,
+            "grand_total": grand_total,
+            "delivery_total": delivery_total,
+            "display_grand_total": format_syp(grand_total, language),
+            "display_delivery_total": format_syp(delivery_total, language),
+            "from_date": from_date,
+            "to_date": to_date,
+        },
+    }
+
+
+def decimal_to_excel_number(value):
+    return int(value or 0)
 
 
 class CustomerAccessRequiredMixin:
@@ -459,21 +974,111 @@ class DashboardOrdersView(DashboardLocalizationMixin, StaffRequiredMixin, Templa
     template_name = "dashboard/orders.html"
 
     def get_context_data(self, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders(print_invoices=True)
         context = super().get_context_data(**kwargs)
-        orders = list(
+        dashboard_ui = self.get_dashboard_ui()
+        report_filters = get_sales_report_filters(self.request, dashboard_ui)
+        order_day_filter = get_order_day_filter(self.request, dashboard_ui)
+        report = None
+        if report_filters["from_date_obj"] and report_filters["to_date_obj"] and not report_filters["errors"]:
+            report = build_sales_report(
+                report_filters["from_date_obj"],
+                report_filters["to_date_obj"],
+                self.get_language(),
+            )
+        orders_queryset = (
             CustomerOrder.objects.select_related("profile", "address").prefetch_related("items").all()
         )
+        if not order_day_filter["errors"]:
+            orders_queryset = filter_orders_by_day(orders_queryset, order_day_filter["day_obj"])
+        orders = list(orders_queryset)
         context["orders"] = attach_dashboard_order_display(orders, self.get_language())
+        context["order_day_filter"] = order_day_filter
+        context["order_filter_errors"] = order_day_filter["errors"]
+        context["sales_report_filters"] = report_filters
+        context["sales_report"] = report
+        context["sales_report_errors"] = report_filters["errors"]
         suggested_minutes = suggested_expected_minutes()
         for order in context["orders"]:
             order.suggested_expected_minutes = suggested_minutes
         return context
 
 
+class SalesReportExcelExportView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        dashboard_ui = self.get_dashboard_ui()
+        report_filters = get_sales_report_filters(request, dashboard_ui, require_dates=True)
+        if report_filters["errors"]:
+            for error in report_filters["errors"]:
+                messages.error(request, error)
+            return redirect("dashboard:orders")
+
+        report = build_sales_report(
+            report_filters["from_date_obj"],
+            report_filters["to_date_obj"],
+            self.get_language(),
+        )
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Sales Report"
+        worksheet.append([dashboard_ui["sales_report"]])
+        worksheet.append(
+            [
+                dashboard_ui["sales_date_range"],
+                f"{report_filters['from_date']} - {report_filters['to_date']}",
+            ]
+        )
+        worksheet.append([])
+        worksheet.append(
+            [
+                dashboard_ui["sales_product_name"],
+                dashboard_ui["sales_category"],
+                dashboard_ui["sales_quantity_sold"],
+                dashboard_ui["sales_unit_price"],
+                dashboard_ui["sales_total_product_price"],
+            ]
+        )
+        for row in report["rows"]:
+            worksheet.append(
+                [
+                    row["title"],
+                    row["category_label"],
+                    row["quantity_sold"] or 0,
+                    decimal_to_excel_number(row["unit_price"]),
+                    decimal_to_excel_number(row["total_product_price"]),
+                ]
+            )
+        worksheet.append([])
+        worksheet.append([dashboard_ui["sales_grand_total"], decimal_to_excel_number(report["summary"]["grand_total"])])
+        worksheet.append([dashboard_ui["sales_delivery_total"], decimal_to_excel_number(report["summary"]["delivery_total"])])
+        worksheet.append([dashboard_ui["sales_order_count"], report["summary"]["order_count"]])
+        worksheet.append(
+            [
+                dashboard_ui["sales_date_range"],
+                f"{report_filters['from_date']} - {report_filters['to_date']}",
+            ]
+        )
+        for column_cells in worksheet.columns:
+            header = str(column_cells[0].value or "")
+            worksheet.column_dimensions[column_cells[0].column_letter].width = max(len(header) + 6, 18)
+
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        filename = f"sales-report-{report_filters['from_date']}-to-{report_filters['to_date']}.xlsx"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+
 class PendingOrdersView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateView):
     template_name = "dashboard/pending_orders.html"
 
     def get_context_data(self, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders(print_invoices=True)
         context = super().get_context_data(**kwargs)
         orders = list(
             CustomerOrder.objects.select_related("profile", "address")
@@ -489,6 +1094,7 @@ class DashboardOrderDetailView(DashboardLocalizationMixin, StaffRequiredMixin, T
     template_name = "dashboard/order_detail.html"
 
     def dispatch(self, request, *args, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders(print_invoices=True)
         self.order = get_object_or_404(
             CustomerOrder.objects.select_related("profile", "address").prefetch_related("items"),
             pk=kwargs["pk"],
@@ -498,7 +1104,12 @@ class DashboardOrderDetailView(DashboardLocalizationMixin, StaffRequiredMixin, T
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         language = self.get_language()
-        context["order"] = attach_order_display(self.order, self.get_dashboard_ui(), language)
+        context["order"] = attach_order_display(
+            self.order,
+            self.get_dashboard_ui(),
+            language,
+            print_auto_accepted_order=True,
+        )
         context["accept_form"] = kwargs.get("accept_form") or OrderAcceptForm(
             language=language,
             suggested_minutes=suggested_expected_minutes(),
@@ -520,18 +1131,20 @@ class DashboardOrderAcceptView(DashboardLocalizationMixin, StaffRequiredMixin, V
             detail.order = order
             return detail.render_to_response(detail.get_context_data(accept_form=form))
 
-        order.status = CustomerOrder.STATUS_BEING_PREPARED
-        order.expected_time_minutes = form.cleaned_data["expected_time_minutes"]
-        order.accepted_at = timezone.now()
-        order.save(update_fields=["status", "expected_time_minutes", "accepted_at", "updated_at"])
+        mark_order_accepted(
+            order,
+            expected_time_minutes=form.cleaned_data["expected_time_minutes"],
+            print_invoice=True,
+        )
         messages.success(request, self.get_dashboard_ui()["order_accepted"])
         return redirect("dashboard:pending-order-detail", pk=order.pk)
 
 
 class DashboardOrderAdvanceView(DashboardLocalizationMixin, StaffRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders(print_invoices=True)
         order = get_object_or_404(CustomerOrder, pk=pk)
-        if order.status == CustomerOrder.STATUS_WAITING_ACCEPT:
+        if order.status in {CustomerOrder.STATUS_WAITING_ACCEPT, CustomerOrder.STATUS_WAITING_BUSY_CENTER}:
             messages.error(request, self.get_dashboard_ui()["invalid_order_status_change"])
             return redirect("dashboard:pending-order-detail", pk=order.pk)
         next_status = order.get_next_status()
@@ -708,20 +1321,21 @@ class ProductDeleteView(DashboardLocalizationMixin, StaffRequiredMixin, DeleteVi
 class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         workbook = Workbook()
-        worksheet = workbook.active
-        worksheet.title = "Products"
-        worksheet.append(PRODUCT_EXCEL_HEADERS)
-        worksheet.append(
+        products_sheet = workbook.active
+        products_sheet.title = "Products"
+        products_sheet.append(PRODUCT_EXCEL_HEADERS)
+        products_sheet.append(
             [
                 "Chocolate Cake",
                 "cakes",
                 "Rich chocolate cake",
                 "Rich chocolate cake",
-                "10.5",
+                "",
                 "inherit",
                 "false",
                 "custom",
                 "false",
+                "true",
                 "piece",
                 "true",
                 "false",
@@ -729,9 +1343,15 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                 "CAKE-001",
             ]
         )
-        for column_cells in worksheet.columns:
-            header = column_cells[0].value or ""
-            worksheet.column_dimensions[column_cells[0].column_letter].width = max(len(header) + 4, 16)
+        options_sheet = workbook.create_sheet("Options")
+        options_sheet.append(PRODUCT_OPTION_EXCEL_HEADERS)
+        options_sheet.append(["CAKE-001", "Small", "10", "true", "0"])
+        options_sheet.append(["CAKE-001", "Large", "18", "false", "1"])
+
+        for worksheet in (products_sheet, options_sheet):
+            for column_cells in worksheet.columns:
+                header = column_cells[0].value or ""
+                worksheet.column_dimensions[column_cells[0].column_letter].width = max(len(header) + 4, 16)
 
         output = BytesIO()
         workbook.save(output)
@@ -858,8 +1478,8 @@ class DeliveryAreaManageView(DashboardLocalizationMixin, StaffRequiredMixin, Cre
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update(get_delivery_area_manage_context(self.get_language(), area_form=context.get("form")))
         context.setdefault("sub_area_formset", self.get_sub_area_formset())
-        context["items"] = DeliveryArea.objects.prefetch_related("sub_areas").all()
         return context
 
     def has_configured_sub_area(self, sub_area_formset):
@@ -902,6 +1522,79 @@ class DeliveryAreaManageView(DashboardLocalizationMixin, StaffRequiredMixin, Cre
         return self.render_to_response(
             self.get_context_data(form=form, sub_area_formset=sub_area_formset)
         )
+
+
+class DeliveryAreaExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        workbook = Workbook()
+        areas_sheet = workbook.active
+        areas_sheet.title = "Areas"
+        areas_sheet.append(DELIVERY_AREA_EXCEL_HEADERS)
+        areas_sheet.append(["Mezzeh", "true", "", "0", "true"])
+        areas_sheet.append(["Malki", "false", "15000", "1", "true"])
+
+        sub_areas_sheet = workbook.create_sheet("SubAreas")
+        sub_areas_sheet.append(DELIVERY_SUB_AREA_EXCEL_HEADERS)
+        sub_areas_sheet.append(["Mezzeh", "East Mezzeh", "12000", "0", "true"])
+        sub_areas_sheet.append(["Mezzeh", "West Mezzeh", "15000", "1", "true"])
+
+        for worksheet in (areas_sheet, sub_areas_sheet):
+            for column_cells in worksheet.columns:
+                header = column_cells[0].value or ""
+                worksheet.column_dimensions[column_cells[0].column_letter].width = max(len(header) + 4, 16)
+
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = 'attachment; filename="delivery-areas-upload-template.xlsx"'
+        return response
+
+
+class DeliveryAreaExcelUploadView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    template_name = "dashboard/manage_delivery_areas.html"
+
+    def post(self, request, *args, **kwargs):
+        language = self.get_language()
+        dashboard_ui = get_dashboard_strings(language)
+        upload_form = DeliveryAreaExcelUploadForm(request.POST, request.FILES, language=language)
+        if not upload_form.is_valid():
+            return self.render_upload_response(request, language, upload_form=upload_form)
+
+        valid_rows, excel_errors = validate_delivery_area_excel_workbook(
+            upload_form.cleaned_data["excel_file"],
+            language,
+        )
+        if excel_errors:
+            messages.error(
+                request,
+                dashboard_ui["delivery_area_excel_import_complete"].format(
+                    created=0,
+                    updated=0,
+                    failed=len(excel_errors),
+                ),
+            )
+            return self.render_upload_response(
+                request,
+                language,
+                upload_form=upload_form,
+                excel_errors=excel_errors,
+            )
+
+        created, updated = import_delivery_area_excel_rows(valid_rows)
+        messages.success(
+            request,
+            dashboard_ui["delivery_area_excel_import_complete"].format(created=created, updated=updated, failed=0),
+        )
+        return redirect("dashboard:delivery-areas")
+
+    def render_upload_response(self, request, language, upload_form=None, excel_errors=None):
+        context = get_delivery_area_manage_context(language, upload_form=upload_form, excel_errors=excel_errors)
+        context["sub_area_formset"] = DeliverySubAreaFormSet(prefix="subareas", form_kwargs={"language": language})
+        return render(request, self.template_name, context)
 
 
 class DeliveryAreaUpdateView(DashboardLocalizationMixin, StaffRequiredMixin, UpdateView):

@@ -45,6 +45,38 @@ def wants_json_response(request):
     return request.headers.get("X-Requested-With") == "XMLHttpRequest" or "application/json" in accept_header
 
 
+def cart_json_payload(request, item_type=None, item_id=None):
+    cart = build_cart(request)
+    item = None
+    if item_type is not None and item_id is not None:
+        item = next(
+            (
+                cart_item
+                for cart_item in cart["items"]
+                if cart_item["item_type"] == item_type and cart_item["item_id"] == item_id
+            ),
+            None,
+        )
+    return {
+        "ok": True,
+        "cart_count": cart["count"],
+        "cart_total": cart["display_subtotal"],
+        "cart_total_range": cart["display_subtotal_range"],
+        "has_weight_items": cart["has_weight_items"],
+        "is_empty": not cart["items"],
+        "item": (
+            {
+                "quantity": item["quantity"],
+                "is_weight_based": item["is_weight_based"],
+                "line_total": item["display_line_total"],
+                "line_total_range": item["display_line_total_range"],
+            }
+            if item
+            else None
+        ),
+    }
+
+
 def get_customer_profile(user):
     defaults = {
         "full_name": user.first_name or user.username,
@@ -265,6 +297,8 @@ class CartUpdateView(LoginRequiredMixin, View):
     def post(self, request, item_type, item_id):
         quantity = parse_quantity(request.POST.get("quantity", 1), default=1)
         update_item(request, item_type, item_id, quantity)
+        if wants_json_response(request):
+            return JsonResponse(cart_json_payload(request, item_type, item_id))
         messages.success(request, get_ui_strings(get_language(request))["cart_updated"])
         preserve_cart_for_next_request(request)
         return redirect("catalog:cart")
@@ -275,6 +309,8 @@ class CartRemoveView(LoginRequiredMixin, View):
 
     def post(self, request, item_type, item_id):
         remove_item(request, item_type, item_id)
+        if wants_json_response(request):
+            return JsonResponse(cart_json_payload(request, item_type, item_id))
         messages.success(request, get_ui_strings(get_language(request))["cart_removed"])
         preserve_cart_for_next_request(request)
         return redirect("catalog:cart")

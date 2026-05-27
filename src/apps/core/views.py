@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db.models import Q
+from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -37,6 +38,7 @@ from apps.core.localization import (
 from apps.core.models import CustomerAddress, CustomerOrder, CustomerProfile, DeliveryArea, SiteSettings
 from apps.core.order_status import attach_order_display, attach_orders_display, get_active_customer_order
 from apps.core.pricing import set_product_display_price, set_promotion_display_price
+from apps.core.services import sync_center_status_and_auto_accept_waiting_orders
 from apps.promotions.models import Promotion
 
 
@@ -111,7 +113,30 @@ class CustomerContextMixin:
 class HomeView(TemplateView):
     template_name = "public/home.html"
 
+    def get_home_categories(self, language, site_content):
+        product_queryset = (
+            Product.objects.filter(is_available=True)
+            .order_by("name", "id")
+            .prefetch_related("options")[:13]
+        )
+        categories = list(
+            Category.objects.filter(is_active=True)
+            .order_by("display_order", "name")
+            .prefetch_related(Prefetch("products", queryset=product_queryset, to_attr="home_products"))
+        )
+        for category in categories:
+            localize_instance(category, language, ["name", "description"])
+            for product in category.home_products:
+                product.category = category
+                product.prefetched_options = list(product.options.all())
+                for option in product.prefetched_options:
+                    option.product = product
+                localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
+                set_product_display_price(product, language, site_content)
+        return categories
+
     def get_context_data(self, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders()
         context = super().get_context_data(**kwargs)
         language = get_language(self.request)
         site_content = get_localized_site_content(language)
@@ -119,37 +144,19 @@ class HomeView(TemplateView):
         if self.request.user.is_authenticated:
             customer_name = (self.request.user.first_name or self.request.user.username or "").strip()
             context["customer_first_name"] = customer_name.split()[0] if customer_name else ""
-            if not self.request.user.is_staff:
-                profile, _ = CustomerProfile.objects.get_or_create(
-                    user=self.request.user,
-                    defaults={
-                        "full_name": self.request.user.first_name or self.request.user.username,
-                        "phone_number": self.request.user.username,
-                    },
-                )
-                active_order = get_active_customer_order(profile)
-                context["active_order"] = (
-                    attach_order_display(active_order, get_ui_strings(language), language) if active_order else None
-                )
-        context["categories"] = localize_queryset(
-            Category.objects.filter(is_active=True).order_by("display_order", "name"),
-            language,
-            ["name", "description"],
-        )
-        featured_products = list(
-            Product.objects.filter(is_available=True, is_featured=True, category__is_active=True)
-            .select_related("category")[:8]
-        )
-        for product in featured_products:
-            product.prefetched_options = list(product.options.all())
-            localize_instance(product.category, language, ["name", "description"])
-            localize_instance(
-                product,
-                language,
-                ["name", "short_description", "description", "unit_label"],
+            profile, _ = CustomerProfile.objects.get_or_create(
+                user=self.request.user,
+                defaults={
+                    "full_name": self.request.user.first_name or self.request.user.username,
+                    "phone_number": self.request.user.username,
+                },
             )
-            set_product_display_price(product, language, site_content)
-        context["featured_products"] = featured_products
+            active_order = get_active_customer_order(profile)
+            context["active_order"] = (
+                attach_order_display(active_order, get_ui_strings(language), language) if active_order else None
+            )
+            context["active_order_status_url"] = reverse("catalog:cart")
+        context["categories"] = self.get_home_categories(language, site_content)
         context["promotions"] = localize_queryset(
             Promotion.active(),
             language,
@@ -163,6 +170,7 @@ class HomeView(TemplateView):
 
 class ActiveOrderStatusView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+        sync_center_status_and_auto_accept_waiting_orders()
         language = get_language(request)
         profile, _ = CustomerProfile.objects.get_or_create(
             user=request.user,
@@ -182,6 +190,8 @@ class ActiveOrderStatusView(LoginRequiredMixin, View):
                 "order": order,
                 "labels": get_ui_strings(language),
                 "heading": get_ui_strings(language)["active_order_heading"],
+                "action_url": reverse("catalog:cart"),
+                "action_label": get_ui_strings(language)["view_order"],
             },
             request=request,
         )

@@ -6,6 +6,10 @@
         <span class="eyebrow">{{ dashboard_ui.delivery_areas }}</span>
         <h1>{{ dashboard_ui.add_delivery_area }}</h1>
     </div>
+    <div class="excel-upload-actions">
+        <button type="button" class="btn btn-secondary" data-excel-modal-open>{{ dashboard_ui.upload_delivery_areas_excel }}</button>
+        <a class="btn btn-secondary" href="{% url 'dashboard:delivery-area-excel-template' %}">{{ dashboard_ui.download_template }}</a>
+    </div>
 </div>
 
 <section class="panel">
@@ -25,6 +29,37 @@
         </div>
     </form>
 </section>
+
+<div class="dashboard-modal" data-excel-modal{% if not excel_errors and not upload_form.errors %} hidden{% endif %}>
+    <button type="button" class="dashboard-modal-backdrop" data-excel-modal-close aria-label="{{ dashboard_ui.close_upload_form }}"></button>
+    <section class="dashboard-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="excel-upload-title">
+        <button type="button" class="dashboard-modal-close" data-excel-modal-close aria-label="{{ dashboard_ui.close_upload_form }}">&times;</button>
+        <h2 id="excel-upload-title">{{ dashboard_ui.upload_delivery_areas_excel }}</h2>
+        <p class="muted-copy">
+            {{ dashboard_ui.delivery_area_excel_upload_help }}
+        </p>
+        <form
+            method="post"
+            action="{% url 'dashboard:delivery-area-excel-upload' %}"
+            enctype="multipart/form-data"
+            class="stack-form excel-upload-form"
+        >
+            {% csrf_token %}
+            {% include "partials/dashboard_form_field.html" with field=upload_form.excel_file %}
+            {% if excel_errors %}
+                <div class="excel-error-panel">
+                    <h3>{{ dashboard_ui.excel_errors }}</h3>
+                    <ul>
+                        {% for error in excel_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">{{ dashboard_ui.upload_delivery_areas_excel }}</button>
+        </form>
+    </section>
+</div>
 
 <section class="panel">
     <h2>{{ dashboard_ui.existing_delivery_areas }}</h2>

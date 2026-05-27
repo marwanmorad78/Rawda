@@ -3,15 +3,24 @@
         <div>
             <span class="eyebrow">{{ labels.order_status }}</span>
             <h2>{{ heading }}</h2>
-            <p>{{ order.display_expected_time }}</p>
+            <p
+                {% if order.status == "waiting_due_to_busy_center" %}
+                    data-busy-countdown
+                    data-busy-remaining-seconds="{{ order.busy_remaining_seconds }}"
+                    data-busy-message-template="{{ labels.center_busy_order_message }}"
+                {% endif %}
+            >{{ order.display_expected_time }}</p>
         </div>
         <div class="order-status-meta">
             <strong>{{ order.invoice_number }}</strong>
             <span>{% if order.service_type == "delivery" %}{{ labels.delivery }}{% else %}{{ labels.pickup }}{% endif %}</span>
             <span>{{ order.display_total }}</span>
         </div>
+        {% if action_url %}
+            <a href="{{ action_url }}" class="order-status-action-link">{{ action_label|default:labels.view_order }}</a>
+        {% endif %}
     </div>
-    <ol class="order-status-track">
+    <ol class="order-status-track" style="--status-step-count: {{ order.status_steps|length }};">
         {% for step in order.status_steps %}
             <li class="order-status-step is-{{ step.state }}">
                 <span class="order-status-circle" aria-hidden="true"></span>

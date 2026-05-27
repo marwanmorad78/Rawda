@@ -78,7 +78,7 @@ class Product(TimeStampedModel):
     short_description_ar = models.CharField(max_length=280, blank=True)
     description = models.TextField(blank=True)
     description_ar = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    price = models.DecimalField(max_digits=10, decimal_places=0, validators=[MinValueValidator(0)])
     price_link_mode = models.CharField(
         max_length=20,
         choices=BEHAVIOR_CHOICES,
@@ -135,7 +135,7 @@ class Product(TimeStampedModel):
             previous_category_id = (
                 Product.objects.filter(pk=self.pk).values_list("category_id", flat=True).first()
             )
-        if not self.sku or previous_category_id != self.category_id:
+        if not self.sku or (self.pk and previous_category_id != self.category_id):
             self.sku = self._next_category_sku()
         return super().save(*args, **kwargs)
 
@@ -149,7 +149,7 @@ class Product(TimeStampedModel):
 class ProductOption(TimeStampedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="options")
     name = models.CharField(max_length=120)
-    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    price = models.DecimalField(max_digits=10, decimal_places=0, validators=[MinValueValidator(0)])
     is_default = models.BooleanField(default=False)
     display_order = models.PositiveIntegerField(default=0)
 

@@ -37,7 +37,7 @@ class Promotion(TimeStampedModel):
     subtitle_ar = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     description_ar = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=0, default=0)
     is_price_linked_to_dollar = models.BooleanField(default=False)
     badge_text = models.CharField(max_length=60, blank=True)
     badge_text_ar = models.CharField(max_length=60, blank=True)

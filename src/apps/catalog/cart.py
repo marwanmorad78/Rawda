@@ -8,6 +8,7 @@ from apps.core.pricing import (
     get_effective_product_price,
     get_effective_promotion_price,
     product_is_sold_by_weight,
+    round_money,
 )
 from apps.promotions.models import Promotion
 
@@ -111,11 +112,7 @@ def update_item(request, item_type, item_id, quantity):
 def remove_item(request, item_type, item_id):
     cart = get_cart_data(request)
     key = make_item_key(item_type, item_id)
-    quantity = cart.get(key, 0)
-    if quantity <= 1:
-        cart.pop(key, None)
-    else:
-        cart[key] = quantity - 1
+    cart.pop(key, None)
     save_cart_data(request, cart)
 
 
@@ -166,20 +163,22 @@ def build_cart(request):
             localize_instance(product.category, language, ["name", "description"])
             localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
             effective_price = get_effective_product_price(product, site_settings)
-            line_total = effective_price * quantity
+            line_total = round_money(effective_price * quantity)
             is_weight_based = product_is_sold_by_weight(product)
-            line_total_max = line_total * WEIGHT_RANGE_FACTOR if is_weight_based else line_total
+            line_total_max = round_money(line_total * WEIGHT_RANGE_FACTOR) if is_weight_based else line_total
             subtotal += line_total
             subtotal_max += line_total_max
             items.append(
                 {
                     "item_type": PRODUCT_ITEM_TYPE,
                     "item_id": product.id,
+                    "cart_key": make_item_key(PRODUCT_ITEM_TYPE, product.id),
                     "title": product.display_name,
                     "subtitle": product.display_short_description,
                     "category_label": product.category.display_name,
                     "quantity": quantity,
                     "unit_label": product.display_unit_label,
+                    "image_url": product.primary_image.url if product.primary_image else product.external_image_url,
                     "unit_price": effective_price,
                     "line_total": line_total,
                     "line_total_min": line_total,
@@ -200,9 +199,9 @@ def build_cart(request):
             localize_instance(product.category, language, ["name", "description"])
             localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
             effective_price = get_effective_product_option_price(option, site_settings)
-            line_total = effective_price * quantity
+            line_total = round_money(effective_price * quantity)
             is_weight_based = product_is_sold_by_weight(product)
-            line_total_max = line_total * WEIGHT_RANGE_FACTOR if is_weight_based else line_total
+            line_total_max = round_money(line_total * WEIGHT_RANGE_FACTOR) if is_weight_based else line_total
             subtotal += line_total
             subtotal_max += line_total_max
             title = f"{product.display_name} - {option.name}"
@@ -210,12 +209,14 @@ def build_cart(request):
                 {
                     "item_type": PRODUCT_OPTION_ITEM_TYPE,
                     "item_id": option.id,
+                    "cart_key": make_item_key(PRODUCT_OPTION_ITEM_TYPE, option.id),
                     "title": title,
                     "subtitle": product.display_short_description,
                     "category_label": product.category.display_name,
                     "option_label": option.name,
                     "quantity": quantity,
                     "unit_label": product.display_unit_label,
+                    "image_url": product.primary_image.url if product.primary_image else product.external_image_url,
                     "unit_price": effective_price,
                     "line_total": line_total,
                     "line_total_min": line_total,
@@ -234,18 +235,20 @@ def build_cart(request):
                 continue
             localize_instance(promotion, language, ["title", "subtitle", "description", "badge_text", "cta_text"])
             effective_price = get_effective_promotion_price(promotion, site_settings)
-            line_total = effective_price * quantity
+            line_total = round_money(effective_price * quantity)
             subtotal += line_total
             subtotal_max += line_total
             items.append(
                 {
                     "item_type": PROMOTION_ITEM_TYPE,
                     "item_id": promotion.id,
+                    "cart_key": make_item_key(PROMOTION_ITEM_TYPE, promotion.id),
                     "title": promotion.display_title,
                     "subtitle": promotion.display_description or promotion.display_subtitle,
                     "category_label": "عرض" if language == "ar" else "Offer",
                     "quantity": quantity,
                     "unit_label": "",
+                    "image_url": promotion.image.url if promotion.image else promotion.external_image_url,
                     "unit_price": effective_price,
                     "line_total": line_total,
                     "line_total_min": line_total,

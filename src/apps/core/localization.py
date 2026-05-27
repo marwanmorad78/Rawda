@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from urllib.parse import urlencode
 
 
@@ -202,10 +202,15 @@ UI_STRINGS = {
         "order_confirmed": "Order confirmed successfully. Invoice {invoice_number} has been created.",
         "order_status": "Order status",
         "active_order_heading": "Your active order",
+        "view_order": "View order",
+        "order_accepted_message": "Order accepted",
+        "center_busy_order_message": "The center is busy. Your order will be accepted automatically after {minutes} minutes.",
         "waiting_manager_confirmation": "Waiting for manager confirmation...",
         "expected_time_minutes": "Expected time: {minutes} minutes",
+        "order_status_waiting_due_to_busy_center": "Center busy",
+        "order_status_accepted": "Order accepted",
         "order_status_waiting_accept": "Waiting for accept",
-        "order_status_being_prepared": "Being prepared",
+        "order_status_being_prepared": "Preparing",
         "order_status_out_for_delivery": "Out for delivery",
         "order_status_ready_to_pickup": "Ready to pick up",
         "order_status_done": "Done",
@@ -233,7 +238,7 @@ UI_STRINGS = {
         "close": "\u0625\u063a\u0644\u0627\u0642",
         "offer_details": "\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0639\u0631\u0636",
         "add_offer_to_cart": "\u0623\u0636\u0641 \u0627\u0644\u0639\u0631\u0636 \u0625\u0644\u0649 \u0627\u0644\u0633\u0644\u0629",
-        "offers_heading": "\u0639\u0631\u0648\u0636 \u062a\u0633\u062a\u062d\u0642 \u0627\u0644\u0638\u0647\u0648\u0631",
+        "offers_heading": "\u0622\u062e\u0631 \u0627\u0644\u0639\u0631\u0648\u0636",
         "fresh_picks": "\u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a \u0637\u0627\u0632\u062c\u0629",
         "promotion_fallback_title": "\u064a\u0645\u0643\u0646 \u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0639\u0631\u0648\u0636 \u0627\u0644\u0645\u0648\u0633\u0645\u064a\u0629 \u0645\u0646 \u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645",
         "promotion_fallback_text": "\u0623\u0636\u0641 \u0639\u0631\u0648\u0636 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629 \u0645\u0639 \u0627\u0644\u0645\u062f\u0629 \u0627\u0644\u0632\u0645\u0646\u064a\u0629 \u0648\u0627\u0644\u0646\u0635\u0648\u0635 \u0648\u0627\u0644\u0631\u0648\u0627\u0628\u0637 \u0639\u0646\u062f \u0627\u0644\u062d\u0627\u062c\u0629.",
@@ -267,7 +272,7 @@ UI_STRINGS = {
         "related_empty": "\u0633\u062a\u0638\u0647\u0631 \u0645\u0646\u062a\u062c\u0627\u062a \u0625\u0636\u0627\u0641\u064a\u0629 \u0645\u0646 \u0647\u0630\u0627 \u0627\u0644\u0642\u0633\u0645 \u0647\u0646\u0627.",
         "about_heading": "\u0645\u0646 \u0646\u062d\u0646 \u0648\u0627\u0644\u062a\u0648\u0627\u0635\u0644",
         "previous_orders_heading": "\u0627\u0644\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0633\u0627\u0628\u0642\u0629",
-        "previous_orders_intro": "\u0627\u0637\u0644\u0639 \u0639\u0644\u0649 \u0637\u0644\u0628\u0627\u062a\u0643 \u0627\u0644\u0645\u0624\u0643\u062f\u0629 \u0648\u0627\u0644\u0639\u0646\u0627\u0648\u064a\u0646 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0648\u0627\u0644\u0645\u062c\u0627\u0645\u064a\u0639 \u0648\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u062a\u0648\u0635\u064a\u0644 \u0645\u0646 \u0647\u0646\u0627.",
+        "previous_orders_intro": "\u0637\u0644\u0628\u0627\u062a\u0643 \u0627\u0644\u0633\u0627\u0628\u0642\u0629",
         "previous_orders_notice": "\u062a\u0638\u0647\u0631 \u0623\u062d\u062f\u062b \u0637\u0644\u0628\u0627\u062a\u0643 \u0627\u0644\u0645\u0624\u0643\u062f\u0629 \u0641\u064a \u0627\u0644\u0623\u0633\u0641\u0644.",
         "previous_orders_empty": "\u0644\u0627 \u062a\u0648\u062c\u062f \u0644\u062f\u064a\u0643 \u0637\u0644\u0628\u0627\u062a \u0645\u0624\u0643\u062f\u0629 \u0628\u0639\u062f.",
         "about_store": "\u0639\u0646 \u0627\u0644\u0645\u062a\u062c\u0631",
@@ -406,8 +411,13 @@ UI_STRINGS = {
         "order_confirmed": "\u062a\u0645 \u062a\u0623\u0643\u064a\u062f \u0627\u0644\u0637\u0644\u0628 \u0628\u0646\u062c\u0627\u062d. \u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 {invoice_number}.",
         "order_status": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0637\u0644\u0628",
         "active_order_heading": "\u0637\u0644\u0628\u0643 \u0627\u0644\u062d\u0627\u0644\u064a",
+        "view_order": "\u0639\u0631\u0636 \u0627\u0644\u0637\u0644\u0628",
+        "order_accepted_message": "\u062a\u0645 \u0642\u0628\u0648\u0644 \u0627\u0644\u0637\u0644\u0628",
+        "center_busy_order_message": "\u0627\u0644\u0645\u0631\u0643\u0632 \u0645\u0634\u063a\u0648\u0644. \u0633\u064a\u062a\u0645 \u0642\u0628\u0648\u0644 \u0637\u0644\u0628\u0643 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b \u0628\u0639\u062f {minutes} \u062f\u0642\u064a\u0642\u0629.",
         "waiting_manager_confirmation": "\u0628\u0627\u0646\u062a\u0638\u0627\u0631 \u062a\u0623\u0643\u064a\u062f \u0627\u0644\u0645\u062f\u064a\u0631...",
         "expected_time_minutes": "\u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0645\u062a\u0648\u0642\u0639: {minutes} \u062f\u0642\u064a\u0642\u0629",
+        "order_status_waiting_due_to_busy_center": "\u0627\u0644\u0645\u0631\u0643\u0632 \u0645\u0634\u063a\u0648\u0644",
+        "order_status_accepted": "\u062a\u0645 \u0642\u0628\u0648\u0644 \u0627\u0644\u0637\u0644\u0628",
         "order_status_waiting_accept": "\u0628\u0627\u0646\u062a\u0638\u0627\u0631 \u0627\u0644\u0642\u0628\u0648\u0644",
         "order_status_being_prepared": "\u0642\u064a\u062f \u0627\u0644\u062a\u062d\u0636\u064a\u0631",
         "order_status_out_for_delivery": "\u062e\u0627\u0631\u062c \u0644\u0644\u062a\u0648\u0635\u064a\u0644",
@@ -446,10 +456,8 @@ def with_lang_query(path, language):
 
 
 def _format_amount(value):
-    amount = Decimal(value)
-    if amount == amount.quantize(Decimal("1")):
-        return f"{int(amount):,}"
-    return f"{amount:,.2f}"
+    amount = Decimal(value).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    return f"{int(amount):,}"
 
 
 def format_syp(value, language="en"):

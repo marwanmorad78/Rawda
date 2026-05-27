@@ -5,6 +5,117 @@
     <div class="dashboard-section-header">
         <h1>{{ dashboard_ui.all_orders }}</h1>
     </div>
-    {% include "dashboard/partials/order_history.html" with orders=orders show_customer=True show_status=True %}
+
+    <section class="sales-report-panel">
+        <div class="dashboard-section-header">
+            <div>
+                <h2>{{ dashboard_ui.sales_report }}</h2>
+            </div>
+        </div>
+        <form method="get" class="dashboard-search-form sales-report-form">
+            <label>
+                <span>{{ dashboard_ui.sales_from_date }}</span>
+                <input type="date" name="from_date" value="{{ sales_report_filters.from_date }}">
+            </label>
+            <label>
+                <span>{{ dashboard_ui.sales_to_date }}</span>
+                <input type="date" name="to_date" value="{{ sales_report_filters.to_date }}">
+            </label>
+            <label>
+                <span>{{ dashboard_ui.sales_single_day }}</span>
+                <input type="date" name="single_day" value="{{ sales_report_filters.single_day }}">
+            </label>
+            <div class="sales-report-actions">
+                <button type="submit" class="btn btn-secondary">{{ dashboard_ui.sales_apply_filter }}</button>
+                <button type="submit" class="btn btn-primary" formaction="{% url 'dashboard:orders-sales-export' %}">
+                    {{ dashboard_ui.sales_export_excel }}
+                </button>
+            </div>
+        </form>
+
+        {% if sales_report_errors %}
+            <div class="excel-error-panel">
+                <h3>{{ dashboard_ui.excel_errors }}</h3>
+                <ul>
+                    {% for error in sales_report_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if sales_report %}
+            <div class="stats-grid sales-report-summary">
+                <article class="stat-card">
+                    <strong>{{ sales_report.summary.display_grand_total }}</strong>
+                    <span>{{ dashboard_ui.sales_grand_total }}</span>
+                </article>
+                <article class="stat-card">
+                    <strong>{{ sales_report.summary.display_delivery_total }}</strong>
+                    <span>{{ dashboard_ui.sales_delivery_total }}</span>
+                </article>
+                <article class="stat-card">
+                    <strong>{{ sales_report.summary.order_count }}</strong>
+                    <span>{{ dashboard_ui.sales_order_count }}</span>
+                </article>
+            </div>
+            {% if sales_report.rows %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ dashboard_ui.sales_product_name }}</th>
+                                <th>{{ dashboard_ui.sales_category }}</th>
+                                <th>{{ dashboard_ui.sales_quantity_sold }}</th>
+                                <th>{{ dashboard_ui.sales_unit_price }}</th>
+                                <th>{{ dashboard_ui.sales_total_product_price }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in sales_report.rows %}
+                                <tr>
+                                    <td>{{ row.title }}</td>
+                                    <td>{{ row.category_label }}</td>
+                                    <td>{{ row.quantity_sold }}</td>
+                                    <td>{{ row.display_unit_price }}</td>
+                                    <td>{{ row.display_total_product_price }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>{{ dashboard_ui.sales_no_rows }}</p>
+            {% endif %}
+        {% endif %}
+    </section>
+
+    <section class="orders-filter-panel">
+        <div class="dashboard-section-header">
+            <h2>{{ dashboard_ui.orders_filter_title }}</h2>
+        </div>
+        <form method="get" class="dashboard-search-form orders-filter-form">
+            <label>
+                <span>{{ dashboard_ui.orders_filter_day }}</span>
+                <input type="date" name="order_day" value="{{ order_day_filter.day }}">
+            </label>
+            <div class="sales-report-actions">
+                <button type="submit" class="btn btn-secondary">{{ dashboard_ui.orders_filter_apply }}</button>
+                <a href="{% url 'dashboard:orders' %}" class="btn btn-secondary">{{ dashboard_ui.orders_filter_clear }}</a>
+            </div>
+        </form>
+        {% if order_filter_errors %}
+            <div class="excel-error-panel">
+                <h3>{{ dashboard_ui.excel_errors }}</h3>
+                <ul>
+                    {% for error in order_filter_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </section>
+
+    {% include "dashboard/partials/order_history.html" with orders=orders show_customer=True show_status=True empty_message=dashboard_ui.no_orders %}
 </section>
 {% endblock %}

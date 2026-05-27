@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 
 class TimeStampedModel(models.Model):
@@ -32,7 +33,7 @@ class SiteSettings(TimeStampedModel):
     hero_cta_text = models.CharField(max_length=80, blank=True)
     hero_cta_text_ar = models.CharField(max_length=80, blank=True)
     hero_cta_url = models.CharField(max_length=255, blank=True)
-    dollar_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    dollar_price = models.DecimalField(max_digits=12, decimal_places=0, default=0)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -99,7 +100,7 @@ class SocialLink(TimeStampedModel):
 class DeliveryArea(TimeStampedModel):
     name = models.CharField(max_length=150, unique=True)
     has_sub_areas = models.BooleanField(default=False)
-    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=0, default=0)
     display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
@@ -118,7 +119,7 @@ class DeliverySubArea(TimeStampedModel):
         related_name="sub_areas",
     )
     name = models.CharField(max_length=150)
-    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=0, default=0)
     display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
@@ -129,6 +130,70 @@ class DeliverySubArea(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.area.name} - {self.name}"
+
+
+class CenterStatus(TimeStampedModel):
+    STATUS_AVAILABLE = "available"
+    STATUS_BUSY = "busy"
+    STATUS_CHOICES = [
+        (STATUS_AVAILABLE, "Available"),
+        (STATUS_BUSY, "Busy"),
+    ]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_AVAILABLE)
+    busy_until = models.DateTimeField(blank=True, null=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="center_status_updates",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = "Center status"
+        verbose_name_plural = "Center status"
+
+    def clean(self) -> None:
+        if not self.pk and CenterStatus.objects.exists():
+            raise ValidationError("Only one CenterStatus record is allowed.")
+        if self.status == self.STATUS_BUSY and self.busy_until is None:
+            raise ValidationError("Busy center status requires a busy-until time.")
+        if self.status == self.STATUS_AVAILABLE:
+            self.busy_until = None
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        if self.is_available():
+            return "Available"
+        return f"Busy until {timezone.localtime(self.busy_until):%Y-%m-%d %H:%M}"
+
+    @classmethod
+    def get_current(cls):
+        status = cls.objects.order_by("pk").first()
+        if status is not None:
+            return status
+        return cls.objects.create(pk=1)
+
+    def is_available(self):
+        return self.status == self.STATUS_AVAILABLE or (
+            self.busy_until is not None and self.busy_until <= timezone.now()
+        )
+
+    def remaining_busy_time(self):
+        if self.status != self.STATUS_BUSY or self.busy_until is None:
+            return timezone.timedelta()
+        return max(self.busy_until - timezone.now(), timezone.timedelta())
+
+    def refresh_availability(self):
+        if self.status == self.STATUS_BUSY and self.busy_until and self.busy_until <= timezone.now():
+            self.status = self.STATUS_AVAILABLE
+            self.busy_until = None
+            self.save(update_fields=["status", "busy_until", "updated_at"])
+        return self
 
 
 class CustomerProfile(TimeStampedModel):
@@ -195,40 +260,57 @@ class CustomerAddress(TimeStampedModel):
 class CustomerOrder(TimeStampedModel):
     SERVICE_PICKUP = "pickup"
     SERVICE_DELIVERY = "delivery"
+    STATUS_WAITING_BUSY_CENTER = "waiting_due_to_busy_center"
+    STATUS_ACCEPTED = "accepted"
     STATUS_WAITING_ACCEPT = "waiting_accept"
     STATUS_BEING_PREPARED = "being_prepared"
+    STATUS_PREPARING = STATUS_BEING_PREPARED
     STATUS_OUT_FOR_DELIVERY = "out_for_delivery"
     STATUS_READY_TO_PICKUP = "ready_to_pickup"
     STATUS_DONE = "done"
     STATUS_CANCELLED = "cancelled"
     STATUS_PENDING = STATUS_WAITING_ACCEPT
     STATUS_CONFIRMED = STATUS_DONE
+    PRINT_NOT_SENT = "not_sent"
+    PRINT_SENT = "sent"
+    PRINT_PRINTED = "printed"
+    PRINT_FAILED = "failed"
     SERVICE_CHOICES = [
         (SERVICE_PICKUP, "Pickup"),
         (SERVICE_DELIVERY, "Delivery"),
     ]
     STATUS_CHOICES = [
+        (STATUS_WAITING_BUSY_CENTER, "Waiting due to busy center"),
+        (STATUS_ACCEPTED, "Accepted"),
         (STATUS_WAITING_ACCEPT, "Waiting for accept"),
-        (STATUS_BEING_PREPARED, "Being prepared"),
+        (STATUS_BEING_PREPARED, "Preparing"),
         (STATUS_OUT_FOR_DELIVERY, "Out for delivery"),
         (STATUS_READY_TO_PICKUP, "Ready to pick up"),
         (STATUS_DONE, "Done"),
         (STATUS_CANCELLED, "Cancelled"),
     ]
+    PRINT_STATUS_CHOICES = [
+        (PRINT_NOT_SENT, "Not sent"),
+        (PRINT_SENT, "Sent"),
+        (PRINT_PRINTED, "Printed"),
+        (PRINT_FAILED, "Failed"),
+    ]
     ACTIVE_STATUSES = [
+        STATUS_WAITING_BUSY_CENTER,
+        STATUS_ACCEPTED,
         STATUS_WAITING_ACCEPT,
         STATUS_BEING_PREPARED,
         STATUS_OUT_FOR_DELIVERY,
         STATUS_READY_TO_PICKUP,
     ]
     DELIVERY_STATUS_FLOW = [
-        STATUS_WAITING_ACCEPT,
+        STATUS_ACCEPTED,
         STATUS_BEING_PREPARED,
         STATUS_OUT_FOR_DELIVERY,
         STATUS_DONE,
     ]
     PICKUP_STATUS_FLOW = [
-        STATUS_WAITING_ACCEPT,
+        STATUS_ACCEPTED,
         STATUS_BEING_PREPARED,
         STATUS_READY_TO_PICKUP,
         STATUS_DONE,
@@ -257,11 +339,18 @@ class CustomerOrder(TimeStampedModel):
     accepted_at = models.DateTimeField(blank=True, null=True)
     completed_at = models.DateTimeField(blank=True, null=True)
     address_snapshot = models.TextField()
-    subtotal_min = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    subtotal_max = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_min = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total_max = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    subtotal_min = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    subtotal_max = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    total_min = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    total_max = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    print_status = models.CharField(
+        max_length=20,
+        choices=PRINT_STATUS_CHOICES,
+        default=PRINT_NOT_SENT,
+    )
+    print_attempted_at = models.DateTimeField(blank=True, null=True)
+    print_error = models.TextField(blank=True)
 
     class Meta:
         ordering = ["-created_at", "-id"]
@@ -291,6 +380,19 @@ class CustomerOrder(TimeStampedModel):
             return None
         return flow[next_index]
 
+    def auto_accept_if_center_available(self, print_invoice=False):
+        if self.status != self.STATUS_WAITING_BUSY_CENTER:
+            return False
+
+        center_status = CenterStatus.get_current().refresh_availability()
+        if not center_status.is_available():
+            return False
+
+        from apps.core.services import mark_order_accepted
+
+        mark_order_accepted(self, print_invoice=print_invoice)
+        return True
+
 
 class CustomerOrderItem(TimeStampedModel):
     order = models.ForeignKey(
@@ -304,9 +406,9 @@ class CustomerOrderItem(TimeStampedModel):
     category_label = models.CharField(max_length=120, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     unit_label = models.CharField(max_length=50, blank=True)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    line_total_min = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    line_total_max = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    line_total_min = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    line_total_max = models.DecimalField(max_digits=12, decimal_places=0, default=0)
     is_weight_based = models.BooleanField(default=False)
 
     class Meta:

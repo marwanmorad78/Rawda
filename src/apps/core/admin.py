@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CustomerAddress, CustomerOrder, DeliveryArea, DeliverySubArea, SiteSettings
+from .models import CenterStatus, CustomerAddress, CustomerOrder, DeliveryArea, DeliverySubArea, SiteSettings
 
 
 @admin.register(SiteSettings)
@@ -23,6 +23,12 @@ class DeliverySubAreaAdmin(admin.ModelAdmin):
     search_fields = ("name", "area__name")
 
 
+@admin.register(CenterStatus)
+class CenterStatusAdmin(admin.ModelAdmin):
+    list_display = ("status", "busy_until", "updated_by", "updated_at")
+    list_filter = ("status",)
+
+
 @admin.register(CustomerAddress)
 class CustomerAddressAdmin(admin.ModelAdmin):
     list_display = ("profile", "area", "sub_area", "street_address", "is_default", "updated_at")
@@ -32,6 +38,15 @@ class CustomerAddressAdmin(admin.ModelAdmin):
 
 @admin.register(CustomerOrder)
 class CustomerOrderAdmin(admin.ModelAdmin):
-    list_display = ("invoice_number", "profile", "service_type", "delivery_fee", "status", "expected_time_minutes", "created_at")
-    list_filter = ("service_type", "status")
+    list_display = (
+        "invoice_number",
+        "profile",
+        "service_type",
+        "delivery_fee",
+        "status",
+        "print_status",
+        "expected_time_minutes",
+        "created_at",
+    )
+    list_filter = ("service_type", "status", "print_status")
     search_fields = ("invoice_number", "profile__full_name", "address_snapshot")

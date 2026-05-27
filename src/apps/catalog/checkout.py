@@ -4,7 +4,9 @@ from django.utils import timezone
 
 from apps.catalog.cart import build_cart
 from apps.core.localization import format_price_range, format_syp, get_language
-from apps.core.models import CustomerOrder, CustomerOrderItem
+from apps.core.models import CenterStatus, CustomerOrder, CustomerOrderItem
+from apps.core.pricing import round_money
+from apps.core.services import mark_order_accepted
 
 
 def build_address_snapshot(address):
@@ -32,9 +34,9 @@ def get_address_delivery_fee(address):
         return Decimal("0")
     if getattr(address.area, "has_sub_areas", False):
         if getattr(address, "sub_area_id", None):
-            return Decimal(getattr(address.sub_area, "delivery_fee", 0) or 0)
+            return round_money(getattr(address.sub_area, "delivery_fee", 0) or 0)
         return Decimal("0")
-    return Decimal(getattr(address.area, "delivery_fee", 0) or 0)
+    return round_money(getattr(address.area, "delivery_fee", 0) or 0)
 
 
 def get_delivery_fee(address, service_type):
@@ -48,8 +50,8 @@ def build_checkout_summary(request, address=None, service_type=CustomerOrder.SER
     language = get_language(request)
     cart = build_cart(request)
     delivery_fee = get_delivery_fee(address, service_type)
-    total_min = cart["subtotal_min"] + delivery_fee
-    total_max = cart["subtotal_max"] + delivery_fee
+    total_min = round_money(cart["subtotal_min"] + delivery_fee)
+    total_max = round_money(cart["subtotal_max"] + delivery_fee)
     return {
         "cart": cart,
         "service_type": service_type,
@@ -78,12 +80,19 @@ def create_order_from_checkout(profile, address, checkout_summary):
         invoice_number = f"{base_invoice_number}-{suffix}"
         suffix += 1
 
+    center_status = CenterStatus.get_current().refresh_availability()
+    initial_status = (
+        CustomerOrder.STATUS_ACCEPTED
+        if center_status.is_available()
+        else CustomerOrder.STATUS_WAITING_BUSY_CENTER
+    )
+
     order = CustomerOrder.objects.create(
         profile=profile,
         address=address,
         invoice_number=invoice_number,
         service_type=checkout_summary["service_type"],
-        status=CustomerOrder.STATUS_WAITING_ACCEPT,
+        status=initial_status,
         address_snapshot=checkout_summary["address_snapshot"],
         subtotal_min=checkout_summary["cart"]["subtotal_min"],
         subtotal_max=checkout_summary["cart"]["subtotal_max"],
@@ -109,4 +118,6 @@ def create_order_from_checkout(profile, address, checkout_summary):
             for item in checkout_summary["cart"]["items"]
         ]
     )
+    if initial_status == CustomerOrder.STATUS_ACCEPTED:
+        mark_order_accepted(order)
     return order

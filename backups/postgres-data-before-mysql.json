@@ -1,0 +1,1717 @@
+[
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$SMGJM7FDRu355Na0zgK32C$vk03ZtGp7eXfaEHfj2Ix7t0lowo+b7Kfx2gZDWVd/ao=",
+    "last_login": "2026-05-03T15:04:43.122Z",
+    "is_superuser": true,
+    "username": "marwanmorad",
+    "first_name": "marwanmorad",
+    "last_name": "",
+    "email": "marwanmorad78@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-15T14:25:05Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$R460IzU2ccVzI8jIv8M4fE$6oM/jIBEXhvZEUhF8JhYAPf0HgN+FSeRod3PG0t1iGQ=",
+    "last_login": "2026-04-20T13:12:42.596Z",
+    "is_superuser": false,
+    "username": "moro-morad",
+    "first_name": "Moro Morad",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-15T21:49:25.924Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "checkout-test-user",
+    "first_name": "Checkout Test",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-16T16:16:15.252Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$KZrmdT1tv71KQMgLvIa06X$zc0kImMa+bdz+oBfWt87ZANYUMKuIxzQoPyMmaukVL8=",
+    "last_login": "2026-04-22T22:43:52.829Z",
+    "is_superuser": false,
+    "username": "mohammad-othman",
+    "first_name": "Mohammad Othman",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-22T22:43:51.292Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.sitesettings",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-04-15T14:10:43.634Z",
+    "updated_at": "2026-04-24T12:27:05.509Z",
+    "store_name": "Al Rawda Center",
+    "store_name_ar": "مركز الروضة",
+    "tagline": "All you need to cook",
+    "tagline_ar": "كل ما تحتاجه للطبخ",
+    "about_text": "Al Rawda Center is a neighborhood grocery destination focused on fresh produce, pantry staples, juices, legumes, and frozen essentials.",
+    "about_text_ar": "مركز الروضة وجهة بقالة محلية تهتم بالخضار والفواكه الطازجة والمواد التموينية والعصائر والبقوليات والمنتجات المجمدة.",
+    "address": "Rawda, Damascus",
+    "address_ar": "الروضة، دمشق",
+    "primary_phone": "0953382023",
+    "secondary_phone": "",
+    "email": "info@alrawdacenter.com",
+    "working_hours_summary": "Daily from 8:00 AM to 10:00 PM",
+    "working_hours_summary_ar": "يومياً من 8:00 صباحاً حتى 10:00 مساءً",
+    "hero_title": "Fresh choices for every kitchen",
+    "hero_title_ar": "خيارات طازجة لكل مطبخ",
+    "hero_subtitle": "Browse vegetables, fruits, juices, canned food, legumes, and frozen products with prices updated by the store team.",
+    "hero_subtitle_ar": "تصفح الخضار والفواكه والعصائر والمعلبات والبقوليات والمنتجات المجمدة مع أسعار محدثة من فريق المتجر.",
+    "hero_cta_text": "Browse categories",
+    "hero_cta_text_ar": "تصفح الأقسام",
+    "hero_cta_url": "/#categories",
+    "dollar_price": "13000.00",
+    "is_active": true
+  }
+},
+{
+  "model": "core.deliveryarea",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-04-22T11:53:57.408Z",
+    "updated_at": "2026-05-02T22:03:04.794Z",
+    "name": "Damascus",
+    "has_sub_areas": false,
+    "delivery_fee": "0.00",
+    "display_order": 0,
+    "is_active": false
+  }
+},
+{
+  "model": "core.deliveryarea",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-04-22T11:53:57.413Z",
+    "updated_at": "2026-04-22T11:53:57.413Z",
+    "name": "المزة",
+    "has_sub_areas": false,
+    "delivery_fee": "0.00",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "core.centerstatus",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-05-06T20:11:49.122Z",
+    "updated_at": "2026-05-06T20:17:29.142Z",
+    "status": "available",
+    "busy_until": null,
+    "updated_by": [
+      "marwanmorad"
+    ]
+  }
+},
+{
+  "model": "core.customerprofile",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-04-15T21:49:26.884Z",
+    "updated_at": "2026-04-19T16:04:47.035Z",
+    "user": [
+      "moro-morad"
+    ],
+    "full_name": "Moro Morad",
+    "phone_number": "+963930125098"
+  }
+},
+{
+  "model": "core.customerprofile",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-04-15T21:58:11.699Z",
+    "updated_at": "2026-04-22T22:20:08.595Z",
+    "user": [
+      "marwanmorad"
+    ],
+    "full_name": "marwanmorad",
+    "phone_number": "0930125098"
+  }
+},
+{
+  "model": "core.customerprofile",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-04-16T16:16:15.259Z",
+    "updated_at": "2026-04-16T16:16:15.259Z",
+    "user": [
+      "checkout-test-user"
+    ],
+    "full_name": "Checkout Test",
+    "phone_number": "+963900000001"
+  }
+},
+{
+  "model": "core.customerprofile",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-04-22T22:43:52.069Z",
+    "updated_at": "2026-04-22T22:43:52.069Z",
+    "user": [
+      "mohammad-othman"
+    ],
+    "full_name": "Mohammad Othman",
+    "phone_number": "0944210710"
+  }
+},
+{
+  "model": "core.customeraddress",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-04-15T21:49:26.887Z",
+    "updated_at": "2026-04-15T21:49:26.887Z",
+    "profile": 1,
+    "area": 2,
+    "sub_area": null,
+    "street_address": "الطريق بين الجمارك والمواساة",
+    "building": "",
+    "floor": "2 فني",
+    "apartment": "",
+    "nearby_landmark": "",
+    "notes": "",
+    "is_default": true
+  }
+},
+{
+  "model": "core.customeraddress",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-04-16T16:16:15.267Z",
+    "updated_at": "2026-04-16T16:16:15.267Z",
+    "profile": 3,
+    "area": 1,
+    "sub_area": null,
+    "street_address": "Test Street 1",
+    "building": "",
+    "floor": "2",
+    "apartment": "",
+    "nearby_landmark": "",
+    "notes": "",
+    "is_default": true
+  }
+},
+{
+  "model": "core.customeraddress",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-04-16T16:43:51.028Z",
+    "updated_at": "2026-04-16T16:43:51.028Z",
+    "profile": 1,
+    "area": 2,
+    "sub_area": null,
+    "street_address": "الطريق بين الجمارك والمواساة",
+    "building": "",
+    "floor": "2 فني",
+    "apartment": "",
+    "nearby_landmark": "",
+    "notes": "",
+    "is_default": false
+  }
+},
+{
+  "model": "core.customeraddress",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-04-22T22:43:52.072Z",
+    "updated_at": "2026-04-22T22:43:52.072Z",
+    "profile": 4,
+    "area": 2,
+    "sub_area": null,
+    "street_address": "الطريق بين الجمارك والمواساة",
+    "building": "بناء مراد",
+    "floor": "2 فني",
+    "apartment": "655",
+    "nearby_landmark": "بجانب صيدلية المدائن",
+    "notes": "",
+    "is_default": true
+  }
+},
+{
+  "model": "core.customeraddress",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-05-02T22:19:48.774Z",
+    "updated_at": "2026-05-02T22:19:48.774Z",
+    "profile": 2,
+    "area": 2,
+    "sub_area": null,
+    "street_address": "الطريق بين الجمارك والمواساة",
+    "building": "بناء مراد",
+    "floor": "2 فني",
+    "apartment": "655",
+    "nearby_landmark": "بجانب صيدلية المدائن",
+    "notes": "",
+    "is_default": true
+  }
+},
+{
+  "model": "core.customeraddress",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-05-03T11:07:54.387Z",
+    "updated_at": "2026-05-03T11:07:54.387Z",
+    "profile": 2,
+    "area": 2,
+    "sub_area": null,
+    "street_address": "شيخ سعد",
+    "building": "12",
+    "floor": "4",
+    "apartment": "322",
+    "nearby_landmark": "جانب كمال عياش",
+    "notes": "",
+    "is_default": false
+  }
+},
+{
+  "model": "core.customerorder",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.510Z",
+    "updated_at": "2026-04-19T16:06:26.510Z",
+    "profile": 1,
+    "address": 3,
+    "invoice_number": "AR-20260419-160626",
+    "service_type": "delivery",
+    "status": "done",
+    "expected_time_minutes": null,
+    "accepted_at": null,
+    "completed_at": null,
+    "address_snapshot": "المزة, الطريق بين الجمارك والمواساة, Floor: 2 فني",
+    "subtotal_min": "47450.00",
+    "subtotal_max": "52975.00",
+    "delivery_fee": "10000.00",
+    "total_min": "57450.00",
+    "total_max": "62975.00",
+    "print_status": "not_sent",
+    "print_attempted_at": null,
+    "print_error": ""
+  }
+},
+{
+  "model": "core.customerorder",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-05-02T22:19:58.851Z",
+    "updated_at": "2026-05-02T22:19:58.851Z",
+    "profile": 2,
+    "address": 5,
+    "invoice_number": "AR-20260502-221958",
+    "service_type": "delivery",
+    "status": "done",
+    "expected_time_minutes": null,
+    "accepted_at": null,
+    "completed_at": null,
+    "address_snapshot": "المزة, الطريق بين الجمارك والمواساة, Building: بناء مراد, Floor: 2 فني, Apartment: 655, Near: بجانب صيدلية المدائن",
+    "subtotal_min": "400.02",
+    "subtotal_max": "400.02",
+    "delivery_fee": "0.00",
+    "total_min": "400.02",
+    "total_max": "400.02",
+    "print_status": "not_sent",
+    "print_attempted_at": null,
+    "print_error": ""
+  }
+},
+{
+  "model": "core.customerorder",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-05-03T11:08:02.676Z",
+    "updated_at": "2026-05-03T11:08:02.676Z",
+    "profile": 2,
+    "address": 5,
+    "invoice_number": "AR-20260503-110802",
+    "service_type": "delivery",
+    "status": "done",
+    "expected_time_minutes": null,
+    "accepted_at": null,
+    "completed_at": null,
+    "address_snapshot": "المزة, الطريق بين الجمارك والمواساة, Building: بناء مراد, Floor: 2 فني, Apartment: 655, Near: بجانب صيدلية المدائن",
+    "subtotal_min": "480.00",
+    "subtotal_max": "555.00",
+    "delivery_fee": "0.00",
+    "total_min": "480.00",
+    "total_max": "555.00",
+    "print_status": "not_sent",
+    "print_attempted_at": null,
+    "print_error": ""
+  }
+},
+{
+  "model": "core.customerorder",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-05-03T11:09:34.683Z",
+    "updated_at": "2026-05-03T11:09:34.683Z",
+    "profile": 2,
+    "address": 6,
+    "invoice_number": "AR-20260503-110934",
+    "service_type": "delivery",
+    "status": "done",
+    "expected_time_minutes": null,
+    "accepted_at": null,
+    "completed_at": null,
+    "address_snapshot": "المزة, شيخ سعد, Building: 12, Floor: 4, Apartment: 322, Near: جانب كمال عياش",
+    "subtotal_min": "325.00",
+    "subtotal_max": "406.25",
+    "delivery_fee": "0.00",
+    "total_min": "325.00",
+    "total_max": "406.25",
+    "print_status": "not_sent",
+    "print_attempted_at": null,
+    "print_error": ""
+  }
+},
+{
+  "model": "core.customerorder",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-05-03T16:14:12.237Z",
+    "updated_at": "2026-05-03T16:18:36.491Z",
+    "profile": 2,
+    "address": 5,
+    "invoice_number": "AR-20260503-161412",
+    "service_type": "delivery",
+    "status": "done",
+    "expected_time_minutes": 20,
+    "accepted_at": "2026-05-03T16:15:16.010Z",
+    "completed_at": "2026-05-03T16:18:36.491Z",
+    "address_snapshot": "المزة, الطريق بين الجمارك والمواساة, Building: بناء مراد, Floor: 2 فني, Apartment: 655, Near: بجانب صيدلية المدائن",
+    "subtotal_min": "550.00",
+    "subtotal_max": "687.50",
+    "delivery_fee": "0.00",
+    "total_min": "550.00",
+    "total_max": "687.50",
+    "print_status": "not_sent",
+    "print_attempted_at": null,
+    "print_error": ""
+  }
+},
+{
+  "model": "core.customerorder",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-05-03T16:20:37.451Z",
+    "updated_at": "2026-05-03T16:21:46.461Z",
+    "profile": 2,
+    "address": null,
+    "invoice_number": "AR-20260503-162037",
+    "service_type": "pickup",
+    "status": "done",
+    "expected_time_minutes": 20,
+    "accepted_at": "2026-05-03T16:21:03.593Z",
+    "completed_at": "2026-05-03T16:21:46.461Z",
+    "address_snapshot": "",
+    "subtotal_min": "640.00",
+    "subtotal_max": "800.00",
+    "delivery_fee": "0.00",
+    "total_min": "640.00",
+    "total_max": "800.00",
+    "print_status": "not_sent",
+    "print_attempted_at": null,
+    "print_error": ""
+  }
+},
+{
+  "model": "core.customerorder",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-05-06T20:17:00.947Z",
+    "updated_at": "2026-05-06T20:19:57.723Z",
+    "profile": 2,
+    "address": null,
+    "invoice_number": "AR-20260506-201700",
+    "service_type": "pickup",
+    "status": "being_prepared",
+    "expected_time_minutes": null,
+    "accepted_at": "2026-05-06T20:17:29.154Z",
+    "completed_at": null,
+    "address_snapshot": "",
+    "subtotal_min": "475.00",
+    "subtotal_max": "593.75",
+    "delivery_fee": "0.00",
+    "total_min": "475.00",
+    "total_max": "593.75",
+    "print_status": "not_sent",
+    "print_attempted_at": null,
+    "print_error": ""
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.515Z",
+    "updated_at": "2026-04-19T16:06:26.515Z",
+    "order": 2,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Canned Mushrooms",
+    "category_label": "المعلبات",
+    "quantity": 1,
+    "unit_label": "per can",
+    "unit_price": "13000.00",
+    "line_total_min": "13000.00",
+    "line_total_max": "13000.00",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.516Z",
+    "updated_at": "2026-04-19T16:06:26.516Z",
+    "order": 2,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Mango Juice",
+    "category_label": "العصائر",
+    "quantity": 1,
+    "unit_label": "per bottle",
+    "unit_price": "12350.00",
+    "line_total_min": "12350.00",
+    "line_total_max": "12350.00",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.516Z",
+    "updated_at": "2026-04-19T16:06:26.516Z",
+    "order": 2,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Gala Apples",
+    "category_label": "الفواكه",
+    "quantity": 1,
+    "unit_label": "per kg",
+    "unit_price": "14300.00",
+    "line_total_min": "14300.00",
+    "line_total_max": "17875.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.516Z",
+    "updated_at": "2026-04-19T16:06:26.516Z",
+    "order": 2,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Cherry Tomatoes",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per pack",
+    "unit_price": "7800.00",
+    "line_total_min": "7800.00",
+    "line_total_max": "9750.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-05-02T22:19:58.856Z",
+    "updated_at": "2026-05-02T22:19:58.856Z",
+    "order": 3,
+    "item_type": "promotion",
+    "cart_item_id": null,
+    "title": "عرض الفول مقلى",
+    "category_label": "عرض",
+    "quantity": 1,
+    "unit_label": "",
+    "unit_price": "400.02",
+    "line_total_min": "400.02",
+    "line_total_max": "400.02",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-05-03T11:08:02.679Z",
+    "updated_at": "2026-05-03T11:08:02.679Z",
+    "order": 4,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "ارضي شوكي",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "180.00",
+    "line_total_min": "180.00",
+    "line_total_max": "180.00",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-05-03T11:08:02.679Z",
+    "updated_at": "2026-05-03T11:08:02.679Z",
+    "order": 4,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "300.00",
+    "line_total_min": "300.00",
+    "line_total_max": "375.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-05-03T11:09:34.685Z",
+    "updated_at": "2026-05-03T11:09:34.685Z",
+    "order": 5,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "بطاطا",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "90.00",
+    "line_total_min": "90.00",
+    "line_total_max": "112.50",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-05-03T11:09:34.685Z",
+    "updated_at": "2026-05-03T11:09:34.685Z",
+    "order": 5,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "شوندر",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "150.00",
+    "line_total_min": "150.00",
+    "line_total_max": "187.50",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-05-03T11:09:34.685Z",
+    "updated_at": "2026-05-03T11:09:34.685Z",
+    "order": 5,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "زهرة",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "85.00",
+    "line_total_min": "85.00",
+    "line_total_max": "106.25",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 13,
+  "fields": {
+    "created_at": "2026-05-03T16:14:12.241Z",
+    "updated_at": "2026-05-03T16:14:12.241Z",
+    "order": 6,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "100.00",
+    "line_total_min": "100.00",
+    "line_total_max": "125.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 14,
+  "fields": {
+    "created_at": "2026-05-03T16:14:12.241Z",
+    "updated_at": "2026-05-03T16:14:12.241Z",
+    "order": 6,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "300.00",
+    "line_total_min": "300.00",
+    "line_total_max": "375.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 15,
+  "fields": {
+    "created_at": "2026-05-03T16:14:12.241Z",
+    "updated_at": "2026-05-03T16:14:12.241Z",
+    "order": 6,
+    "item_type": "product",
+    "cart_item_id": 52,
+    "title": "بصل",
+    "category_label": "الخضار",
+    "quantity": 2,
+    "unit_label": "per Kilo",
+    "unit_price": "75.00",
+    "line_total_min": "150.00",
+    "line_total_max": "187.50",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 16,
+  "fields": {
+    "created_at": "2026-05-03T16:20:37.454Z",
+    "updated_at": "2026-05-03T16:20:37.454Z",
+    "order": 7,
+    "item_type": "product",
+    "cart_item_id": 79,
+    "title": "شوندر",
+    "category_label": "الخضار",
+    "quantity": 2,
+    "unit_label": "per Kilo",
+    "unit_price": "150.00",
+    "line_total_min": "300.00",
+    "line_total_max": "375.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 17,
+  "fields": {
+    "created_at": "2026-05-03T16:20:37.454Z",
+    "updated_at": "2026-05-03T16:20:37.454Z",
+    "order": 7,
+    "item_type": "product",
+    "cart_item_id": 59,
+    "title": "زهرة",
+    "category_label": "الخضار",
+    "quantity": 4,
+    "unit_label": "per Kilo",
+    "unit_price": "85.00",
+    "line_total_min": "340.00",
+    "line_total_max": "425.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 18,
+  "fields": {
+    "created_at": "2026-05-06T20:17:00.951Z",
+    "updated_at": "2026-05-06T20:17:00.951Z",
+    "order": 8,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "100.00",
+    "line_total_min": "100.00",
+    "line_total_max": "125.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 19,
+  "fields": {
+    "created_at": "2026-05-06T20:17:00.951Z",
+    "updated_at": "2026-05-06T20:17:00.951Z",
+    "order": 8,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "300.00",
+    "line_total_min": "300.00",
+    "line_total_max": "375.00",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 20,
+  "fields": {
+    "created_at": "2026-05-06T20:17:00.951Z",
+    "updated_at": "2026-05-06T20:17:00.951Z",
+    "order": 8,
+    "item_type": "product",
+    "cart_item_id": 52,
+    "title": "بصل",
+    "category_label": "الخضار",
+    "quantity": 1,
+    "unit_label": "per Kilo",
+    "unit_price": "75.00",
+    "line_total_min": "75.00",
+    "line_total_max": "93.75",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-04-29T14:14:54.412Z",
+    "updated_at": "2026-04-29T14:17:52.273Z",
+    "name": "الخضار",
+    "name_ar": "",
+    "slug": "category",
+    "description": "",
+    "description_ar": "",
+    "display_order": 1,
+    "is_active": true,
+    "sold_by_weight": true,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-04-29T14:15:06.902Z",
+    "updated_at": "2026-04-29T14:15:06.902Z",
+    "name": "الفواكة",
+    "name_ar": "",
+    "slug": "category-2",
+    "description": "",
+    "description_ar": "",
+    "display_order": 2,
+    "is_active": true,
+    "sold_by_weight": true,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-04-29T14:15:40.189Z",
+    "updated_at": "2026-04-29T14:15:40.189Z",
+    "name": "مفرزات",
+    "name_ar": "",
+    "slug": "category-3",
+    "description": "",
+    "description_ar": "",
+    "display_order": 3,
+    "is_active": true,
+    "sold_by_weight": false,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-04-29T14:15:55.625Z",
+    "updated_at": "2026-04-29T14:17:03.440Z",
+    "name": "المنظفات",
+    "name_ar": "",
+    "slug": "category-4",
+    "description": "",
+    "description_ar": "",
+    "display_order": 7,
+    "is_active": true,
+    "sold_by_weight": false,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 13,
+  "fields": {
+    "created_at": "2026-04-29T14:16:12.586Z",
+    "updated_at": "2026-04-29T14:16:20.635Z",
+    "name": "العصائر والمشروبات",
+    "name_ar": "",
+    "slug": "category-5",
+    "description": "",
+    "description_ar": "",
+    "display_order": 4,
+    "is_active": true,
+    "sold_by_weight": false,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 14,
+  "fields": {
+    "created_at": "2026-04-29T14:16:35.794Z",
+    "updated_at": "2026-04-29T14:16:35.794Z",
+    "name": "ألبان وأجبان",
+    "name_ar": "",
+    "slug": "category-6",
+    "description": "",
+    "description_ar": "",
+    "display_order": 5,
+    "is_active": true,
+    "sold_by_weight": true,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 15,
+  "fields": {
+    "created_at": "2026-04-29T14:16:47.938Z",
+    "updated_at": "2026-04-29T14:16:56.934Z",
+    "name": "بقوليات",
+    "name_ar": "",
+    "slug": "category-7",
+    "description": "",
+    "description_ar": "",
+    "display_order": 6,
+    "is_active": true,
+    "sold_by_weight": false,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 16,
+  "fields": {
+    "created_at": "2026-04-29T14:17:21.656Z",
+    "updated_at": "2026-04-29T14:17:21.656Z",
+    "name": "المعلبات",
+    "name_ar": "",
+    "slug": "category-8",
+    "description": "",
+    "description_ar": "",
+    "display_order": 8,
+    "is_active": true,
+    "sold_by_weight": false,
+    "is_price_linked_to_dollar": true,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 17,
+  "fields": {
+    "created_at": "2026-04-29T14:17:33.754Z",
+    "updated_at": "2026-04-29T14:17:33.754Z",
+    "name": "بسكويت وشوكولا",
+    "name_ar": "",
+    "slug": "category-9",
+    "description": "",
+    "description_ar": "",
+    "display_order": 9,
+    "is_active": true,
+    "sold_by_weight": false,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.category",
+  "pk": 18,
+  "fields": {
+    "created_at": "2026-04-29T14:18:28.106Z",
+    "updated_at": "2026-04-29T14:18:28.106Z",
+    "name": "البلاستيك والنايلون",
+    "name_ar": "",
+    "slug": "category-10",
+    "description": "",
+    "description_ar": "",
+    "display_order": 10,
+    "is_active": true,
+    "sold_by_weight": false,
+    "is_price_linked_to_dollar": false,
+    "cover_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 44,
+  "fields": {
+    "created_at": "2026-04-29T14:50:35.844Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "بطاطا",
+    "name_ar": "",
+    "slug": "product-2",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "90.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-2",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 47,
+  "fields": {
+    "created_at": "2026-04-29T14:50:35.869Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "ملفوف",
+    "name_ar": "",
+    "slug": "product-5",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "40.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-5",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 51,
+  "fields": {
+    "created_at": "2026-04-29T14:50:35.913Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "ليمون",
+    "name_ar": "",
+    "slug": "product-9",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "300.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-9",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 52,
+  "fields": {
+    "created_at": "2026-04-29T14:50:35.924Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "بصل",
+    "name_ar": "",
+    "slug": "product-10",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "75.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-10",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 53,
+  "fields": {
+    "created_at": "2026-04-29T14:50:35.938Z",
+    "updated_at": "2026-05-02T21:38:33.062Z",
+    "category": 9,
+    "name": "بروكلي",
+    "name_ar": "",
+    "slug": "product-11",
+    "short_description": "بروكلي طازج",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "300.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": true,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-11",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 56,
+  "fields": {
+    "created_at": "2026-04-29T14:50:35.986Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "يقطين أبيض",
+    "name_ar": "",
+    "slug": "product-14",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "230.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-14",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 59,
+  "fields": {
+    "created_at": "2026-04-29T14:50:36.036Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "زهرة",
+    "name_ar": "",
+    "slug": "product-17",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "85.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-17",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 64,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.300Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "خيار",
+    "name_ar": "",
+    "slug": "product-22",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "200.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-22",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 65,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.325Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "فليفلة",
+    "name_ar": "",
+    "slug": "product-23",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "180.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": true,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-23",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 67,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.385Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "بندورة",
+    "name_ar": "",
+    "slug": "product-25",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "200.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-25",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 68,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.411Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "كوسا",
+    "name_ar": "",
+    "slug": "product-26",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "150.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-26",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 69,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.445Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "باذنجان",
+    "name_ar": "",
+    "slug": "product-27",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "100.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": true,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-27",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 73,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.582Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "جزر",
+    "name_ar": "",
+    "slug": "product-31",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "120.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-31",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 74,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.615Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "فاصولياء",
+    "name_ar": "",
+    "slug": "product-32",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "200.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-32",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 76,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.696Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "فطر",
+    "name_ar": "",
+    "slug": "product-34",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "1100.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-34",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 77,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.749Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "ثوم",
+    "name_ar": "",
+    "slug": "product-35",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "500.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-35",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 79,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.860Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "شوندر",
+    "name_ar": "",
+    "slug": "product-37",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "150.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-37",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 80,
+  "fields": {
+    "created_at": "2026-04-29T18:02:14.902Z",
+    "updated_at": "2026-05-01T13:47:48.298Z",
+    "category": 9,
+    "name": "براصيا",
+    "name_ar": "",
+    "slug": "product-38",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "100.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "inherit",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-38",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.product",
+  "pk": 100,
+  "fields": {
+    "created_at": "2026-04-29T18:04:16.512Z",
+    "updated_at": "2026-05-02T21:40:04.789Z",
+    "category": 9,
+    "name": "ارضي شوكي",
+    "name_ar": "",
+    "slug": "product-33",
+    "short_description": "",
+    "short_description_ar": "",
+    "description": "",
+    "description_ar": "",
+    "price": "180.00",
+    "price_link_mode": "inherit",
+    "is_price_linked_to_dollar": false,
+    "unit_label": "per Kilo",
+    "unit_label_ar": "",
+    "sold_by_weight_mode": "custom",
+    "sold_by_weight": false,
+    "has_options": false,
+    "is_available": true,
+    "is_featured": false,
+    "sku": "CAT-57",
+    "primary_image": "",
+    "external_image_url": ""
+  }
+},
+{
+  "model": "catalog.productoption",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-04-30T08:03:15.015Z",
+    "updated_at": "2026-04-30T08:03:15.015Z",
+    "product": 69,
+    "name": "أسود بلدي",
+    "price": "100.00",
+    "is_default": true,
+    "display_order": 0
+  }
+},
+{
+  "model": "catalog.productoption",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-04-30T08:03:15.023Z",
+    "updated_at": "2026-04-30T08:03:15.023Z",
+    "product": 69,
+    "name": "معلا",
+    "price": "50.00",
+    "is_default": false,
+    "display_order": 0
+  }
+},
+{
+  "model": "catalog.productoption",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-04-30T08:05:10.342Z",
+    "updated_at": "2026-04-30T08:05:10.342Z",
+    "product": 65,
+    "name": "خضراء",
+    "price": "100.00",
+    "is_default": true,
+    "display_order": 0
+  }
+},
+{
+  "model": "catalog.productoption",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-04-30T08:05:10.347Z",
+    "updated_at": "2026-04-30T08:05:10.347Z",
+    "product": 65,
+    "name": "حمراء",
+    "price": "200.00",
+    "is_default": false,
+    "display_order": 0
+  }
+},
+{
+  "model": "catalog.productoption",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-04-30T08:05:10.347Z",
+    "updated_at": "2026-04-30T08:05:10.347Z",
+    "product": 65,
+    "name": "صفراء",
+    "price": "300.00",
+    "is_default": false,
+    "display_order": 0
+  }
+},
+{
+  "model": "catalog.productoption",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-04-30T08:05:10.347Z",
+    "updated_at": "2026-04-30T08:05:10.351Z",
+    "product": 65,
+    "name": "مزحلطة",
+    "price": "250.00",
+    "is_default": false,
+    "display_order": 0
+  }
+},
+{
+  "model": "promotions.promotion",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-05-02T21:41:51.230Z",
+    "updated_at": "2026-05-02T21:41:51.230Z",
+    "title": "عرض الفول مقلى",
+    "title_ar": "",
+    "slug": "promotion",
+    "subtitle": "",
+    "subtitle_ar": "",
+    "description": "عرض الفول مقلى",
+    "description_ar": "",
+    "price": "400.02",
+    "is_price_linked_to_dollar": false,
+    "badge_text": "",
+    "badge_text_ar": "",
+    "cta_text": "",
+    "cta_text_ar": "",
+    "cta_url": "",
+    "image": "promotions/Screenshot_2026-04-25_235201.png",
+    "external_image_url": "",
+    "start_date": null,
+    "end_date": null,
+    "is_active": true,
+    "display_order": 0
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2026-04-15T21:14:30.356Z",
+    "user": [
+      "marwanmorad"
+    ],
+    "content_type": [
+      "catalog",
+      "category"
+    ],
+    "object_id": "7",
+    "object_repr": "البسكويت",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2026-04-16T16:42:02.098Z",
+    "user": [
+      "marwanmorad"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "1",
+    "object_repr": "marwanmorad",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2026-04-16T16:42:20.421Z",
+    "user": [
+      "marwanmorad"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "2",
+    "object_repr": "moro-morad",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+  }
+}
+]

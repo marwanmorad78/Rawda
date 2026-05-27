@@ -25,6 +25,8 @@ def database_config_from_url(database_url):
     engine = {
         "postgres": "django.db.backends.postgresql",
         "postgresql": "django.db.backends.postgresql",
+        "mysql": "django.db.backends.mysql",
+        "mariadb": "django.db.backends.mysql",
     }.get(parsed.scheme)
 
     if not engine:
@@ -40,8 +42,16 @@ def database_config_from_url(database_url):
         "CONN_MAX_AGE": int(os.getenv("DATABASE_CONN_MAX_AGE", "600")),
         "CONN_HEALTH_CHECKS": True,
     }
+    if engine == "django.db.backends.mysql":
+        config["OPTIONS"] = {
+            "charset": os.getenv("DATABASE_CHARSET", "utf8mb4"),
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
     if env_to_bool("DATABASE_SSL_REQUIRE", False):
-        config["OPTIONS"] = {"sslmode": "require"}
+        if engine == "django.db.backends.mysql":
+            config.setdefault("OPTIONS", {})["ssl"] = {}
+        else:
+            config["OPTIONS"] = {"sslmode": "require"}
     return config
 
 
@@ -121,6 +131,21 @@ elif DATABASE_ENGINE == "sqlite":
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": PROJECT_ROOT / "db.sqlite3",
     }
+elif DATABASE_ENGINE in {"mysql", "mariadb"}:
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DATABASE_NAME", "al_rawda_center"),
+        "USER": os.getenv("DATABASE_USER", "root"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD", ""),
+        "HOST": os.getenv("DATABASE_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DATABASE_PORT", "3306"),
+        "CONN_MAX_AGE": int(os.getenv("DATABASE_CONN_MAX_AGE", "600")),
+        "CONN_HEALTH_CHECKS": True,
+        "OPTIONS": {
+            "charset": os.getenv("DATABASE_CHARSET", "utf8mb4"),
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
 else:
     DATABASES["default"] = {
         "ENGINE": "django.db.backends.postgresql",
@@ -157,6 +182,11 @@ LOGOUT_REDIRECT_URL = "core:home"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@alrawdacenter.local")
+
+INVOICE_PRINT_ENABLED = env_to_bool("INVOICE_PRINT_ENABLED", False)
+INVOICE_PRINT_SERVICE_URL = os.getenv("INVOICE_PRINT_SERVICE_URL", "http://127.0.0.1:5050/print-order")
+INVOICE_PRINT_SERVICE_TOKEN = os.getenv("INVOICE_PRINT_SERVICE_TOKEN", "")
+INVOICE_PRINT_TIMEOUT_SECONDS = int(os.getenv("INVOICE_PRINT_TIMEOUT_SECONDS", "3"))
 
 SESSION_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = "DENY"

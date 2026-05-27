@@ -1,112 +1,149 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}{{ ui.cart }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
+{% block body_class %}cart-page{% endblock %}
 
 {% block content %}
-<section class="page-hero compact">
+<section class="page-hero compact cart-hero">
     <div class="container">
         <span class="eyebrow">{{ ui.cart }}</span>
         <h1>{{ ui.cart_heading }}</h1>
-        <p>{{ ui.currency_name }}</p>
     </div>
 </section>
 
-<section class="section">
+<section class="section cart-page-section">
     <div class="container">
         {% if active_order %}
             <div data-active-order-status-region data-active-order-status-url="{% url 'core:active-order-status' %}">
                 {% include "partials/order_status_tracker.html" with order=active_order labels=ui heading=ui.active_order_heading %}
             </div>
         {% endif %}
+
         {% if cart.items %}
-            <section class="panel cart-panel">
-                <div class="cart-layout">
-                    <div class="cart-items-panel">
-                        <div class="table-wrap">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>{{ ui.category }}</th>
-                                        <th>{{ ui.qty }}</th>
-                                        <th>{{ ui.price }}</th>
-                                        <th>{{ ui.total }}</th>
-                                        <th>{{ ui.remove }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in cart.items %}
-                                        <tr>
-                                            <td>
-                                                <div class="product-category">{{ item.category_label }}</div>
-                                                <strong>{{ item.title }}</strong>
-                                                <div>{{ item.subtitle }}</div>
-                                            </td>
-                                            <td>
-                                                <form method="post" action="{% url 'catalog:cart-update' item.item_type item.item_id %}" class="qty-form">
-                                                    {% csrf_token %}
-                                                    <input type="number" name="quantity" min="0" value="{{ item.quantity }}">
-                                                    <button type="submit" class="btn btn-secondary btn-small">{{ ui.update_cart }}</button>
-                                                </form>
-                                            </td>
-                                            <td>{{ item.display_unit_price }}</td>
-                                            <td>{{ item.display_line_total }}</td>
-                                            <td>
-                                                <form method="post" action="{% url 'catalog:cart-remove' item.item_type item.item_id %}">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn-link-danger">{{ ui.remove }}</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+            <div class="cart-shell" data-cart-page>
+                <section class="cart-products" aria-label="{{ ui.cart }}">
+                    <div class="cart-section-header">
+                        <div>
+                            <span class="eyebrow">{{ ui.cart }}</span>
+                            <h2>{{ cart.count }} {{ ui.cart }}</h2>
                         </div>
+                        <a href="{% url 'core:home' %}" class="cart-continue-link">{{ ui.continue_shopping }}</a>
                     </div>
-                    <aside class="summary-card cart-checkout-footer">
-                        <div class="cart-total-block">
-                            <h2>{{ ui.final_total }}</h2>
-                            <p class="summary-amount">{{ cart.display_subtotal }}</p>
-                            {% if cart.has_weight_items %}
-                                <p>{{ ui.weighted_estimate_notice }}</p>
-                            {% endif %}
-                        </div>
-                        <form method="post" action="{% url 'catalog:checkout-service' %}" class="stack-form cart-service-form">
-                            {% csrf_token %}
-                            <fieldset class="choice-fieldset">
-                                <legend>{{ ui.fulfillment_method }}</legend>
-                                <div class="cart-service-options">
-                                    <label class="address-choice-card">
-                                        <span class="address-choice-input">
-                                            <input type="radio" name="service_type" value="pickup" {% if checkout_service_type == "pickup" %}checked{% endif %}>
-                                            <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
-                                        </span>
-                                        <span class="address-choice-body">
-                                            <strong>{{ ui.pickup }}</strong>
-                                            <span>{{ ui.pickup_help }}</span>
-                                        </span>
-                                    </label>
-                                    <label class="address-choice-card">
-                                        <span class="address-choice-input">
-                                            <input type="radio" name="service_type" value="delivery" {% if checkout_service_type == "delivery" %}checked{% endif %}>
-                                            <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
-                                        </span>
-                                        <span class="address-choice-body">
-                                            <strong>{{ ui.delivery }}</strong>
-                                            <span>{{ ui.delivery_help }}</span>
-                                        </span>
-                                    </label>
+
+                    <div class="cart-item-list" data-cart-item-list>
+                        {% for item in cart.items %}
+                            <article
+                                class="cart-item-card"
+                                data-cart-item
+                                data-item-type="{{ item.item_type }}"
+                                data-item-id="{{ item.item_id }}"
+                            >
+                                <div class="cart-item-media">
+                                    {% if item.image_url %}
+                                        <img src="{{ item.image_url }}" alt="{{ item.title }}">
+                                    {% else %}
+                                        <span class="cart-item-placeholder">{{ item.title|slice:":1" }}</span>
+                                    {% endif %}
                                 </div>
-                            </fieldset>
-                            <div class="cart-checkout-actions">
-                                <button type="submit" class="btn btn-primary full-width">{{ ui.proceed_checkout }}</button>
-                                <a href="{% url 'core:home' %}" class="btn btn-secondary full-width">{{ ui.continue_shopping }}</a>
+
+                                <div class="cart-item-main">
+                                    <div class="cart-item-title-row">
+                                        <div>
+                                            <span class="cart-category-badge">{{ item.category_label }}</span>
+                                            <h3>{{ item.title }}</h3>
+                                        </div>
+                                        <form method="post" action="{% url 'catalog:cart-remove' item.item_type item.item_id %}" class="cart-remove-form" data-cart-remove-form>
+                                            {% csrf_token %}
+                                            <button type="submit" class="cart-remove-button" aria-label="{{ ui.remove }} {{ item.title }}">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                    <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h1.6v-7H10Zm3.4 0v7H15v-7h-1.6Z" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    {% if item.subtitle %}
+                                        <p class="cart-item-subtitle">{{ item.subtitle }}</p>
+                                    {% endif %}
+
+                                    <div class="cart-item-meta">
+                                        <span>{{ ui.price }}: <strong>{{ item.display_unit_price }}</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="cart-item-actions">
+                                    <form method="post" action="{% url 'catalog:cart-update' item.item_type item.item_id %}" class="cart-quantity-form" data-cart-quantity-form>
+                                        {% csrf_token %}
+                                        <div class="cart-quantity-stepper" data-cart-quantity-stepper>
+                                            <button type="button" data-cart-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                                            <input type="number" name="quantity" min="0" value="{{ item.quantity }}" inputmode="numeric" data-cart-quantity-input>
+                                            <button type="button" data-cart-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                                        </div>
+                                        <button type="submit" class="cart-quantity-submit">{{ ui.update_cart }}</button>
+                                    </form>
+                                    <div class="cart-item-total">
+                                        <span>{{ ui.total }}</span>
+                                        <strong data-cart-item-total>{% if item.is_weight_based %}{{ item.display_line_total_range }}{% else %}{{ item.display_line_total }}{% endif %}</strong>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <aside class="cart-summary-card" aria-label="{{ ui.final_total }}">
+                    <div class="cart-summary-header">
+                        <span class="eyebrow">{{ ui.final_total }}</span>
+                        <strong data-cart-summary-total>{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</strong>
+                    </div>
+
+                    <div class="cart-summary-lines">
+                        <p>
+                            <span>{{ ui.subtotal }}</span>
+                            <strong data-cart-summary-subtotal>{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</strong>
+                        </p>
+                        <p>
+                            <span>{{ ui.delivery_fee }}</span>
+                            <strong>{% if checkout_service_type == "pickup" %}{{ ui.free_delivery }}{% else %}{{ ui.delivery }}{% endif %}</strong>
+                        </p>
+                        {% if cart.has_weight_items %}
+                            <p class="cart-weight-note">{{ ui.weighted_estimate_notice }}</p>
+                        {% endif %}
+                    </div>
+
+                    <form method="post" action="{% url 'catalog:checkout-service' %}" class="cart-service-form">
+                        {% csrf_token %}
+                        <fieldset class="choice-fieldset cart-service-fieldset">
+                            <legend>{{ ui.fulfillment_method }}</legend>
+                            <div class="cart-service-options">
+                                <label class="cart-service-card">
+                                    <input type="radio" name="service_type" value="pickup" {% if checkout_service_type == "pickup" %}checked{% endif %}>
+                                    <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                    <span>
+                                        <strong>{{ ui.pickup }}</strong>
+                                        <small>{{ ui.pickup_help }}</small>
+                                    </span>
+                                </label>
+                                <label class="cart-service-card">
+                                    <input type="radio" name="service_type" value="delivery" {% if checkout_service_type == "delivery" %}checked{% endif %}>
+                                    <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                    <span>
+                                        <strong>{{ ui.delivery }}</strong>
+                                        <small>{{ ui.delivery_help }}</small>
+                                    </span>
+                                </label>
                             </div>
-                        </form>
-                    </aside>
-                </div>
-            </section>
+                        </fieldset>
+
+                        <div class="cart-checkout-actions">
+                            <button type="submit" class="btn btn-primary cart-checkout-button">{{ ui.proceed_checkout }}</button>
+                            <a href="{% url 'core:home' %}" class="btn btn-secondary cart-secondary-button">{{ ui.continue_shopping }}</a>
+                        </div>
+                    </form>
+                </aside>
+            </div>
         {% else %}
-            <section class="panel panel-narrow">
+            <section class="cart-empty-state">
                 <h2>{{ ui.cart_empty }}</h2>
                 <a href="{% url 'core:home' %}" class="btn btn-primary">{{ ui.continue_shopping }}</a>
             </section>

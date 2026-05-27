@@ -2,11 +2,12 @@ from decimal import Decimal
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.utils import timezone
 from django.forms import inlineformset_factory
 
 from apps.catalog.models import Category, Product, ProductOption
 from apps.core.localization import DEFAULT_LANGUAGE
-from apps.core.models import DeliveryArea, DeliverySubArea, SiteSettings
+from apps.core.models import CenterStatus, DeliveryArea, DeliverySubArea, SiteSettings
 from apps.dashboard.localization import (
     get_dashboard_strings,
     get_field_label,
@@ -88,6 +89,62 @@ class OrderAcceptForm(forms.Form):
         )
 
 
+class CenterStatusForm(forms.ModelForm):
+    duration_choice = forms.ChoiceField(required=False)
+    custom_minutes = forms.IntegerField(min_value=1, max_value=1440, required=False)
+
+    class Meta:
+        model = CenterStatus
+        fields = ["status", "duration_choice", "custom_minutes"]
+
+    DURATION_CHOICES = [
+        ("15", "15 minutes"),
+        ("30", "30 minutes"),
+        ("45", "45 minutes"),
+        ("60", "1 hour"),
+        ("custom", "Custom minutes"),
+    ]
+
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, **kwargs):
+        self.language = language
+        self.dashboard_ui = get_dashboard_strings(language)
+        super().__init__(*args, **kwargs)
+        self.fields["status"].label = self.dashboard_ui["center_status"]
+        self.fields["duration_choice"].label = self.dashboard_ui["busy_duration"]
+        self.fields["duration_choice"].choices = self.DURATION_CHOICES
+        self.fields["duration_choice"].initial = "15"
+        self.fields["custom_minutes"].label = self.dashboard_ui["custom_minutes"]
+        self.fields["custom_minutes"].widget.attrs.update({"inputmode": "numeric", "placeholder": "90"})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("status") != CenterStatus.STATUS_BUSY:
+            cleaned_data["busy_until"] = None
+            self.instance.busy_until = None
+            return cleaned_data
+
+        duration_choice = cleaned_data.get("duration_choice") or "15"
+        if duration_choice == "custom":
+            minutes = cleaned_data.get("custom_minutes")
+            if not minutes:
+                self.add_error("custom_minutes", self.dashboard_ui["custom_minutes_required"])
+                return cleaned_data
+        else:
+            minutes = int(duration_choice)
+        cleaned_data["busy_until"] = timezone.now() + timezone.timedelta(minutes=minutes)
+        self.instance.busy_until = cleaned_data["busy_until"]
+        return cleaned_data
+
+    def save(self, commit=True, user=None):
+        center_status = super().save(commit=False)
+        center_status.busy_until = self.cleaned_data.get("busy_until")
+        if user is not None and getattr(user, "is_authenticated", False):
+            center_status.updated_by = user
+        if commit:
+            center_status.save()
+        return center_status
+
+
 class CategoryForm(DashboardLocalizedFormMixin, forms.ModelForm):
     class Meta:
         model = Category
@@ -136,7 +193,7 @@ class ProductForm(DashboardLocalizedFormMixin, forms.ModelForm):
         cleaned_data = super().clean()
         if cleaned_data.get("has_options"):
             cleaned_data["price"] = Decimal("0")
-        elif cleaned_data.get("price") is None:
+        elif cleaned_data.get("price") is None and not self.errors.get("price"):
             self.add_error("price", self.fields["price"].error_messages["required"])
         return cleaned_data
 
@@ -159,6 +216,13 @@ class ProductExcelUploadForm(forms.Form):
         if not excel_file.name.lower().endswith(".xlsx"):
             raise forms.ValidationError(self.dashboard_ui["xlsx_only_error"])
         return excel_file
+
+
+class DeliveryAreaExcelUploadForm(ProductExcelUploadForm):
+    def __init__(self, *args, language=DEFAULT_LANGUAGE, **kwargs):
+        super().__init__(*args, language=language, **kwargs)
+        self.fields["excel_file"].label = self.dashboard_ui["delivery_areas_excel_file"]
+        self.fields["excel_file"].help_text = self.dashboard_ui["delivery_areas_excel_help"]
 
 
 ProductOptionFormSet = inlineformset_factory(

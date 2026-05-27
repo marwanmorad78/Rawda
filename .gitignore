@@ -1,5 +1,6 @@
 .venv/
 .local-postgres/
+.local-mariadb/
 __pycache__/
 *.py[cod]
 *.pyo
