@@ -21,35 +21,49 @@
     </main>
     <div class="offer-modal product-modal" data-product-modal hidden>
         <div class="offer-modal-backdrop" data-product-modal-close></div>
-        <div class="offer-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+        <div class="offer-modal-dialog product-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
             <button type="button" class="offer-modal-close" data-product-modal-close aria-label="{{ ui.close }}">
                 &times;
             </button>
-            <div class="offer-modal-media">
-                <img src="" alt="" data-product-modal-image hidden>
-                <div class="offer-modal-placeholder" data-product-modal-placeholder></div>
-            </div>
-            <div class="offer-modal-body">
-                <span class="eyebrow" data-product-modal-category></span>
-                <h2 id="product-modal-title" data-product-modal-title></h2>
-                <p data-product-modal-description></p>
-                <p class="offer-modal-price" data-product-modal-price></p>
-                <form method="post" action="" data-product-modal-form data-cart-form{% if not request.user.is_authenticated %} hidden{% endif %}>
-                    {% csrf_token %}
-                    <fieldset class="product-options" data-product-modal-options hidden>
-                        <legend>{{ ui.product_options }}</legend>
-                    </fieldset>
-                    <label class="quantity-field">
-                        <span>{{ ui.qty }}</span>
-                        <span class="quantity-stepper" data-quantity-control>
-                            <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
-                            <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
-                            <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
-                        </span>
-                    </label>
-                    <input type="hidden" name="next" value="{{ request.path }}">
-                    <button type="submit" class="btn btn-primary" data-product-modal-submit>{{ ui.add_to_cart }}</button>
-                </form>
+            <div class="product-modal-shell">
+                <header class="product-modal-header">
+                    <div class="offer-modal-media product-modal-media">
+                        <img src="" alt="" data-product-modal-image hidden>
+                        <div class="offer-modal-placeholder" data-product-modal-placeholder></div>
+                    </div>
+                    <div class="product-modal-heading">
+                        <span class="eyebrow" data-product-modal-category></span>
+                        <h2 id="product-modal-title" data-product-modal-title></h2>
+                        <p data-product-modal-description></p>
+                        <p class="offer-modal-price" data-product-modal-price></p>
+                    </div>
+                </header>
+                <div class="offer-modal-body product-modal-body">
+                    <form method="post" action="" data-product-modal-form data-cart-form{% if not request.user.is_authenticated %} hidden{% endif %}>
+                        {% csrf_token %}
+                        <div class="product-modal-options-scroll">
+                            <fieldset class="product-options" data-product-modal-options hidden>
+                                <legend>{{ ui.product_options }}</legend>
+                            </fieldset>
+                        </div>
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <div class="product-modal-action-bar">
+                            <label class="quantity-field product-modal-quantity">
+                                <span>{{ ui.qty }}</span>
+                                <span class="quantity-stepper" data-quantity-control>
+                                    <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
+                                    <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                    <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
+                                </span>
+                            </label>
+                            <div class="product-modal-total">
+                                <span>{{ ui.total }}</span>
+                                <strong data-product-modal-total></strong>
+                            </div>
+                            <button type="submit" class="btn btn-primary" data-product-modal-submit>{{ ui.add_to_cart }}</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

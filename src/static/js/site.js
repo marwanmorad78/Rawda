@@ -17,9 +17,11 @@ const productModalTitle = productModal?.querySelector("[data-product-modal-title
 const productModalDescription = productModal?.querySelector("[data-product-modal-description]");
 const productModalCategory = productModal?.querySelector("[data-product-modal-category]");
 const productModalPrice = productModal?.querySelector("[data-product-modal-price]");
+const productModalTotal = productModal?.querySelector("[data-product-modal-total]");
 const productModalForm = productModal?.querySelector("[data-product-modal-form]");
 const productModalOptions = productModal?.querySelector("[data-product-modal-options]");
 const productModalSubmit = productModal?.querySelector("[data-product-modal-submit]");
+const productModalOptionsScroll = productModal?.querySelector(".product-modal-options-scroll");
 
 const floatingCart = document.querySelector("[data-floating-cart]");
 const floatingCartCount = floatingCart?.querySelector("[data-floating-cart-count]");
@@ -84,9 +86,45 @@ const cartState = {
     total: floatingCart?.dataset.cartTotal || "0",
 };
 const ARABIC_NAME_PATTERN = /^[\u0621-\u064A\u064B-\u065F]+(?:\s+[\u0621-\u064A\u064B-\u065F]+)*$/;
+let lockedBodyScrollY = 0;
+let productModalUnitPriceText = "";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const tabTargetCache = new WeakMap();
+
+const getAnyOpenModal = () =>
+    Boolean(
+        (offerModal && !offerModal.hidden) ||
+            (productModal && !productModal.hidden) ||
+            (excelModal && !excelModal.hidden) ||
+            orderModals.some((modal) => !modal.hidden) ||
+            checkoutAddressModals.some((modal) => !modal.hidden),
+    );
+
+const setBodyScrollLock = (isLocked) => {
+    const isAlreadyLocked = document.body.classList.contains("modal-open");
+
+    if (isLocked && !isAlreadyLocked) {
+        lockedBodyScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.classList.add("modal-open");
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${lockedBodyScrollY}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
+        return;
+    }
+
+    if (!isLocked && isAlreadyLocked) {
+        document.body.classList.remove("modal-open");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        window.scrollTo(0, lockedBodyScrollY);
+    }
+};
 
 const registerMessages = {
     en: {
@@ -175,12 +213,7 @@ const setExcelModalOpen = (isOpen) => {
 };
 
 const syncModalOpenState = () => {
-    const hasOpenModal = Boolean(
-        (excelModal && !excelModal.hidden) ||
-            orderModals.some((modal) => !modal.hidden) ||
-            checkoutAddressModals.some((modal) => !modal.hidden),
-    );
-    document.body.classList.toggle("modal-open", hasOpenModal);
+    setBodyScrollLock(getAnyOpenModal());
 };
 
 const setCheckoutAddressModalOpen = (isOpen, modal = checkoutAddressModals[0]) => {
@@ -226,6 +259,45 @@ const setQuantityValue = (input, value) => {
 
     const minimum = Number.parseInt(input.min || "1", 10) || 1;
     input.value = String(Math.max(value, minimum));
+};
+
+const normalizePriceText = (value) =>
+    String(value || "")
+        .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
+        .replace(/[\u06F0-\u06F9]/g, (digit) => String(digit.charCodeAt(0) - 0x06F0));
+
+const formatDisplayPriceTotal = (displayPrice, quantity) => {
+    const priceText = String(displayPrice || "").trim();
+    if (!priceText) {
+        return "";
+    }
+
+    const normalized = normalizePriceText(priceText);
+    const match = normalized.match(/\d[\d.,\u066C\u066B]*/);
+    if (!match) {
+        return priceText;
+    }
+
+    const numericValue = Number.parseInt(match[0].replace(/[^\d]/g, ""), 10);
+    if (!Number.isFinite(numericValue)) {
+        return priceText;
+    }
+
+    const language = document.documentElement.lang || undefined;
+    const formattedTotal = new Intl.NumberFormat(language).format(numericValue * Math.max(quantity, 1));
+    const originalNumberText = priceText.slice(match.index, match.index + match[0].length);
+    return priceText.replace(originalNumberText, formattedTotal);
+};
+
+const syncProductModalTotal = () => {
+    if (!productModalTotal || !productModalForm) {
+        return;
+    }
+
+    const quantityInput = productModalForm.querySelector('input[name="quantity"]');
+    const selectedOption = productModalForm.querySelector('input[name="option_id"]:checked');
+    const unitPrice = selectedOption?.dataset.optionPrice || productModalUnitPriceText || productModalPrice?.textContent || "";
+    productModalTotal.textContent = formatDisplayPriceTotal(unitPrice, quantityInput ? getQuantityValue(quantityInput) : 1);
 };
 
 const normalizeLabel = (value) =>
@@ -1026,7 +1098,7 @@ const openOfferModal = (slide) => {
     }
 
     offerModal.hidden = false;
-    document.body.classList.add("modal-open");
+    syncModalOpenState();
 };
 
 const closeOfferModal = () => {
@@ -1035,7 +1107,7 @@ const closeOfferModal = () => {
     }
 
     offerModal.hidden = true;
-    document.body.classList.remove("modal-open");
+    syncModalOpenState();
 };
 
 const openProductModal = (card) => {
@@ -1050,12 +1122,16 @@ const openProductModal = (card) => {
     const image = card.dataset.productImage || "";
     const action = card.dataset.productAction || "";
 
+    productModalUnitPriceText = price;
     productModalTitle.textContent = title;
     productModalPrice.textContent = price;
     productModalForm.action = action;
     productModalForm.dataset.cartItemTitle = title;
     productModalForm.dataset.cartItemImage = image;
     setQuantityValue(productModalForm.querySelector('input[name="quantity"]'), 1);
+    if (productModalOptionsScroll) {
+        productModalOptionsScroll.scrollTop = 0;
+    }
 
     if (productModalOptions && productModalSubmit) {
         const optionNodes = Array.from(card.querySelectorAll("[data-product-options-source] [data-option-id]"));
@@ -1088,15 +1164,18 @@ const openProductModal = (card) => {
             copy.append(name, optionPrice);
 
             input.addEventListener("change", () => {
-                productModalPrice.textContent = input.dataset.optionPrice || price;
+                productModalUnitPriceText = input.dataset.optionPrice || price;
+                productModalPrice.textContent = productModalUnitPriceText;
                 productModalSubmit.disabled = false;
+                syncProductModalTotal();
             });
 
             label.append(input, mark, copy);
             productModalOptions.append(label);
 
             if (input.checked) {
-                productModalPrice.textContent = input.dataset.optionPrice || price;
+                productModalUnitPriceText = input.dataset.optionPrice || price;
+                productModalPrice.textContent = productModalUnitPriceText;
                 productModalSubmit.disabled = false;
             }
         });
@@ -1126,7 +1205,8 @@ const openProductModal = (card) => {
     }
 
     productModal.hidden = false;
-    document.body.classList.add("modal-open");
+    syncProductModalTotal();
+    syncModalOpenState();
 };
 
 const closeProductModal = () => {
@@ -1135,7 +1215,7 @@ const closeProductModal = () => {
     }
 
     productModal.hidden = true;
-    document.body.classList.remove("modal-open");
+    syncModalOpenState();
 };
 
 const closeModals = () => {
@@ -1889,14 +1969,29 @@ quantityControls.forEach((control) => {
 
     decreaseButton?.addEventListener("click", () => {
         setQuantityValue(input, getQuantityValue(input) - 1);
+        if (productModalForm?.contains(input)) {
+            syncProductModalTotal();
+        }
     });
 
     increaseButton?.addEventListener("click", () => {
         setQuantityValue(input, getQuantityValue(input) + 1);
+        if (productModalForm?.contains(input)) {
+            syncProductModalTotal();
+        }
     });
 
     input?.addEventListener("change", () => {
         setQuantityValue(input, getQuantityValue(input));
+        if (productModalForm?.contains(input)) {
+            syncProductModalTotal();
+        }
+    });
+
+    input?.addEventListener("input", () => {
+        if (productModalForm?.contains(input)) {
+            syncProductModalTotal();
+        }
     });
 });
 
