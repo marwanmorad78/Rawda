@@ -13,8 +13,9 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, DeleteView, TemplateView, UpdateView
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font, PatternFill
 
-from apps.catalog.models import Category, Product, ProductOption
+from apps.catalog.models import Category, Product, ProductCompany, ProductCompanyOption, ProductOption
 from apps.core.localization import DEFAULT_LANGUAGE, format_syp, localize_instance, localize_queryset
 from apps.core.models import (
     CenterStatus,
@@ -42,6 +43,8 @@ from apps.dashboard.forms import (
     ManagerLoginForm,
     OrderAcceptForm,
     ProductExcelUploadForm,
+    ProductCompanyFormSet,
+    ProductCompanyOptionFormSet,
     ProductOptionFormSet,
     ProductForm,
     PromotionForm,
@@ -60,6 +63,7 @@ PRODUCT_EXCEL_HEADERS = [
     "short_description",
     "description",
     "price",
+    "product_type",
     "price_link_mode",
     "is_price_linked_to_dollar",
     "sold_by_weight_mode",
@@ -77,9 +81,27 @@ PRODUCT_OPTION_EXCEL_HEADERS = [
     "option_name",
     "price",
     "is_default",
+    "is_available",
     "display_order",
 ]
 PRODUCT_OPTION_EXCEL_REQUIRED_HEADERS = ["product_sku", "option_name", "price"]
+PRODUCT_COMPANY_EXCEL_HEADERS = [
+    "company_id",
+    "company_name",
+    "logo_url",
+    "display_order",
+    "is_active",
+]
+PRODUCT_COMPANY_EXCEL_REQUIRED_HEADERS = ["company_id", "company_name"]
+PRODUCT_COMPANY_OPTION_EXCEL_HEADERS = [
+    "product_sku",
+    "company_id",
+    "option_name",
+    "price",
+    "is_available",
+    "display_order",
+]
+PRODUCT_COMPANY_OPTION_EXCEL_REQUIRED_HEADERS = ["product_sku", "company_id", "option_name", "price"]
 BOOLEAN_COLUMNS = ["is_price_linked_to_dollar", "sold_by_weight", "has_options", "is_available", "is_featured"]
 PRODUCT_MODE_COLUMNS = {
     "price_link_mode": {Product.BEHAVIOR_INHERIT, Product.BEHAVIOR_CUSTOM},
@@ -139,7 +161,7 @@ def parse_excel_boolean(value, default=False):
     return default, "Use true or false."
 
 
-def parse_excel_decimal(value):
+def parse_excel_decimal(value, allow_decimals=False):
     if value is None or value == "":
         return None, "This field is required."
     try:
@@ -148,7 +170,7 @@ def parse_excel_decimal(value):
         return None, "Enter a valid number."
     if parsed < 0:
         return None, "Price cannot be negative."
-    if parsed != parsed.to_integral_value():
+    if not allow_decimals and parsed != parsed.to_integral_value():
         return None, "Enter a whole number without decimals."
     return parsed, None
 
@@ -163,6 +185,25 @@ def parse_excel_integer(value, default=0):
     if parsed < 0:
         return default, "Enter zero or a positive number."
     return parsed, None
+
+
+def parse_excel_product_type(value, default=Product.PRODUCT_TYPE_NORMAL):
+    normalized = normalize_excel_text(value).lower()
+    if not normalized:
+        return default, None
+    aliases = {
+        "normal": Product.PRODUCT_TYPE_NORMAL,
+        "normal product": Product.PRODUCT_TYPE_NORMAL,
+        "company_grouped": Product.PRODUCT_TYPE_COMPANY_GROUPED,
+        "company grouped": Product.PRODUCT_TYPE_COMPANY_GROUPED,
+        "company/brand grouped product": Product.PRODUCT_TYPE_COMPANY_GROUPED,
+        "brand": Product.PRODUCT_TYPE_COMPANY_GROUPED,
+        "company": Product.PRODUCT_TYPE_COMPANY_GROUPED,
+    }
+    product_type = aliases.get(normalized)
+    if product_type is None:
+        return default, "Use normal or company_grouped."
+    return product_type, None
 
 
 def build_sheet_rows(worksheet):
@@ -183,17 +224,44 @@ def build_sheet_rows(worksheet):
 def get_product_excel_category_lookup():
     lookup = {}
     duplicate_names = set()
-    for category in Category.objects.all():
+    for category in Category.objects.select_related("parent").all():
         slug_key = (category.slug or "").strip().lower()
         name_key = (category.name or "").strip().lower()
+        name_ar_key = (category.name_ar or "").strip().lower()
         if slug_key:
             lookup[slug_key] = category
+            if category.parent_id and category.parent.slug:
+                lookup[f"{category.parent.slug.strip().lower()}/{slug_key}"] = category
         if name_key:
             if name_key in lookup:
                 duplicate_names.add(name_key)
             else:
                 lookup[name_key] = category
+        if name_ar_key:
+            if name_ar_key in lookup:
+                duplicate_names.add(name_ar_key)
+            else:
+                lookup[name_ar_key] = category
+        if category.parent_id:
+            parent_names = [category.parent.name, category.parent.name_ar, category.parent.slug]
+            child_names = [category.name, category.name_ar, category.slug]
+            for parent_name in parent_names:
+                for child_name in child_names:
+                    parent_key = (parent_name or "").strip().lower()
+                    child_key = (child_name or "").strip().lower()
+                    if parent_key and child_key:
+                        lookup[f"{parent_key}/{child_key}"] = category
+                        lookup[f"{parent_key} / {child_key}"] = category
+                        lookup[f"{parent_key} > {child_key}"] = category
     return lookup, duplicate_names
+
+
+def format_category_path(category, language=DEFAULT_LANGUAGE):
+    name = category.name_ar if language == "ar" and category.name_ar else category.name
+    if category.parent_id:
+        parent_name = category.parent.name_ar if language == "ar" and category.parent.name_ar else category.parent.name
+        return f"{parent_name} / {name}"
+    return name
 
 
 def get_product_manage_context(language, product_form=None, upload_form=None, excel_errors=None):
@@ -205,7 +273,8 @@ def get_product_manage_context(language, product_form=None, upload_form=None, ex
     }
 
 
-def get_product_list_context(language, upload_form=None, excel_errors=None, search_query=""):
+def get_product_list_context(language, upload_form=None, excel_errors=None, search_query="", filters=None):
+    filters = filters or {}
     site_settings = get_active_site_settings() or get_dashboard_site_settings()
     items_queryset = Product.objects.select_related("category").all().order_by("name")
     if search_query:
@@ -217,17 +286,56 @@ def get_product_list_context(language, upload_form=None, excel_errors=None, sear
             | Q(category__name_ar__icontains=search_query)
             | Q(sku__icontains=search_query)
         )
+    name_filter = (filters.get("name") or "").strip()
+    category_filter = (filters.get("category") or "").strip()
+    pricing_type_filter = (filters.get("pricing_type") or "").strip()
+    status_filter = (filters.get("status") or "").strip()
+    if name_filter:
+        items_queryset = items_queryset.filter(
+            Q(name__icontains=name_filter)
+            | Q(name_ar__icontains=name_filter)
+        )
+    if category_filter.isdigit():
+        items_queryset = items_queryset.filter(category_id=int(category_filter))
+    if status_filter == "available":
+        items_queryset = items_queryset.filter(is_available=True)
+    elif status_filter == "unavailable":
+        items_queryset = items_queryset.filter(is_available=False)
     items = list(items_queryset)
     for item in items:
         localize_instance(item.category, language, ["name", "description"])
         localize_instance(item, language, ["name", "short_description", "description", "unit_label"])
         set_product_display_price(item, language, site_settings)
+    if pricing_type_filter:
+        items = [
+            item
+            for item in items
+            if (
+                (pricing_type_filter == "sold_by_weight" and item.effective_sold_by_weight)
+                or (pricing_type_filter == "dollar_priced" and item.effective_is_price_linked_to_dollar)
+                or (
+                    pricing_type_filter == "regular"
+                    and not item.effective_sold_by_weight
+                    and not item.effective_is_price_linked_to_dollar
+                )
+            )
+        ]
+    categories = list(Category.objects.select_related("parent").all().order_by("parent__name", "name"))
+    for category in categories:
+        localize_instance(category, language, ["name", "description"])
     return {
         "dashboard_ui": get_dashboard_strings(language),
         "items": items,
         "upload_form": upload_form or ProductExcelUploadForm(language=language),
         "excel_errors": excel_errors or [],
         "search_query": search_query,
+        "product_filters": {
+            "name": name_filter,
+            "category": category_filter,
+            "pricing_type": pricing_type_filter,
+            "status": status_filter,
+        },
+        "product_filter_categories": categories,
     }
 
 
@@ -254,12 +362,27 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
     option_header_positions = {}
     option_sheet_rows = []
     option_product_skus = set()
+    company_header_positions = {}
+    company_sheet_rows = []
+    company_option_header_positions = {}
+    company_option_sheet_rows = []
+    company_option_product_skus = set()
     if "Options" in workbook.sheetnames:
         option_header_positions, option_sheet_rows = build_sheet_rows(workbook["Options"])
         if "product_sku" in option_header_positions:
             option_product_skus = {
                 normalize_excel_text(row.get("product_sku")).lower()
                 for _, row in option_sheet_rows
+                if normalize_excel_text(row.get("product_sku"))
+            }
+    if "Companies" in workbook.sheetnames:
+        company_header_positions, company_sheet_rows = build_sheet_rows(workbook["Companies"])
+    if "CompanyOptions" in workbook.sheetnames:
+        company_option_header_positions, company_option_sheet_rows = build_sheet_rows(workbook["CompanyOptions"])
+        if "product_sku" in company_option_header_positions:
+            company_option_product_skus = {
+                normalize_excel_text(row.get("product_sku")).lower()
+                for _, row in company_option_sheet_rows
                 if normalize_excel_text(row.get("product_sku"))
             }
     missing_headers = [
@@ -271,6 +394,8 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
     category_lookup, duplicate_names = get_product_excel_category_lookup()
     valid_rows = []
     valid_options = []
+    valid_companies = []
+    valid_company_options = []
     errors = []
     seen_import_keys = set()
 
@@ -301,9 +426,24 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             if boolean_error:
                 row_errors.append(f"{column}: {boolean_error}")
 
-        has_options = parsed_booleans["has_options"] or bool(sku and sku.lower() in option_product_skus)
-        price, price_error = parse_excel_decimal(row.get("price"))
-        if price_error and has_options and row.get("price") in (None, ""):
+        product_type_default = (
+            Product.PRODUCT_TYPE_COMPANY_GROUPED
+            if sku and sku.lower() in company_option_product_skus
+            else Product.PRODUCT_TYPE_NORMAL
+        )
+        product_type, product_type_error = parse_excel_product_type(
+            row.get("product_type"),
+            product_type_default,
+        )
+        if product_type_error:
+            row_errors.append(f"product_type: {product_type_error}")
+
+        has_options = (
+            product_type != Product.PRODUCT_TYPE_COMPANY_GROUPED
+            and (parsed_booleans["has_options"] or bool(sku and sku.lower() in option_product_skus))
+        )
+        price, price_error = parse_excel_decimal(row.get("price"), allow_decimals=True)
+        if price_error and (has_options or product_type == Product.PRODUCT_TYPE_COMPANY_GROUPED) and row.get("price") in (None, ""):
             price = Decimal("0")
         elif price_error:
             row_errors.append(f"price: {price_error}")
@@ -338,6 +478,7 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             "short_description": normalize_excel_text(row.get("short_description")),
             "description": normalize_excel_text(row.get("description")),
             "price": price,
+            "product_type": product_type,
             "price_link_mode": parsed_modes["price_link_mode"],
             "is_price_linked_to_dollar": parsed_booleans["is_price_linked_to_dollar"],
             "sold_by_weight_mode": parsed_modes["sold_by_weight_mode"],
@@ -354,6 +495,17 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             row_data["_import_keys"].append(("name", getattr(category, "id", None), product_name.lower()))
         valid_rows.append(row_data)
 
+    known_product_keys = {
+        import_key
+        for valid_row in valid_rows
+        for import_key in valid_row.get("_import_keys", [])
+    }
+    imported_product_types_by_sku = {
+        row["sku"].strip().lower(): row["product_type"]
+        for row in valid_rows
+        if row.get("sku")
+    }
+
     if "Options" in workbook.sheetnames:
         if option_sheet_rows:
             missing_option_headers = [
@@ -363,11 +515,6 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                 errors.append(f"Options sheet missing required column: {', '.join(missing_option_headers)}")
 
         seen_option_keys = set()
-        known_product_keys = {
-            import_key
-            for valid_row in valid_rows
-            for import_key in valid_row.get("_import_keys", [])
-        }
         for row_number, row in option_sheet_rows:
             row_errors = []
             product_sku = normalize_excel_text(row.get("product_sku"))
@@ -378,13 +525,16 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             if not option_name:
                 row_errors.append("option_name is required.")
 
-            price, price_error = parse_excel_decimal(row.get("price"))
+            price, price_error = parse_excel_decimal(row.get("price"), allow_decimals=True)
             if price_error:
                 row_errors.append(f"price: {price_error}")
 
             is_default, boolean_error = parse_excel_boolean(row.get("is_default"), False)
             if boolean_error:
                 row_errors.append(f"is_default: {boolean_error}")
+            is_available, available_error = parse_excel_boolean(row.get("is_available"), True)
+            if available_error:
+                row_errors.append(f"is_available: {available_error}")
 
             display_order, display_order_error = parse_excel_integer(row.get("display_order"), 0)
             if display_order_error:
@@ -393,6 +543,8 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             product_key = ("sku", product_sku.lower()) if product_sku else None
             if product_key and product_key not in known_product_keys and not Product.objects.filter(sku__iexact=product_sku).exists():
                 row_errors.append(f"product_sku '{product_sku}' does not match an imported or existing product.")
+            if product_sku and imported_product_types_by_sku.get(product_sku.lower()) == Product.PRODUCT_TYPE_COMPANY_GROUPED:
+                row_errors.append("Use CompanyOptions for company_grouped products, not Options.")
 
             option_key = (product_key, option_name.lower())
             if product_key and option_name:
@@ -410,14 +562,132 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                     "name": option_name,
                     "price": price,
                     "is_default": is_default,
+                    "is_available": is_available,
                     "display_order": display_order,
+                }
+            )
+
+    known_company_ids = set()
+    if "Companies" in workbook.sheetnames:
+        if company_sheet_rows:
+            missing_company_headers = [
+                header for header in PRODUCT_COMPANY_EXCEL_REQUIRED_HEADERS if header not in company_header_positions
+            ]
+            if missing_company_headers:
+                errors.append(f"Companies sheet missing required column: {', '.join(missing_company_headers)}")
+
+        seen_company_ids = set()
+        for row_number, row in company_sheet_rows:
+            row_errors = []
+            company_id = normalize_excel_text(row.get("company_id"))
+            company_name = normalize_excel_text(row.get("company_name"))
+
+            if not company_id:
+                row_errors.append("company_id is required.")
+            if not company_name:
+                row_errors.append("company_name is required.")
+
+            display_order, display_order_error = parse_excel_integer(row.get("display_order"), 0)
+            if display_order_error:
+                row_errors.append(f"display_order: {display_order_error}")
+            is_active, active_error = parse_excel_boolean(row.get("is_active"), True)
+            if active_error:
+                row_errors.append(f"is_active: {active_error}")
+
+            company_key = company_id.lower()
+            if company_id:
+                if company_key in seen_company_ids:
+                    row_errors.append("This company_id appears more than once in this file.")
+                seen_company_ids.add(company_key)
+                known_company_ids.add(company_key)
+
+            if row_errors:
+                errors.append(f"Companies row {row_number}: {' '.join(row_errors)}")
+                continue
+
+            valid_companies.append(
+                {
+                    "company_id": company_id,
+                    "name": company_name,
+                    "external_logo_url": normalize_excel_text(row.get("logo_url")),
+                    "order": display_order,
+                    "is_active": is_active,
+                }
+            )
+
+    if "CompanyOptions" in workbook.sheetnames:
+        if company_option_sheet_rows:
+            missing_company_option_headers = [
+                header for header in PRODUCT_COMPANY_OPTION_EXCEL_REQUIRED_HEADERS
+                if header not in company_option_header_positions
+            ]
+            if missing_company_option_headers:
+                errors.append(
+                    f"CompanyOptions sheet missing required column: {', '.join(missing_company_option_headers)}"
+                )
+
+        seen_company_option_keys = set()
+        for row_number, row in company_option_sheet_rows:
+            row_errors = []
+            product_sku = normalize_excel_text(row.get("product_sku"))
+            company_id = normalize_excel_text(row.get("company_id"))
+            option_name = normalize_excel_text(row.get("option_name"))
+            product_key = ("sku", product_sku.lower()) if product_sku else None
+            company_key = (product_key, company_id.lower()) if product_key and company_id else None
+
+            if not product_sku:
+                row_errors.append("product_sku is required.")
+            elif product_key not in known_product_keys and not Product.objects.filter(sku__iexact=product_sku).exists():
+                row_errors.append(f"product_sku '{product_sku}' does not match an imported or existing product.")
+            if not company_id:
+                row_errors.append("company_id is required.")
+            elif company_id.lower() not in known_company_ids:
+                row_errors.append(f"company_id '{company_id}' does not match a Companies row.")
+            if not option_name:
+                row_errors.append("option_name is required.")
+
+            price, price_error = parse_excel_decimal(row.get("price"), allow_decimals=True)
+            if price_error:
+                row_errors.append(f"price: {price_error}")
+
+            is_available, available_error = parse_excel_boolean(row.get("is_available"), True)
+            if available_error:
+                row_errors.append(f"is_available: {available_error}")
+
+            display_order, display_order_error = parse_excel_integer(row.get("display_order"), 0)
+            if display_order_error:
+                row_errors.append(f"display_order: {display_order_error}")
+
+            option_key = (company_key, option_name.lower())
+            if company_key and option_name:
+                if option_key in seen_company_option_keys:
+                    row_errors.append("This company option appears more than once for the same company in this file.")
+                seen_company_option_keys.add(option_key)
+
+            if row_errors:
+                errors.append(f"CompanyOptions row {row_number}: {' '.join(row_errors)}")
+                continue
+
+            valid_company_options.append(
+                {
+                    "product_key": product_key,
+                    "company_id": company_id,
+                    "name": option_name,
+                    "price": price,
+                    "is_available": is_available,
+                    "order": display_order,
                 }
             )
 
     if not valid_rows and not errors:
         errors.append("The uploaded workbook has no product rows.")
 
-    return {"products": valid_rows, "options": valid_options}, errors
+    return {
+        "products": valid_rows,
+        "options": valid_options,
+        "companies": valid_companies,
+        "company_options": valid_company_options,
+    }, errors
 
 
 def find_existing_product_for_import(row):
@@ -464,6 +734,8 @@ def import_product_excel_rows(valid_rows):
     # Existing products are matched by SKU when present, otherwise by category and product name.
     product_rows = valid_rows["products"] if isinstance(valid_rows, dict) else valid_rows
     option_rows = valid_rows.get("options", []) if isinstance(valid_rows, dict) else []
+    company_rows = valid_rows.get("companies", []) if isinstance(valid_rows, dict) else []
+    company_option_rows = valid_rows.get("company_options", []) if isinstance(valid_rows, dict) else []
     created = 0
     updated = 0
     now = timezone.now()
@@ -486,6 +758,9 @@ def import_product_excel_rows(valid_rows):
                 product = Product(**row)
                 product.save()
                 created += 1
+            if product.is_company_grouped:
+                product.options.all().delete()
+                Product.objects.filter(pk=product.pk).update(has_options=False, price=Decimal("0"), updated_at=now)
             for import_key in import_keys:
                 product_lookup[import_key] = product
 
@@ -494,10 +769,13 @@ def import_product_excel_rows(valid_rows):
             product = resolve_imported_product(product_lookup, row["product_key"])
             if product is None:
                 continue
+            if product.is_company_grouped:
+                continue
             option_products.add(product.pk)
             option_data = {
                 "price": row["price"],
                 "is_default": row["is_default"],
+                "is_available": row["is_available"],
                 "display_order": row["display_order"],
             }
             if row["is_default"]:
@@ -509,7 +787,69 @@ def import_product_excel_rows(valid_rows):
                 ProductOption.objects.create(product=product, name=row["name"], **option_data)
 
         if option_products:
-            Product.objects.filter(pk__in=option_products).update(has_options=True, updated_at=now)
+            Product.objects.filter(pk__in=option_products).update(
+                has_options=True,
+                product_type=Product.PRODUCT_TYPE_NORMAL,
+                updated_at=now,
+            )
+
+        company_definitions = {
+            row["company_id"].lower(): row
+            for row in company_rows
+        }
+        company_lookup = {}
+        company_products = set()
+
+        for row in company_option_rows:
+            product = resolve_imported_product(product_lookup, row["product_key"])
+            if product is None:
+                continue
+            company_id = row["company_id"].lower()
+            company_definition = company_definitions.get(company_id)
+            if company_definition is None:
+                continue
+            company_products.add(product.pk)
+            company_data = {
+                "external_logo_url": company_definition["external_logo_url"],
+                "order": company_definition["order"],
+                "is_active": company_definition["is_active"],
+            }
+            company_key = (row["product_key"], company_id)
+            company = company_lookup.get(company_key)
+            if company is None:
+                company = product.companies.filter(name__iexact=company_definition["name"]).first()
+            if company is None:
+                company = ProductCompany.objects.create(
+                    product=product,
+                    name=company_definition["name"],
+                    **company_data,
+                )
+            else:
+                ProductCompany.objects.filter(pk=company.pk).update(
+                    name=company_definition["name"],
+                    **company_data,
+                )
+                company = ProductCompany.objects.get(pk=company.pk)
+            company_lookup[company_key] = company
+            option_data = {
+                "price": row["price"],
+                "is_available": row["is_available"],
+                "order": row["order"],
+            }
+            option = company.options.filter(name__iexact=row["name"]).first()
+            if option:
+                ProductCompanyOption.objects.filter(pk=option.pk).update(name=row["name"], **option_data)
+            else:
+                ProductCompanyOption.objects.create(company=company, name=row["name"], **option_data)
+
+        if company_products:
+            Product.objects.filter(pk__in=company_products).update(
+                product_type=Product.PRODUCT_TYPE_COMPANY_GROUPED,
+                has_options=False,
+                price=Decimal("0"),
+                updated_at=now,
+            )
+            ProductOption.objects.filter(product_id__in=company_products).delete()
 
     return created, updated
 
@@ -708,12 +1048,102 @@ def product_options_have_rows(option_formset):
     )
 
 
+def product_company_form_has_row(company_form):
+    cleaned_data = getattr(company_form, "cleaned_data", None) or {}
+    return bool(cleaned_data and not cleaned_data.get("DELETE") and cleaned_data.get("name"))
+
+
+def product_company_options_have_rows(option_formset):
+    return any(
+        form.cleaned_data
+        and not form.cleaned_data.get("DELETE")
+        and form.cleaned_data.get("name")
+        and form.cleaned_data.get("price") is not None
+        for form in option_formset.forms
+    )
+
+
+def product_companies_have_rows(company_formset, option_formsets):
+    return any(
+        product_company_form_has_row(company_form) and product_company_options_have_rows(option_formsets[index])
+        for index, company_form in enumerate(company_formset.forms)
+    )
+
+
+def validate_product_company_formsets(company_formset, option_formsets, dashboard_ui):
+    has_company_with_options = False
+    is_valid = True
+    for index, company_form in enumerate(company_formset.forms):
+        if not product_company_form_has_row(company_form):
+            continue
+        option_formset = option_formsets[index]
+        if product_company_options_have_rows(option_formset):
+            has_company_with_options = True
+            continue
+        option_formset._non_form_errors = option_formset.error_class(
+            [dashboard_ui["company_options_required"]]
+        )
+        is_valid = False
+    return has_company_with_options, is_valid
+
+
 def save_product_options(product, option_formset):
     if not product.has_options:
         product.options.all().delete()
         return
     option_formset.instance = product
     option_formset.save()
+
+
+def save_product_companies(product, company_formset, company_option_formsets):
+    if not product.is_company_grouped:
+        product.companies.all().delete()
+        return
+
+    company_formset.instance = product
+    for index, company_form in enumerate(company_formset.forms):
+        cleaned_data = getattr(company_form, "cleaned_data", None) or {}
+        if not cleaned_data:
+            continue
+        if cleaned_data.get("DELETE"):
+            if company_form.instance.pk:
+                company_form.instance.delete()
+            continue
+        if not cleaned_data.get("name"):
+            continue
+
+        company = company_form.save(commit=False)
+        company.product = product
+        company.save()
+        option_formset = company_option_formsets[index]
+        option_formset.instance = company
+        option_formset.save()
+
+
+def build_company_option_formsets(company_formset, data=None):
+    return [
+        ProductCompanyOptionFormSet(
+            data=data,
+            instance=company_form.instance,
+            prefix=f"company-{index}-options",
+        )
+        for index, company_form in enumerate(company_formset.forms)
+    ]
+
+
+def build_empty_company_option_formset():
+    return ProductCompanyOptionFormSet(prefix="company-__company_index__-options")
+
+
+def build_company_blocks(company_formset, company_option_formsets):
+    return [
+        {
+            "company_form": company_form,
+            "option_formset": company_option_formsets[index],
+            "index": index,
+        }
+        for index, company_form in enumerate(company_formset.forms)
+    ]
 
 
 class ManagerLoginView(DashboardLocalizationMixin, LoginView):
@@ -866,9 +1296,9 @@ def build_sales_report(from_date, to_date, language):
     orders = get_sales_report_orders(from_date, to_date)
     item_rows = (
         CustomerOrderItem.objects.filter(order__in=orders)
-        .values("title", "category_label", "unit_price")
+        .values("title", "category_label", "company_label", "selected_option_label", "unit_price")
         .annotate(quantity_sold=Sum("quantity"), total_product_price=Sum("line_total_max"))
-        .order_by("category_label", "title", "unit_price")
+        .order_by("category_label", "title", "company_label", "selected_option_label", "unit_price")
     )
     rows = []
     for row in item_rows:
@@ -877,6 +1307,15 @@ def build_sales_report(from_date, to_date, language):
         rows.append(
             {
                 **row,
+                "title": " - ".join(
+                    part
+                    for part in (
+                        row["title"],
+                        row.get("company_label"),
+                        row.get("selected_option_label"),
+                    )
+                    if part
+                ),
                 "display_unit_price": format_syp(unit_price, language),
                 "display_total_product_price": format_syp(total_product_price, language),
             }
@@ -1174,7 +1613,12 @@ class CategoryManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateV
         context = super().get_context_data(**kwargs)
         language = self.get_language()
         search_query = self.request.GET.get("q", "").strip()
-        items = Category.objects.all().order_by("display_order", "name")
+        items = Category.objects.select_related("parent").order_by(
+            "parent__display_order",
+            "parent__name",
+            "display_order",
+            "name",
+        )
         if search_query:
             items = items.filter(
                 Q(name__icontains=search_query)
@@ -1183,11 +1627,14 @@ class CategoryManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateV
                 | Q(description_ar__icontains=search_query)
                 | Q(slug__icontains=search_query)
             )
-        context["items"] = localize_queryset(
+        localized_items = localize_queryset(
             items,
             language,
             ["name", "description"],
         )
+        for item in localized_items:
+            localize_instance(item.parent, language, ["name", "description"])
+        context["items"] = localized_items
         context["search_query"] = search_query
         return context
 
@@ -1229,33 +1676,77 @@ class ProductManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateVi
     def get_option_formset(self, data=None):
         return ProductOptionFormSet(data=data, prefix="options")
 
+    def get_company_formset(self, data=None, files=None):
+        return ProductCompanyFormSet(data=data, files=files, prefix="companies")
+
+    def get_company_option_formsets(self, company_formset, data=None):
+        return build_company_option_formsets(company_formset, data=data)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(get_product_manage_context(self.get_language(), product_form=context.get("form")))
         context["option_formset"] = kwargs.get("option_formset") or self.get_option_formset()
+        context["company_formset"] = kwargs.get("company_formset") or self.get_company_formset()
+        context["company_option_formsets"] = kwargs.get("company_option_formsets") or self.get_company_option_formsets(
+            context["company_formset"]
+        )
+        context["company_blocks"] = build_company_blocks(
+            context["company_formset"],
+            context["company_option_formsets"],
+        )
+        context["empty_company_option_formset"] = build_empty_company_option_formset()
         return context
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         option_formset = self.get_option_formset(request.POST)
-        if form.is_valid() and option_formset.is_valid():
-            if form.cleaned_data.get("has_options") and not product_options_have_rows(option_formset):
+        company_formset = self.get_company_formset(request.POST, request.FILES)
+        company_option_formsets = self.get_company_option_formsets(company_formset, request.POST)
+        if form.is_valid():
+            is_company_grouped = form.cleaned_data.get("product_type") == Product.PRODUCT_TYPE_COMPANY_GROUPED
+            normal_options_valid = True if is_company_grouped else option_formset.is_valid()
+            company_formset_valid = company_formset.is_valid() if is_company_grouped else True
+            company_options_valid = (
+                all(option_formset.is_valid() for option_formset in company_option_formsets)
+                if is_company_grouped
+                else True
+            )
+            if not normal_options_valid or not company_formset_valid or not company_options_valid:
+                return self.form_invalid(form, option_formset, company_formset, company_option_formsets)
+            has_companies, company_options_valid = validate_product_company_formsets(
+                company_formset,
+                company_option_formsets,
+                self.get_dashboard_ui(),
+            )
+            if is_company_grouped and not has_companies:
+                company_formset._non_form_errors = company_formset.error_class(
+                    [self.get_dashboard_ui()["product_companies_required"]]
+                )
+            elif is_company_grouped and not company_options_valid:
+                pass
+            elif form.cleaned_data.get("has_options") and not product_options_have_rows(option_formset):
                 option_formset._non_form_errors = option_formset.error_class(
-                    ["Add at least one option when product options are enabled."]
+                    [self.get_dashboard_ui()["product_options_required"]]
                 )
             else:
-                return self.save_valid_product(form, option_formset)
-        return self.form_invalid(form, option_formset)
+                return self.save_valid_product(form, option_formset, company_formset, company_option_formsets)
+        return self.form_invalid(form, option_formset, company_formset, company_option_formsets)
 
-    def save_valid_product(self, form, option_formset):
+    def save_valid_product(self, form, option_formset, company_formset, company_option_formsets):
         with transaction.atomic():
             product = form.save()
             save_product_options(product, option_formset)
+            save_product_companies(product, company_formset, company_option_formsets)
         messages.success(self.request, self.get_dashboard_ui()["product_saved"])
         return redirect(self.success_url)
 
-    def form_invalid(self, form, option_formset=None):
-        context = self.get_context_data(form=form, option_formset=option_formset)
+    def form_invalid(self, form, option_formset=None, company_formset=None, company_option_formsets=None):
+        context = self.get_context_data(
+            form=form,
+            option_formset=option_formset,
+            company_formset=company_formset,
+            company_option_formsets=company_option_formsets,
+        )
         return self.render_to_response(context)
 
 
@@ -1265,7 +1756,13 @@ class ProductListView(DashboardLocalizationMixin, StaffRequiredMixin, TemplateVi
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         search_query = self.request.GET.get("q", "").strip()
-        context.update(get_product_list_context(self.get_language(), search_query=search_query))
+        filters = {
+            "name": self.request.GET.get("filter_name", ""),
+            "category": self.request.GET.get("filter_category", ""),
+            "pricing_type": self.request.GET.get("filter_pricing_type", ""),
+            "status": self.request.GET.get("filter_status", ""),
+        }
+        context.update(get_product_list_context(self.get_language(), search_query=search_query, filters=filters))
         return context
 
 
@@ -1278,34 +1775,78 @@ class ProductUpdateView(DashboardLocalizationMixin, StaffRequiredMixin, UpdateVi
     def get_option_formset(self, data=None):
         return ProductOptionFormSet(data=data, instance=self.object, prefix="options")
 
+    def get_company_formset(self, data=None, files=None):
+        return ProductCompanyFormSet(data=data, files=files, instance=self.object, prefix="companies")
+
+    def get_company_option_formsets(self, company_formset, data=None):
+        return build_company_option_formsets(company_formset, data=data)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = self.get_dashboard_ui()["edit_product"]
         context["option_formset"] = kwargs.get("option_formset") or self.get_option_formset()
+        context["company_formset"] = kwargs.get("company_formset") or self.get_company_formset()
+        context["company_option_formsets"] = kwargs.get("company_option_formsets") or self.get_company_option_formsets(
+            context["company_formset"]
+        )
+        context["company_blocks"] = build_company_blocks(
+            context["company_formset"],
+            context["company_option_formsets"],
+        )
+        context["empty_company_option_formset"] = build_empty_company_option_formset()
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
         option_formset = self.get_option_formset(request.POST)
-        if form.is_valid() and option_formset.is_valid():
-            if form.cleaned_data.get("has_options") and not product_options_have_rows(option_formset):
+        company_formset = self.get_company_formset(request.POST, request.FILES)
+        company_option_formsets = self.get_company_option_formsets(company_formset, request.POST)
+        if form.is_valid():
+            is_company_grouped = form.cleaned_data.get("product_type") == Product.PRODUCT_TYPE_COMPANY_GROUPED
+            normal_options_valid = True if is_company_grouped else option_formset.is_valid()
+            company_formset_valid = company_formset.is_valid() if is_company_grouped else True
+            company_options_valid = (
+                all(option_formset.is_valid() for option_formset in company_option_formsets)
+                if is_company_grouped
+                else True
+            )
+            if not normal_options_valid or not company_formset_valid or not company_options_valid:
+                return self.form_invalid(form, option_formset, company_formset, company_option_formsets)
+            has_companies, company_options_valid = validate_product_company_formsets(
+                company_formset,
+                company_option_formsets,
+                self.get_dashboard_ui(),
+            )
+            if is_company_grouped and not has_companies:
+                company_formset._non_form_errors = company_formset.error_class(
+                    [self.get_dashboard_ui()["product_companies_required"]]
+                )
+            elif is_company_grouped and not company_options_valid:
+                pass
+            elif form.cleaned_data.get("has_options") and not product_options_have_rows(option_formset):
                 option_formset._non_form_errors = option_formset.error_class(
-                    ["Add at least one option when product options are enabled."]
+                    [self.get_dashboard_ui()["product_options_required"]]
                 )
             else:
-                return self.save_valid_product(form, option_formset)
-        return self.form_invalid(form, option_formset)
+                return self.save_valid_product(form, option_formset, company_formset, company_option_formsets)
+        return self.form_invalid(form, option_formset, company_formset, company_option_formsets)
 
-    def save_valid_product(self, form, option_formset):
+    def save_valid_product(self, form, option_formset, company_formset, company_option_formsets):
         with transaction.atomic():
             product = form.save()
             save_product_options(product, option_formset)
+            save_product_companies(product, company_formset, company_option_formsets)
         messages.success(self.request, self.get_dashboard_ui()["product_updated"])
         return redirect(self.success_url)
 
-    def form_invalid(self, form, option_formset=None):
-        context = self.get_context_data(form=form, option_formset=option_formset)
+    def form_invalid(self, form, option_formset=None, company_formset=None, company_option_formsets=None):
+        context = self.get_context_data(
+            form=form,
+            option_formset=option_formset,
+            company_formset=company_formset,
+            company_option_formsets=company_option_formsets,
+        )
         return self.render_to_response(context)
 
 
@@ -1320,17 +1861,28 @@ class ProductDeleteView(DashboardLocalizationMixin, StaffRequiredMixin, DeleteVi
 
 class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+        language = self.get_language()
+        categories = list(
+            Category.objects.select_related("parent")
+            .filter(is_active=True)
+            .order_by("parent__display_order", "parent__name", "display_order", "name")
+        )
+        sample_category = next((category for category in categories if category.parent_id), None)
+        sample_category = sample_category or (categories[0] if categories else None)
+        sample_category_value = sample_category.slug if sample_category is not None else "subcategory-slug"
+
         workbook = Workbook()
         products_sheet = workbook.active
         products_sheet.title = "Products"
         products_sheet.append(PRODUCT_EXCEL_HEADERS)
         products_sheet.append(
             [
-                "Chocolate Cake",
-                "cakes",
-                "Rich chocolate cake",
-                "Rich chocolate cake",
+                "Sample Product",
+                sample_category_value,
+                "Short product description",
+                "Full product description",
                 "",
+                "normal",
                 "inherit",
                 "false",
                 "custom",
@@ -1339,19 +1891,94 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                 "piece",
                 "true",
                 "false",
-                "https://example.com/cake.jpg",
-                "CAKE-001",
+                "https://example.com/product.jpg",
+                "SAMPLE-001",
+            ]
+        )
+        products_sheet.append(
+            [
+                "Running Shoes",
+                sample_category_value,
+                "Company grouped sample",
+                "Choose the brand, then the option.",
+                "",
+                "company_grouped",
+                "inherit",
+                "false",
+                "custom",
+                "false",
+                "false",
+                "piece",
+                "true",
+                "false",
+                "https://example.com/shoes.jpg",
+                "SHOES-001",
             ]
         )
         options_sheet = workbook.create_sheet("Options")
         options_sheet.append(PRODUCT_OPTION_EXCEL_HEADERS)
-        options_sheet.append(["CAKE-001", "Small", "10", "true", "0"])
-        options_sheet.append(["CAKE-001", "Large", "18", "false", "1"])
+        options_sheet.append(["SAMPLE-001", "Option 1", "1.08", "true", "true", "0"])
+        options_sheet.append(["SAMPLE-001", "Option 2", "2.48", "false", "false", "1"])
 
-        for worksheet in (products_sheet, options_sheet):
+        companies_sheet = workbook.create_sheet("Companies")
+        companies_sheet.append(PRODUCT_COMPANY_EXCEL_HEADERS)
+        companies_sheet.append(["adidas", "Adidas", "https://example.com/adidas-logo.png", "0", "true"])
+        companies_sheet.append(["nike", "Nike", "https://example.com/nike-logo.png", "1", "true"])
+
+        company_options_sheet = workbook.create_sheet("CompanyOptions")
+        company_options_sheet.append(PRODUCT_COMPANY_OPTION_EXCEL_HEADERS)
+        company_options_sheet.append(["SHOES-001", "adidas", "Size 42 Black", "15.50", "true", "0"])
+        company_options_sheet.append(["SHOES-001", "adidas", "Size 43 White", "16.00", "true", "1"])
+        company_options_sheet.append(["SHOES-001", "nike", "Size 42 Blue", "18.00", "true", "0"])
+
+        categories_sheet = workbook.create_sheet("Categories")
+        categories_sheet.append(["category", "type", "parent", "name", "slug"])
+        for category in categories:
+            categories_sheet.append(
+                [
+                    category.slug,
+                    "subcategory" if category.parent_id else "parent",
+                    format_category_path(category.parent, language) if category.parent_id else "",
+                    format_category_path(category, language),
+                    category.slug,
+                ]
+            )
+
+        help_sheet = workbook.create_sheet("Help")
+        help_sheet.append(["Products sheet"])
+        help_sheet.append(["Use the category column for the category or subcategory slug."])
+        help_sheet.append(["For products under a parent section, use the subcategory slug, not the parent slug."])
+        help_sheet.append(["product_type accepts normal or company_grouped. Leave blank for normal."])
+        help_sheet.append(["You can copy valid values from the Categories sheet."])
+        help_sheet.append(["Options sheet"])
+        help_sheet.append(["Use product_sku to connect normal product options to a product row in the Products sheet."])
+        help_sheet.append(["Companies sheet"])
+        help_sheet.append(["Use company_id and company_name to define reusable companies. Do not add product_sku here."])
+        help_sheet.append(["CompanyOptions sheet"])
+        help_sheet.append(["Use product_sku, company_id, and option_name for variants under a company."])
+        help_sheet.append(["Dollar-linked prices can use decimals such as 1.08 or 2.48."])
+
+        header_fill = PatternFill("solid", fgColor="DDEBFF")
+        header_font = Font(bold=True, color="0B2E63")
+        for worksheet in (products_sheet, options_sheet, companies_sheet, company_options_sheet, categories_sheet, help_sheet):
+            for header_cell in worksheet[1]:
+                header_cell.fill = header_fill
+                header_cell.font = header_font
+
+        for worksheet in (products_sheet, options_sheet, companies_sheet, company_options_sheet, categories_sheet, help_sheet):
             for column_cells in worksheet.columns:
                 header = column_cells[0].value or ""
-                worksheet.column_dimensions[column_cells[0].column_letter].width = max(len(header) + 4, 16)
+                max_length = max(len(str(cell.value or "")) for cell in column_cells)
+                worksheet.column_dimensions[column_cells[0].column_letter].width = min(
+                    max(max_length + 4, len(header) + 4, 16),
+                    44,
+                )
+
+        products_sheet.freeze_panes = "A2"
+        options_sheet.freeze_panes = "A2"
+        companies_sheet.freeze_panes = "A2"
+        company_options_sheet.freeze_panes = "A2"
+        categories_sheet.freeze_panes = "A2"
 
         output = BytesIO()
         workbook.save(output)

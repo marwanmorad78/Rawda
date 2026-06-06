@@ -11,6 +11,7 @@ const offerModalDescription = offerModal?.querySelector("[data-offer-modal-descr
 const offerModalPrice = offerModal?.querySelector("[data-offer-modal-price]");
 const offerModalForm = offerModal?.querySelector("[data-offer-modal-form]");
 const productModal = document.querySelector("[data-product-modal]");
+const productModalDialog = productModal?.querySelector(".product-modal-dialog");
 const productModalImage = productModal?.querySelector("[data-product-modal-image]");
 const productModalPlaceholder = productModal?.querySelector("[data-product-modal-placeholder]");
 const productModalTitle = productModal?.querySelector("[data-product-modal-title]");
@@ -20,8 +21,10 @@ const productModalPrice = productModal?.querySelector("[data-product-modal-price
 const productModalTotal = productModal?.querySelector("[data-product-modal-total]");
 const productModalForm = productModal?.querySelector("[data-product-modal-form]");
 const productModalOptions = productModal?.querySelector("[data-product-modal-options]");
+const productModalCompanies = productModal?.querySelector("[data-product-modal-companies]");
 const productModalSubmit = productModal?.querySelector("[data-product-modal-submit]");
 const productModalOptionsScroll = productModal?.querySelector(".product-modal-options-scroll");
+const productModalLoginPanel = productModal?.querySelector(".product-modal-login-panel");
 
 const floatingCart = document.querySelector("[data-floating-cart]");
 const floatingCartCount = floatingCart?.querySelector("[data-floating-cart-count]");
@@ -31,6 +34,14 @@ const cartForms = Array.from(document.querySelectorAll("[data-cart-form]"));
 const cartPage = document.querySelector("[data-cart-page]");
 const cartQuantityForms = Array.from(document.querySelectorAll("[data-cart-quantity-form]"));
 const cartRemoveForms = Array.from(document.querySelectorAll("[data-cart-remove-form]"));
+const cartNoteForms = Array.from(document.querySelectorAll("[data-cart-note-form]"));
+const cartNoteOpeners = Array.from(document.querySelectorAll("[data-cart-note-open]"));
+const cartNoteDeleteButtons = Array.from(document.querySelectorAll("[data-cart-note-delete]"));
+const cartNoteModal = document.querySelector("[data-cart-note-modal]");
+const cartNoteModalTitle = cartNoteModal?.querySelector("[data-cart-note-modal-title]");
+const cartNoteModalForm = cartNoteModal?.querySelector("[data-cart-note-modal-form]");
+const cartNoteModalInput = cartNoteModal?.querySelector("[data-cart-note-input]");
+const cartNoteModalClosers = Array.from(document.querySelectorAll("[data-cart-note-close]"));
 const storeHero = document.querySelector("[data-store-hero]");
 const heroCartScene = document.querySelector("[data-hero-cart-scene]");
 const heroSceneOverlay = document.querySelector("[data-hero-scene-overlay]");
@@ -45,7 +56,11 @@ const homeShelfRows = Array.from(document.querySelectorAll("[data-home-shelf-row
 const productCards = Array.from(document.querySelectorAll("[data-product-card]"));
 const categoryProductSearches = Array.from(document.querySelectorAll("[data-category-product-search]"));
 const activeOrderStatusRegions = Array.from(document.querySelectorAll("[data-active-order-status-region]"));
-const productOptionInputs = Array.from(document.querySelectorAll("[data-product-options] input[name='option_id']"));
+const productOptionInputs = Array.from(
+    document.querySelectorAll(
+        "[data-product-options] input[name='option_id'], [data-product-company-options] input[name='company_option_id']",
+    ),
+);
 const productDetailPrice = document.querySelector("[data-product-detail-price]");
 const productOptionsSubmit = document.querySelector("[data-product-options-submit]");
 const quantityControls = Array.from(document.querySelectorAll("[data-quantity-control]"));
@@ -56,6 +71,8 @@ const syrianPhoneControls = Array.from(document.querySelectorAll("[data-syrian-p
 const deliveryAreaGroups = Array.from(document.querySelectorAll("[data-delivery-area-group]"));
 const dashboardSubAreaFormsets = Array.from(document.querySelectorAll("[data-dashboard-sub-area-formset]"));
 const dashboardDeliveryAreaForms = Array.from(document.querySelectorAll("[data-dashboard-delivery-area-form]"));
+const dashboardProductOptionPanels = Array.from(document.querySelectorAll("[data-dashboard-product-options-panel]"));
+const dashboardCompanyFormsets = Array.from(document.querySelectorAll("[data-dashboard-company-formset]"));
 const expectedTimePresetButtons = Array.from(document.querySelectorAll("[data-time-preset]"));
 const siteHeader = document.querySelector(".site-header");
 const mobileNavToggle = document.querySelector("[data-mobile-nav-toggle]");
@@ -65,6 +82,9 @@ const dashboardDrawer = document.querySelector("[data-dashboard-drawer]");
 const dashboardDrawerToggle = document.querySelector("[data-dashboard-drawer-toggle]");
 const dashboardDrawerClosers = Array.from(document.querySelectorAll("[data-dashboard-drawer-close]"));
 const dashboardProductOptionsPanel = document.querySelector("[data-dashboard-product-options-panel]");
+const dashboardProductCompaniesPanel = document.querySelector("[data-dashboard-product-companies-panel]");
+const dashboardProductTypeInput = document.querySelector('select[name="product_type"]');
+const dashboardHasOptionsField = document.querySelector("[data-dashboard-has-options-field]");
 const dashboardHasOptionsInput = document.querySelector('input[name="has_options"]');
 const dashboardProductBasePriceField = document.querySelector("[data-dashboard-product-base-price-field]");
 const dashboardProductBasePriceInput = dashboardProductBasePriceField?.querySelector("input, select, textarea");
@@ -80,6 +100,15 @@ const checkoutAddressModalClosers = Array.from(document.querySelectorAll("[data-
 const checkoutAddressOptions = Array.from(document.querySelectorAll("[data-checkout-address-option]"));
 const checkoutDeliveryFee = document.querySelector("[data-checkout-delivery-fee]");
 const checkoutGrandTotal = document.querySelector("[data-checkout-grand-total]");
+const checkoutFlow = document.querySelector("[data-checkout-flow]");
+const checkoutServiceOptions = Array.from(document.querySelectorAll("[data-checkout-service-option]"));
+const checkoutAddressPanel = document.querySelector("[data-checkout-address-panel]");
+const checkoutConfirmForm = document.querySelector("[data-checkout-confirm-form]");
+const checkoutConfirmSubmit = document.querySelector("[data-checkout-confirm-submit]");
+const checkoutConfirmModal = document.querySelector("[data-checkout-confirm-modal]");
+const checkoutConfirmClosers = Array.from(document.querySelectorAll("[data-checkout-confirm-close]"));
+const checkoutConfirmApprove = document.querySelector("[data-checkout-confirm-approve]");
+const dashboardColumnFilters = Array.from(document.querySelectorAll("[data-column-filter]"));
 
 const cartState = {
     count: Number.parseInt(floatingCart?.dataset.cartCount || "0", 10) || 0,
@@ -87,16 +116,28 @@ const cartState = {
 };
 const ARABIC_NAME_PATTERN = /^[\u0621-\u064A\u064B-\u065F]+(?:\s+[\u0621-\u064A\u064B-\u065F]+)*$/;
 let lockedBodyScrollY = 0;
+let lockedRootScrollBehavior = "";
+let lockedBodyScrollRestoreTimer = null;
 let productModalUnitPriceText = "";
+let activeCartNoteCard = null;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const tabTargetCache = new WeakMap();
+
+const syncViewportHeightVariable = () => {
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const viewportOffsetTop = window.visualViewport?.offsetTop || 0;
+    document.documentElement.style.setProperty("--app-viewport-height", `${Math.round(viewportHeight)}px`);
+    document.documentElement.style.setProperty("--app-viewport-offset-top", `${Math.round(viewportOffsetTop)}px`);
+};
 
 const getAnyOpenModal = () =>
     Boolean(
         (offerModal && !offerModal.hidden) ||
             (productModal && !productModal.hidden) ||
             (excelModal && !excelModal.hidden) ||
+            (cartNoteModal && !cartNoteModal.hidden) ||
+            (checkoutConfirmModal && !checkoutConfirmModal.hidden) ||
             orderModals.some((modal) => !modal.hidden) ||
             checkoutAddressModals.some((modal) => !modal.hidden),
     );
@@ -105,7 +146,11 @@ const setBodyScrollLock = (isLocked) => {
     const isAlreadyLocked = document.body.classList.contains("modal-open");
 
     if (isLocked && !isAlreadyLocked) {
+        window.clearTimeout(lockedBodyScrollRestoreTimer);
+        syncViewportHeightVariable();
         lockedBodyScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        lockedRootScrollBehavior = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.setProperty("scroll-behavior", "auto", "important");
         document.body.classList.add("modal-open");
         document.body.style.position = "fixed";
         document.body.style.top = `-${lockedBodyScrollY}px`;
@@ -116,13 +161,35 @@ const setBodyScrollLock = (isLocked) => {
     }
 
     if (!isLocked && isAlreadyLocked) {
+        const restoreY = lockedBodyScrollY;
         document.body.classList.remove("modal-open");
         document.body.style.position = "";
         document.body.style.top = "";
         document.body.style.left = "";
         document.body.style.right = "";
         document.body.style.width = "";
-        window.scrollTo(0, lockedBodyScrollY);
+
+        const restoreScrollPosition = () => {
+            try {
+                window.scrollTo({
+                    left: 0,
+                    top: restoreY,
+                    behavior: "instant",
+                });
+            } catch (error) {
+                window.scrollTo(0, restoreY);
+            }
+        };
+
+        restoreScrollPosition();
+        window.requestAnimationFrame(() => {
+            restoreScrollPosition();
+            window.requestAnimationFrame(restoreScrollPosition);
+        });
+        lockedBodyScrollRestoreTimer = window.setTimeout(() => {
+            restoreScrollPosition();
+            document.documentElement.style.scrollBehavior = lockedRootScrollBehavior;
+        }, 120);
     }
 };
 
@@ -188,19 +255,29 @@ const setMobileNavOpen = (isOpen) => {
 };
 
 const syncDashboardProductOptionsPanel = () => {
-    if (!dashboardHasOptionsInput) {
+    if (!dashboardHasOptionsInput && !dashboardProductTypeInput) {
         return;
     }
-    const hasOptions = dashboardHasOptionsInput.checked;
+    const isCompanyGrouped = dashboardProductTypeInput?.value === "company_grouped";
+    const hasOptions = Boolean(dashboardHasOptionsInput?.checked) && !isCompanyGrouped;
+    if (dashboardHasOptionsInput && isCompanyGrouped) {
+        dashboardHasOptionsInput.checked = false;
+    }
+    if (dashboardHasOptionsField) {
+        dashboardHasOptionsField.hidden = isCompanyGrouped;
+    }
     if (dashboardProductOptionsPanel) {
         dashboardProductOptionsPanel.hidden = !hasOptions;
     }
+    if (dashboardProductCompaniesPanel) {
+        dashboardProductCompaniesPanel.hidden = !isCompanyGrouped;
+    }
     if (dashboardProductBasePriceField) {
-        dashboardProductBasePriceField.hidden = hasOptions;
+        dashboardProductBasePriceField.hidden = hasOptions || isCompanyGrouped;
     }
     if (dashboardProductBasePriceInput) {
-        dashboardProductBasePriceInput.disabled = hasOptions;
-        dashboardProductBasePriceInput.required = !hasOptions;
+        dashboardProductBasePriceInput.disabled = hasOptions || isCompanyGrouped;
+        dashboardProductBasePriceInput.required = !hasOptions && !isCompanyGrouped;
     }
 };
 
@@ -209,6 +286,14 @@ const setExcelModalOpen = (isOpen) => {
         return;
     }
     excelModal.hidden = !isOpen;
+    syncModalOpenState();
+};
+
+const setCartNoteModalOpen = (isOpen) => {
+    if (!cartNoteModal) {
+        return;
+    }
+    cartNoteModal.hidden = !isOpen;
     syncModalOpenState();
 };
 
@@ -231,6 +316,14 @@ const closeCheckoutAddressModals = () => {
     syncModalOpenState();
 };
 
+const setCheckoutConfirmModalOpen = (isOpen) => {
+    if (!checkoutConfirmModal) {
+        return;
+    }
+    checkoutConfirmModal.hidden = !isOpen;
+    syncModalOpenState();
+};
+
 const setOrderModalOpen = (isOpen, modal) => {
     if (!modal) {
         return;
@@ -247,9 +340,9 @@ const closeOrderModals = () => {
 };
 
 const getQuantityValue = (input) => {
-    const minimum = Number.parseInt(input.min || "1", 10) || 1;
-    const current = Number.parseInt(input.value || String(minimum), 10);
-    return Math.max(Number.isNaN(current) ? minimum : current, minimum);
+    const minimum = Number(input?.min || 1);
+    const current = Number(input?.value || minimum);
+    return Math.max(Number.isFinite(current) ? current : minimum, minimum);
 };
 
 const setQuantityValue = (input, value) => {
@@ -257,8 +350,31 @@ const setQuantityValue = (input, value) => {
         return;
     }
 
-    const minimum = Number.parseInt(input.min || "1", 10) || 1;
-    input.value = String(Math.max(value, minimum));
+    const minimum = Number(input.min || 1);
+    const maximum = input.max ? Number(input.max) : Number.POSITIVE_INFINITY;
+    const step = Number(input.step || 1);
+    const numericValue = Number(value);
+    const boundedValue = Math.min(
+        Math.max(Number.isFinite(numericValue) ? numericValue : minimum, minimum),
+        maximum,
+    );
+    const steppedValue = minimum + Math.round((boundedValue - minimum) / step) * step;
+    input.value = String(Math.min(Math.max(steppedValue, minimum), maximum));
+
+    const control = input.closest("[data-quantity-control], [data-cart-quantity-stepper]");
+    const display = control?.querySelector("[data-quantity-display]");
+    const isWeightBased = Boolean(control?.hasAttribute("data-weight-control"));
+    if (display) {
+        const quantity = Number(input.value);
+        const isArabic = document.documentElement.lang === "ar";
+        display.textContent = quantity < 1
+            ? `${Math.round(quantity * 1000)} ${isArabic ? "غ" : "g"}`
+            : `${Number(quantity.toFixed(1))} ${isArabic ? "كغ" : "kg"}`;
+    }
+    control?.querySelector("[data-quantity-decrease], [data-cart-quantity-decrease]")
+        ?.toggleAttribute("disabled", isWeightBased && Number(input.value) <= minimum);
+    control?.querySelector("[data-quantity-increase], [data-cart-quantity-increase]")
+        ?.toggleAttribute("disabled", Number(input.value) >= maximum);
 };
 
 const normalizePriceText = (value) =>
@@ -266,7 +382,7 @@ const normalizePriceText = (value) =>
         .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
         .replace(/[\u06F0-\u06F9]/g, (digit) => String(digit.charCodeAt(0) - 0x06F0));
 
-const formatDisplayPriceTotal = (displayPrice, quantity) => {
+const formatDisplayPriceTotal = (displayPrice, quantity, numericUnitPrice = null, showEstimate = false) => {
     const priceText = String(displayPrice || "").trim();
     if (!priceText) {
         return "";
@@ -278,13 +394,19 @@ const formatDisplayPriceTotal = (displayPrice, quantity) => {
         return priceText;
     }
 
-    const numericValue = Number.parseInt(match[0].replace(/[^\d]/g, ""), 10);
+    const numericValue = numericUnitPrice === null
+        ? Number.parseInt(match[0].replace(/[^\d]/g, ""), 10)
+        : Number(numericUnitPrice);
     if (!Number.isFinite(numericValue)) {
         return priceText;
     }
 
     const language = document.documentElement.lang || undefined;
-    const formattedTotal = new Intl.NumberFormat(language).format(numericValue * Math.max(quantity, 1));
+    const formatter = new Intl.NumberFormat(language);
+    const total = Math.round(numericValue * Math.max(quantity, 0));
+    const formattedTotal = showEstimate
+        ? `${formatter.format(total)} ~ ${formatter.format(Math.round(numericValue * (quantity + 0.1)))}`
+        : formatter.format(total);
     const originalNumberText = priceText.slice(match.index, match.index + match[0].length);
     return priceText.replace(originalNumberText, formattedTotal);
 };
@@ -295,9 +417,78 @@ const syncProductModalTotal = () => {
     }
 
     const quantityInput = productModalForm.querySelector('input[name="quantity"]');
-    const selectedOption = productModalForm.querySelector('input[name="option_id"]:checked');
-    const unitPrice = selectedOption?.dataset.optionPrice || productModalUnitPriceText || productModalPrice?.textContent || "";
-    productModalTotal.textContent = formatDisplayPriceTotal(unitPrice, quantityInput ? getQuantityValue(quantityInput) : 1);
+    const selectedOption = productModalForm.querySelector(
+        'input[name="option_id"]:checked, input[name="company_option_id"]:checked',
+    );
+    const displayPrice = selectedOption?.dataset.optionPrice || productModalUnitPriceText || productModalPrice?.textContent || "";
+    const unitPrice = selectedOption?.dataset.optionUnitPrice || productModalForm.dataset.productUnitPrice || null;
+    const isWeightBased = productModalForm.dataset.soldByWeight === "true";
+    productModalTotal.textContent = formatDisplayPriceTotal(
+        displayPrice,
+        quantityInput ? getQuantityValue(quantityInput) : 1,
+        unitPrice,
+        isWeightBased,
+    );
+};
+
+const resetProductModalMedia = () => {
+    if (productModalImage) {
+        productModalImage.onerror = null;
+        productModalImage.removeAttribute("src");
+        productModalImage.removeAttribute("srcset");
+        productModalImage.alt = "";
+        productModalImage.hidden = true;
+    }
+
+    if (productModalPlaceholder) {
+        productModalPlaceholder.textContent = "";
+        productModalPlaceholder.hidden = false;
+    }
+};
+
+const resetProductModalContent = () => {
+    resetProductModalMedia();
+    productModalDialog?.classList.remove(
+        "has-options",
+        "has-no-options",
+        "has-few-options",
+        "has-many-options",
+        "has-company-groups",
+        "requires-login",
+    );
+    if (productModalTitle) {
+        productModalTitle.textContent = "";
+    }
+    if (productModalDescription) {
+        productModalDescription.textContent = "";
+        productModalDescription.hidden = true;
+    }
+    if (productModalCategory) {
+        productModalCategory.textContent = "";
+        productModalCategory.hidden = true;
+    }
+    if (productModalPrice) {
+        productModalPrice.textContent = "";
+    }
+    if (productModalTotal) {
+        productModalTotal.textContent = "";
+    }
+    if (productModalOptions) {
+        productModalOptions.querySelectorAll(".product-option-card").forEach((option) => option.remove());
+        productModalOptions.hidden = true;
+    }
+    if (productModalCompanies) {
+        productModalCompanies.querySelectorAll(".product-company-card").forEach((company) => company.remove());
+        productModalCompanies.hidden = true;
+    }
+    if (productModalOptionsScroll) {
+        productModalOptionsScroll.hidden = true;
+        productModalOptionsScroll.classList.remove("has-many-options");
+        productModalOptionsScroll.scrollTop = 0;
+    }
+    if (productModalSubmit) {
+        productModalSubmit.disabled = false;
+    }
 };
 
 const normalizeLabel = (value) =>
@@ -737,6 +928,81 @@ const enhanceDashboardSubAreaFormset = (formset) => {
     });
 };
 
+const addFormsetRow = ({ rowsContainer, emptyTemplate, totalFormsInput, token = "__prefix__", extraReplacements = {} }) => {
+    if (!rowsContainer || !emptyTemplate || !totalFormsInput) {
+        return null;
+    }
+
+    const nextIndex = Number.parseInt(totalFormsInput.value || "0", 10) || 0;
+    let templateMarkup = emptyTemplate.innerHTML.replaceAll(token, String(nextIndex));
+    Object.entries(extraReplacements).forEach(([key, value]) => {
+        templateMarkup = templateMarkup.replaceAll(key, String(value));
+    });
+    templateMarkup = templateMarkup.trim();
+    if (!templateMarkup) {
+        return null;
+    }
+
+    rowsContainer.insertAdjacentHTML("beforeend", templateMarkup);
+    totalFormsInput.value = String(nextIndex + 1);
+    return rowsContainer.lastElementChild;
+};
+
+const enhanceDashboardProductOptionsPanel = (panel) => {
+    const rowsContainer = panel.querySelector("[data-dashboard-option-rows]");
+    const addButton = panel.querySelector("[data-dashboard-add-option]");
+    const emptyTemplate = panel.querySelector("[data-dashboard-option-empty-form]");
+    const totalFormsInput = panel.querySelector('input[name$="-TOTAL_FORMS"]');
+
+    addButton?.addEventListener("click", () => {
+        addFormsetRow({ rowsContainer, emptyTemplate, totalFormsInput });
+    });
+};
+
+const enhanceDashboardCompanyOptionControls = (scope) => {
+    scope.querySelectorAll("[data-dashboard-add-company-option]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const optionsPanel = button.closest(".dashboard-company-options");
+            const rowsContainer = optionsPanel?.querySelector("[data-dashboard-company-option-rows]");
+            const emptyTemplate = optionsPanel?.querySelector("[data-dashboard-company-option-empty-form]");
+            const totalFormsInput = optionsPanel?.querySelector('input[name$="-TOTAL_FORMS"]');
+            addFormsetRow({ rowsContainer, emptyTemplate, totalFormsInput });
+        });
+    });
+};
+
+const enhanceDashboardCompanyFormset = (formset) => {
+    const rowsContainer = formset.querySelector("[data-dashboard-company-rows]");
+    const addButton = formset.querySelector("[data-dashboard-add-company]");
+    const emptyTemplate = formset.querySelector("[data-dashboard-company-empty-form]");
+    const totalFormsInput = formset.querySelector('input[name="companies-TOTAL_FORMS"]');
+
+    enhanceDashboardCompanyOptionControls(formset);
+
+    addButton?.addEventListener("click", () => {
+        if (!rowsContainer || !emptyTemplate || !totalFormsInput) {
+            return;
+        }
+        const nextIndex = Number.parseInt(totalFormsInput.value || "0", 10) || 0;
+        const templateMarkup = emptyTemplate.innerHTML
+            .replaceAll("__company_index__", String(nextIndex))
+            .replaceAll("companies-__prefix__", `companies-${nextIndex}`)
+            .replaceAll("id_companies-__prefix__", `id_companies-${nextIndex}`)
+            .trim();
+
+        if (!templateMarkup) {
+            return;
+        }
+
+        rowsContainer.insertAdjacentHTML("beforeend", templateMarkup);
+        totalFormsInput.value = String(nextIndex + 1);
+        const row = rowsContainer.lastElementChild;
+        if (row) {
+            enhanceDashboardCompanyOptionControls(row);
+        }
+    });
+};
+
 const enhanceDashboardDeliveryAreaForm = (form) => {
     if (!form) {
         return;
@@ -1101,7 +1367,10 @@ const openOfferModal = (slide) => {
     syncModalOpenState();
 };
 
-const closeOfferModal = () => {
+const closeOfferModal = (event) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+
     if (!offerModal) {
         return;
     }
@@ -1110,8 +1379,112 @@ const closeOfferModal = () => {
     syncModalOpenState();
 };
 
+const buildProductCompanyCard = (companyNode, basePrice) => {
+    const card = document.createElement("article");
+    card.className = "product-company-card";
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "product-company-summary";
+    toggle.setAttribute("aria-expanded", "false");
+
+    const logo = document.createElement("span");
+    logo.className = "product-company-logo";
+    const logoUrl = companyNode.dataset.companyLogo || "";
+    const companyName = companyNode.dataset.companyName || "";
+    if (logoUrl) {
+        const image = document.createElement("img");
+        image.src = logoUrl;
+        image.alt = companyName;
+        logo.append(image);
+    } else {
+        const placeholder = document.createElement("span");
+        placeholder.textContent = companyName.slice(0, 1);
+        logo.append(placeholder);
+    }
+
+    const name = document.createElement("strong");
+    name.textContent = companyName;
+
+    const arrow = document.createElement("span");
+    arrow.className = "product-company-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "v";
+
+    const optionsWrap = document.createElement("div");
+    optionsWrap.className = "product-company-options";
+    optionsWrap.hidden = true;
+
+    Array.from(companyNode.querySelectorAll("[data-company-option-id]")).forEach((optionNode) => {
+        const label = document.createElement("label");
+        label.className = "product-option-card product-company-option-row";
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "company_option_id";
+        input.value = optionNode.dataset.companyOptionId || "";
+        input.required = true;
+        input.dataset.optionPrice = optionNode.dataset.companyOptionPrice || "";
+        input.dataset.optionUnitPrice = optionNode.dataset.companyOptionUnitPrice || "";
+        input.disabled = optionNode.dataset.companyOptionAvailable === "false";
+
+        const mark = document.createElement("span");
+        mark.className = "choice-mark choice-mark-radio";
+        mark.setAttribute("aria-hidden", "true");
+
+        const copy = document.createElement("span");
+        copy.className = "choice-copy";
+        const optionName = document.createElement("strong");
+        optionName.textContent = optionNode.dataset.companyOptionName || "";
+        const optionPrice = document.createElement("small");
+        optionPrice.textContent = optionNode.dataset.companyOptionPrice || "";
+        copy.append(optionName, optionPrice);
+        if (input.disabled) {
+            const unavailable = document.createElement("em");
+            unavailable.textContent = document.documentElement.lang === "ar" ? "غير متوفر حالياً" : "Unavailable now";
+            copy.append(unavailable);
+            label.classList.add("is-unavailable");
+        }
+
+        input.addEventListener("change", () => {
+            productModalUnitPriceText = input.dataset.optionPrice || basePrice;
+            if (productModalPrice) {
+                productModalPrice.textContent = productModalUnitPriceText;
+            }
+            if (productModalSubmit) {
+                productModalSubmit.disabled = false;
+            }
+            syncProductModalTotal();
+        });
+
+        label.append(input, mark, copy);
+        optionsWrap.append(label);
+    });
+
+    if (!optionsWrap.querySelector('input[name="company_option_id"]:not(:disabled)')) {
+        const empty = document.createElement("p");
+        empty.className = "product-company-empty";
+        empty.textContent = document.documentElement.lang === "ar" ? "لا توجد خيارات متوفرة حالياً" : "No options are currently available.";
+        optionsWrap.append(empty);
+    }
+
+    toggle.addEventListener("click", () => {
+        const isOpen = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!isOpen));
+        card.classList.toggle("is-open", !isOpen);
+        optionsWrap.hidden = isOpen;
+    });
+
+    toggle.append(logo, name, arrow);
+    card.append(toggle, optionsWrap);
+    return card;
+};
+
 const openProductModal = (card) => {
     if (!productModal || !productModalTitle || !productModalPrice || !productModalForm) {
+        return;
+    }
+    if (card.dataset.productAvailable === "false") {
         return;
     }
 
@@ -1119,27 +1492,70 @@ const openProductModal = (card) => {
     const description = card.dataset.productDescription || "";
     const category = card.dataset.productCategory || "";
     const price = card.dataset.productPrice || "";
+    const unitPrice = card.dataset.productUnitPrice || "";
+    const isWeightBased = card.dataset.productSoldByWeight === "true";
     const image = card.dataset.productImage || "";
     const action = card.dataset.productAction || "";
+    const productType = card.dataset.productType || "normal";
+    const isCompanyGrouped = productType === "company_grouped";
 
+    syncViewportHeightVariable();
+    resetProductModalContent();
     productModalUnitPriceText = price;
     productModalTitle.textContent = title;
     productModalPrice.textContent = price;
     productModalForm.action = action;
     productModalForm.dataset.cartItemTitle = title;
     productModalForm.dataset.cartItemImage = image;
-    setQuantityValue(productModalForm.querySelector('input[name="quantity"]'), 1);
+    productModalForm.dataset.productUnitPrice = unitPrice;
+    productModalForm.dataset.soldByWeight = String(isWeightBased);
+    const quantityInput = productModalForm.querySelector('input[name="quantity"]');
+    const quantityControl = quantityInput?.closest("[data-quantity-control]");
+    const quantityDisplay = quantityControl?.querySelector("[data-quantity-display]");
+    if (quantityInput) {
+        quantityInput.type = isWeightBased ? "hidden" : "number";
+        quantityInput.min = isWeightBased ? "0.5" : "1";
+        quantityInput.max = isWeightBased ? "10" : "";
+        quantityInput.step = isWeightBased ? "0.5" : "1";
+        quantityInput.inputMode = isWeightBased ? "" : "numeric";
+    }
+    quantityControl?.toggleAttribute("data-weight-control", isWeightBased);
+    if (quantityDisplay) {
+        quantityDisplay.hidden = !isWeightBased;
+    }
+    setQuantityValue(quantityInput, isWeightBased ? 0.5 : 1);
     if (productModalOptionsScroll) {
         productModalOptionsScroll.scrollTop = 0;
     }
 
-    if (productModalOptions && productModalSubmit) {
-        const optionNodes = Array.from(card.querySelectorAll("[data-product-options-source] [data-option-id]"));
-        productModalOptions.querySelectorAll(".product-option-card").forEach((option) => option.remove());
-        productModalOptions.hidden = optionNodes.length === 0;
-        productModalSubmit.disabled = optionNodes.length > 0;
+    const optionNodes = Array.from(card.querySelectorAll("[data-product-options-source] [data-option-id]"));
+    const companyNodes = Array.from(card.querySelectorAll("[data-product-companies-source] [data-company-id]"));
+    const companyOptionCount = companyNodes.reduce(
+        (total, companyNode) => total + companyNode.querySelectorAll("[data-company-option-id]").length,
+        0,
+    );
+    const hasOptions = !isCompanyGrouped && optionNodes.length > 0;
+    const hasCompanyGroups = isCompanyGrouped && companyOptionCount > 0;
+    const hasSelections = hasOptions || hasCompanyGroups;
+    const hasManyOptions = hasOptions ? optionNodes.length > 3 : companyOptionCount > 4 || companyNodes.length > 2;
+    const requiresLogin = Boolean(productModalLoginPanel && productModalForm.hidden);
+    productModalDialog?.classList.toggle("has-options", hasSelections);
+    productModalDialog?.classList.toggle("has-no-options", !hasSelections);
+    productModalDialog?.classList.toggle("has-few-options", hasSelections && !hasManyOptions);
+    productModalDialog?.classList.toggle("has-many-options", hasSelections && hasManyOptions);
+    productModalDialog?.classList.toggle("has-company-groups", hasCompanyGroups);
+    productModalDialog?.classList.toggle("requires-login", requiresLogin);
+    if (productModalOptionsScroll) {
+        productModalOptionsScroll.hidden = !hasSelections || requiresLogin;
+        productModalOptionsScroll.classList.toggle("has-many-options", hasSelections && hasManyOptions);
+    }
 
-        optionNodes.forEach((optionNode) => {
+    if (productModalOptions && productModalSubmit) {
+        productModalOptions.querySelectorAll(".product-option-card").forEach((option) => option.remove());
+        productModalOptions.hidden = !hasOptions;
+        productModalSubmit.disabled = hasSelections || isCompanyGrouped;
+
+        if (hasOptions) optionNodes.forEach((optionNode) => {
             const label = document.createElement("label");
             label.className = "product-option-card";
 
@@ -1149,7 +1565,9 @@ const openProductModal = (card) => {
             input.value = optionNode.dataset.optionId || "";
             input.required = true;
             input.dataset.optionPrice = optionNode.dataset.optionPrice || "";
-            input.checked = optionNode.dataset.optionDefault === "true";
+            input.dataset.optionUnitPrice = optionNode.dataset.optionUnitPrice || "";
+            input.disabled = optionNode.dataset.optionAvailable === "false";
+            input.checked = optionNode.dataset.optionDefault === "true" && !input.disabled;
 
             const mark = document.createElement("span");
             mark.className = "choice-mark choice-mark-radio";
@@ -1162,6 +1580,12 @@ const openProductModal = (card) => {
             const optionPrice = document.createElement("small");
             optionPrice.textContent = optionNode.dataset.optionPrice || "";
             copy.append(name, optionPrice);
+            if (input.disabled) {
+                const unavailable = document.createElement("em");
+                unavailable.textContent = document.documentElement.lang === "ar" ? "غير متوفر حالياً" : "Unavailable now";
+                copy.append(unavailable);
+                label.classList.add("is-unavailable");
+            }
 
             input.addEventListener("change", () => {
                 productModalUnitPriceText = input.dataset.optionPrice || price;
@@ -1181,6 +1605,14 @@ const openProductModal = (card) => {
         });
     }
 
+    if (productModalCompanies && productModalSubmit) {
+        productModalCompanies.querySelectorAll(".product-company-card").forEach((company) => company.remove());
+        productModalCompanies.hidden = !hasCompanyGroups;
+        companyNodes.forEach((companyNode) => {
+            productModalCompanies.append(buildProductCompanyCard(companyNode, price));
+        });
+    }
+
     if (productModalDescription) {
         productModalDescription.textContent = description;
         productModalDescription.hidden = !description;
@@ -1193,11 +1625,22 @@ const openProductModal = (card) => {
 
     if (productModalImage && productModalPlaceholder) {
         if (image) {
+            productModalImage.onerror = () => {
+                productModalImage.removeAttribute("src");
+                productModalImage.removeAttribute("srcset");
+                productModalImage.alt = "";
+                productModalImage.hidden = true;
+                productModalPlaceholder.hidden = false;
+                productModalPlaceholder.textContent = title.slice(0, 1);
+            };
             productModalImage.src = image;
             productModalImage.alt = title;
             productModalImage.hidden = false;
             productModalPlaceholder.hidden = true;
         } else {
+            productModalImage.removeAttribute("src");
+            productModalImage.removeAttribute("srcset");
+            productModalImage.alt = "";
             productModalImage.hidden = true;
             productModalPlaceholder.hidden = false;
             productModalPlaceholder.textContent = title.slice(0, 1);
@@ -1209,7 +1652,10 @@ const openProductModal = (card) => {
     syncModalOpenState();
 };
 
-const closeProductModal = () => {
+const closeProductModal = (event) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+
     if (!productModal) {
         return;
     }
@@ -1222,6 +1668,8 @@ const closeModals = () => {
     closeOfferModal();
     closeProductModal();
     setExcelModalOpen(false);
+    setCartNoteModalOpen(false);
+    setCheckoutConfirmModalOpen(false);
     closeOrderModals();
     closeCheckoutAddressModals();
 };
@@ -1229,6 +1677,7 @@ const closeModals = () => {
 const enhanceCartForm = (form) => {
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
+        event.stopPropagation();
 
         const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
         const formData = new FormData(form);
@@ -1247,14 +1696,14 @@ const enhanceCartForm = (form) => {
                 },
             });
 
-            if (!response.ok) {
-                throw new Error(`Cart request failed with status ${response.status}`);
-            }
-
             const payload = await response.json();
 
+            if (!response.ok) {
+                throw new Error(payload.message || `Cart request failed with status ${response.status}`);
+            }
+
             if (!payload.ok) {
-                throw new Error("Cart update returned an unexpected payload.");
+                throw new Error(payload.message || "Cart update returned an unexpected payload.");
             }
 
             cartState.count = Number.parseInt(String(payload.cart_count || cartState.count), 10) || cartState.count;
@@ -1269,7 +1718,11 @@ const enhanceCartForm = (form) => {
             showCartToast(payload.message || "");
             closeModals();
         } catch (error) {
-            form.submit();
+            if (!productModal?.contains(form) && !offerModal?.contains(form)) {
+                form.submit();
+            } else if (error?.message) {
+                showCartToast(error.message);
+            }
         } finally {
             if (submitButton) {
                 submitButton.disabled = false;
@@ -1292,8 +1745,8 @@ const updateCartPageTotals = (payload) => {
         floatingCartCount.textContent = payload.cart_count;
         floatingCart?.classList.toggle("is-empty", payload.cart_count <= 0);
     }
-    if (floatingCartTotal && payload.cart_total) {
-        floatingCartTotal.textContent = payload.cart_total;
+    if (floatingCartTotal && total) {
+        floatingCartTotal.textContent = total;
     }
 };
 
@@ -1333,14 +1786,24 @@ const submitCartItemForm = async (form, card) => {
 
         if (!payload.item) {
             card.classList.add("is-removing");
-            window.setTimeout(() => card.remove(), 190);
+            window.setTimeout(() => {
+                card.remove();
+                if (!payload.has_unavailable_items) {
+                    window.location.reload();
+                }
+            }, 190);
             return;
         }
 
         const quantityInput = form.querySelector("[data-cart-quantity-input]");
+        const quantityLabel = card.querySelector("[data-cart-quantity-label]");
         const itemTotal = card.querySelector("[data-cart-item-total]");
         if (quantityInput) {
             quantityInput.value = payload.item.quantity;
+            setQuantityValue(quantityInput, payload.item.quantity);
+        }
+        if (quantityLabel) {
+            quantityLabel.textContent = payload.item.display_quantity;
         }
         if (itemTotal) {
             itemTotal.textContent = payload.item.is_weight_based
@@ -1370,14 +1833,13 @@ const enhanceCartQuantityForm = (form) => {
     }
 
     const setQuantity = (nextValue) => {
-        const minimum = Number.parseInt(input.min || "0", 10) || 0;
-        const value = Math.max(Number.parseInt(nextValue || "0", 10) || 0, minimum);
-        input.value = String(value);
+        setQuantityValue(input, nextValue);
         submitCartItemForm(form, card);
     };
 
-    decreaseButton?.addEventListener("click", () => setQuantity(Number.parseInt(input.value || "0", 10) - 1));
-    increaseButton?.addEventListener("click", () => setQuantity(Number.parseInt(input.value || "0", 10) + 1));
+    const step = Number(input.step || 1);
+    decreaseButton?.addEventListener("click", () => setQuantity(getQuantityValue(input) - step));
+    increaseButton?.addEventListener("click", () => setQuantity(getQuantityValue(input) + step));
     input.addEventListener("change", () => setQuantity(input.value));
     input.addEventListener("input", () => {
         window.clearTimeout(changeTimer);
@@ -1387,6 +1849,7 @@ const enhanceCartQuantityForm = (form) => {
         event.preventDefault();
         submitCartItemForm(form, card);
     });
+    setQuantityValue(input, input.value);
 };
 
 const enhanceCartRemoveForm = (form) => {
@@ -1399,6 +1862,148 @@ const enhanceCartRemoveForm = (form) => {
         event.preventDefault();
         submitCartItemForm(form, card);
     });
+};
+
+const updateCartNoteCard = (card, note) => {
+    if (!card) {
+        return;
+    }
+
+    const cleanNote = String(note || "").trim();
+    const hasNote = Boolean(cleanNote);
+    const preview = card.querySelector("[data-cart-note-preview]");
+    const previewText = card.querySelector("[data-cart-note-preview-text]");
+    const opener = card.querySelector("[data-cart-note-open]");
+    const deleteButton = card.querySelector("[data-cart-note-delete]");
+
+    if (preview) {
+        preview.hidden = !hasNote;
+        preview.classList.toggle("is-empty", !hasNote);
+    }
+    if (previewText) {
+        previewText.textContent = cleanNote;
+    }
+    if (opener) {
+        opener.dataset.noteText = cleanNote;
+        opener.textContent = hasNote
+            ? (opener.dataset.editLabel || opener.textContent)
+            : (opener.dataset.addLabel || opener.textContent);
+    }
+    if (deleteButton) {
+        deleteButton.classList.toggle("is-hidden", !hasNote);
+    }
+};
+
+const submitCartNote = async ({ action, note, card, submitButton }) => {
+    if (!cartNoteModalForm || !action) {
+        return;
+    }
+
+    const formData = new FormData(cartNoteModalForm);
+    formData.set("note", note);
+
+    try {
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+
+        const response = await window.fetch(action, {
+            method: "POST",
+            body: formData,
+            headers: {
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
+        const payload = await response.json();
+
+        if (!response.ok || !payload.ok) {
+            throw new Error(payload.message || `Cart note request failed with status ${response.status}`);
+        }
+
+        updateCartNoteCard(card, payload.note || note);
+        showCartToast(payload.message || "");
+        setCartNoteModalOpen(false);
+    } catch (error) {
+        if (error?.message) {
+            showCartToast(error.message);
+        }
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+        }
+    }
+};
+
+const openCartNoteModal = (button) => {
+    if (!cartNoteModalForm || !cartNoteModalInput) {
+        return;
+    }
+
+    activeCartNoteCard = button.closest("[data-cart-item]");
+    cartNoteModalForm.action = button.dataset.noteAction || "";
+    cartNoteModalInput.value = button.dataset.noteText || "";
+    if (cartNoteModalTitle) {
+        cartNoteModalTitle.textContent = button.dataset.noteTitle || cartNoteModalTitle.textContent;
+    }
+    setCartNoteModalOpen(true);
+    cartNoteModalInput.focus();
+};
+
+const enhanceCartNoteForm = (form) => {
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        submitCartNote({
+            action: form.action,
+            note: cartNoteModalInput?.value || "",
+            card: activeCartNoteCard,
+            submitButton: event.submitter || form.querySelector('button[type="submit"]'),
+        });
+    });
+};
+
+const getSelectedCheckoutService = () =>
+    checkoutServiceOptions.find((input) => input.checked)?.value || "pickup";
+
+const syncCheckoutTotals = () => {
+    if (!checkoutFlow) {
+        return;
+    }
+
+    const isDelivery = getSelectedCheckoutService() === "delivery";
+    if (checkoutAddressPanel) {
+        checkoutAddressPanel.hidden = !isDelivery;
+    }
+
+    if (!isDelivery) {
+        if (checkoutDeliveryFee) {
+            checkoutDeliveryFee.textContent = checkoutFlow.dataset.pickupFee || "0";
+        }
+        if (checkoutGrandTotal) {
+            checkoutGrandTotal.textContent = checkoutFlow.dataset.pickupTotal || "";
+        }
+        return;
+    }
+
+    const selectedAddress = document.querySelector("[data-checkout-address-option]")?.selectedOptions?.[0];
+    if (checkoutDeliveryFee && selectedAddress?.dataset.deliveryFeeDisplay) {
+        checkoutDeliveryFee.textContent = selectedAddress.dataset.deliveryFeeDisplay;
+    }
+    if (checkoutGrandTotal && selectedAddress?.dataset.grandTotalDisplay) {
+        checkoutGrandTotal.textContent = selectedAddress.dataset.grandTotalDisplay;
+    }
+};
+
+const setCheckoutSubmitting = (isSubmitting) => {
+    if (checkoutConfirmSubmit) {
+        checkoutConfirmSubmit.disabled = isSubmitting;
+        checkoutConfirmSubmit.classList.toggle("is-loading", isSubmitting);
+    }
+    if (checkoutConfirmApprove) {
+        checkoutConfirmApprove.disabled = isSubmitting;
+        checkoutConfirmApprove.classList.toggle("is-loading", isSubmitting);
+    }
 };
 
 const getFieldLabel = (field) => {
@@ -1732,12 +2337,19 @@ const enhanceRegisterForm = () => {
     });
 };
 
+syncViewportHeightVariable();
+window.visualViewport?.addEventListener("resize", syncViewportHeightVariable);
+window.visualViewport?.addEventListener("scroll", syncViewportHeightVariable);
+window.addEventListener("resize", syncViewportHeightVariable);
+
 passwordVisibilityToggles.forEach(enhancePasswordVisibilityToggle);
 syrianPhoneInputs.forEach(enhanceSyrianPhoneInput);
 syrianPhoneControls.forEach(enhanceSyrianPhoneControl);
 deliveryAreaGroups.forEach(enhanceDeliveryAreaGroup);
 dashboardSubAreaFormsets.forEach(enhanceDashboardSubAreaFormset);
 dashboardDeliveryAreaForms.forEach(enhanceDashboardDeliveryAreaForm);
+dashboardProductOptionPanels.forEach(enhanceDashboardProductOptionsPanel);
+dashboardCompanyFormsets.forEach(enhanceDashboardCompanyFormset);
 expectedTimePresetButtons.forEach((button) => {
     button.addEventListener("click", () => {
         const form = button.closest("form");
@@ -1958,6 +2570,7 @@ productCards.forEach((card) => {
         }
 
         event.preventDefault();
+        event.stopPropagation();
         openProductModal(card);
     });
 });
@@ -1968,14 +2581,14 @@ quantityControls.forEach((control) => {
     const increaseButton = control.querySelector("[data-quantity-increase]");
 
     decreaseButton?.addEventListener("click", () => {
-        setQuantityValue(input, getQuantityValue(input) - 1);
+        setQuantityValue(input, getQuantityValue(input) - Number(input?.step || 1));
         if (productModalForm?.contains(input)) {
             syncProductModalTotal();
         }
     });
 
     increaseButton?.addEventListener("click", () => {
-        setQuantityValue(input, getQuantityValue(input) + 1);
+        setQuantityValue(input, getQuantityValue(input) + Number(input?.step || 1));
         if (productModalForm?.contains(input)) {
             syncProductModalTotal();
         }
@@ -1993,6 +2606,7 @@ quantityControls.forEach((control) => {
             syncProductModalTotal();
         }
     });
+    setQuantityValue(input, input?.value);
 });
 
 productOptionInputs.forEach((input) => {
@@ -2013,6 +2627,19 @@ if (productOptionsSubmit && productOptionInputs.length) {
         productDetailPrice.textContent = checkedOption.dataset.optionPrice;
     }
 }
+
+dashboardColumnFilters.forEach((filter) => {
+    filter.addEventListener("toggle", () => {
+        if (!filter.open) {
+            return;
+        }
+        dashboardColumnFilters.forEach((otherFilter) => {
+            if (otherFilter !== filter) {
+                otherFilter.open = false;
+            }
+        });
+    });
+});
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -2052,11 +2679,28 @@ dashboardDrawer?.querySelectorAll("nav a").forEach((link) => {
 });
 
 dashboardHasOptionsInput?.addEventListener("change", syncDashboardProductOptionsPanel);
+dashboardProductTypeInput?.addEventListener("change", syncDashboardProductOptionsPanel);
 syncDashboardProductOptionsPanel();
 
 excelModalOpen?.addEventListener("click", () => setExcelModalOpen(true));
 excelModalClosers.forEach((closer) => {
     closer.addEventListener("click", () => setExcelModalOpen(false));
+});
+cartNoteOpeners.forEach((button) => {
+    button.addEventListener("click", () => openCartNoteModal(button));
+});
+cartNoteDeleteButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        submitCartNote({
+            action: button.dataset.noteAction || "",
+            note: "",
+            card: button.closest("[data-cart-item]"),
+            submitButton: button,
+        });
+    });
+});
+cartNoteModalClosers.forEach((closer) => {
+    closer.addEventListener("click", () => setCartNoteModalOpen(false));
 });
 orderModalOpeners.forEach((opener) => {
     opener.addEventListener("click", () => {
@@ -2101,16 +2745,36 @@ checkoutAddressOptions.forEach((input) => {
         if (input.tagName === "SELECT") {
             input.dataset.previousAddressValue = input.value;
         }
-        if (checkoutDeliveryFee && selectedOption?.dataset.deliveryFeeDisplay) {
-            checkoutDeliveryFee.textContent = selectedOption.dataset.deliveryFeeDisplay;
-        }
-        if (checkoutGrandTotal && selectedOption?.dataset.grandTotalDisplay) {
-            checkoutGrandTotal.textContent = selectedOption.dataset.grandTotalDisplay;
-        }
+        syncCheckoutTotals();
     };
 
     input.addEventListener("input", handleCheckoutAddressChange);
     input.addEventListener("change", handleCheckoutAddressChange);
+});
+checkoutServiceOptions.forEach((input) => {
+    input.addEventListener("change", syncCheckoutTotals);
+});
+syncCheckoutTotals();
+checkoutConfirmClosers.forEach((closer) => {
+    closer.addEventListener("click", () => setCheckoutConfirmModalOpen(false));
+});
+checkoutConfirmForm?.addEventListener("submit", (event) => {
+    if (checkoutConfirmForm.dataset.confirmed === "true") {
+        setCheckoutSubmitting(true);
+        return;
+    }
+
+    event.preventDefault();
+    setCheckoutConfirmModalOpen(true);
+});
+checkoutConfirmApprove?.addEventListener("click", () => {
+    if (!checkoutConfirmForm || checkoutConfirmApprove.disabled) {
+        return;
+    }
+
+    checkoutConfirmForm.dataset.confirmed = "true";
+    setCheckoutSubmitting(true);
+    checkoutConfirmForm.requestSubmit();
 });
 syncModalOpenState();
 
@@ -2132,6 +2796,7 @@ homeTabs.forEach((tab) => {
 cartForms.forEach(enhanceCartForm);
 cartQuantityForms.forEach(enhanceCartQuantityForm);
 cartRemoveForms.forEach(enhanceCartRemoveForm);
+cartNoteForms.forEach(enhanceCartNoteForm);
 enhanceRegisterForm();
 
 syncCartState();

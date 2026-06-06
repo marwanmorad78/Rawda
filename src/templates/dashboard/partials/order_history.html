@@ -103,8 +103,19 @@
                                 {% for item in order.items.all %}
                                     <tr>
                                         <td>{{ item.category_label }}</td>
-                                        <td><strong>{{ item.title }}</strong></td>
-                                        <td>{{ item.quantity }}</td>
+                                        <td>
+                                            <strong>{{ item.title }}</strong>
+                                            {% if item.company_label %}
+                                                <div class="product-category">{{ dashboard_ui.company }}: {{ item.company_label }}</div>
+                                            {% endif %}
+                                            {% if item.selected_option_label %}
+                                                <div class="product-category">{{ dashboard_ui.selected_option }}: {{ item.selected_option_label }}</div>
+                                            {% endif %}
+                                            {% if item.note %}
+                                                <div class="product-category">{{ dashboard_ui.item_note }}: {{ item.note }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.display_quantity }}</td>
                                         <td>{{ item.display_unit_price }}</td>
                                         <td>{{ item.display_line_total }}</td>
                                     </tr>
@@ -158,8 +169,17 @@
                                         <td>
                                             <div class="product-category">{{ item.category_label }}</div>
                                             <strong>{{ item.title }}</strong>
+                                            {% if item.company_label %}
+                                                <div class="product-category">{{ dashboard_ui.company }}: {{ item.company_label }}</div>
+                                            {% endif %}
+                                            {% if item.selected_option_label %}
+                                                <div class="product-category">{{ dashboard_ui.selected_option }}: {{ item.selected_option_label }}</div>
+                                            {% endif %}
+                                            {% if item.note %}
+                                                <div class="product-category">{{ dashboard_ui.item_note }}: {{ item.note }}</div>
+                                            {% endif %}
                                         </td>
-                                        <td>{{ item.quantity }}</td>
+                                        <td>{{ item.display_quantity }}</td>
                                         <td>{{ item.display_line_total }}</td>
                                     </tr>
                                 {% endfor %}

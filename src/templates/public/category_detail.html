@@ -13,7 +13,29 @@
 
 <section class="section">
     <div class="container">
-        {% if products %}
+        {% if subcategories %}
+        <div class="subcategory-grid">
+            {% for subcategory in subcategories %}
+                <a class="subcategory-card" href="{{ subcategory.get_absolute_url }}" aria-label="{{ ui.explore }} {{ subcategory.display_name }}">
+                    <span class="subcategory-card-media">
+                        {% if subcategory.cover_image %}
+                            <img src="{{ subcategory.cover_image.url }}" alt="{{ subcategory.display_name }}">
+                        {% elif subcategory.external_image_url %}
+                            <img src="{{ subcategory.external_image_url }}" alt="{{ subcategory.display_name }}">
+                        {% else %}
+                            <span class="subcategory-card-placeholder">{{ subcategory.display_name|slice:":1" }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="subcategory-card-content">
+                        <strong>{{ subcategory.display_name }}</strong>
+                        {% if subcategory.display_description %}
+                            <small>{{ subcategory.display_description }}</small>
+                        {% endif %}
+                    </span>
+                </a>
+            {% endfor %}
+        </div>
+        {% elif products %}
         <div class="category-product-section" data-category-product-section>
             <form class="category-product-search" role="search" data-category-product-search>
                 <label>
@@ -31,19 +53,23 @@
             <div class="product-grid">
             {% for product in products %}
                 <article
-                    class="product-card"
+                    class="product-card{% if not product.is_available %} unavailable{% endif %}"
                     data-product-card
+                    data-product-available="{{ product.is_available|yesno:'true,false' }}"
                     data-product-title="{{ product.display_name }}"
                     data-product-description="{{ product.display_short_description}}"
                     data-product-category="{{ category.display_name }}"
                     data-product-price="{{ product.display_price }}"
+                    data-product-unit-price="{{ product.effective_price }}"
+                    data-product-sold-by-weight="{{ product.effective_sold_by_weight|yesno:'true,false' }}"
                     data-product-action="{% url 'catalog:add-to-cart' product.slug %}"
                     data-product-url="{{ product.get_absolute_url }}"
+                    data-product-type="{{ product.product_type }}"
                     data-product-has-options="{{ product.has_options|yesno:'true,false' }}"
                     data-product-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
                 >
                     <div class="product-image">
-                        <a href="{{ product.get_absolute_url }}" data-product-trigger aria-label="{{ product.display_name }}">
+                        <a href="{{ product.get_absolute_url }}"{% if product.is_available %} data-product-trigger{% endif %} aria-label="{{ product.display_name }}">
                             {% if product.primary_image %}
                                 <img src="{{ product.primary_image.url }}" alt="{{ product.display_name }}">
                             {% elif product.external_image_url %}
@@ -58,9 +84,14 @@
                         <div class="product-meta">
                             <strong>{{ product.display_price }}</strong>
                         </div>
-                        {% if not request.user.is_authenticated %}
+                        {% if not product.is_available %}
+                            <div class="inline-form product-option-action">
+                                <span class="product-unavailable-badge">{{ ui.product_unavailable }}</span>
+                                <button type="button" class="btn btn-primary btn-small full-width" disabled>{{ ui.product_unavailable }}</button>
+                            </div>
+                        {% elif not request.user.is_authenticated %}
                             <button type="button" class="btn btn-primary btn-small full-width" data-product-trigger>{{ ui.view_details }}</button>
-                        {% elif product.has_options %}
+                        {% elif product.has_options or product.is_company_grouped %}
                             <div class="inline-form product-option-action">
                                 <div class="product-option-placeholder" style="min-height: 4.35rem;" aria-hidden="true"></div>
                                 <button type="button" class="btn btn-primary btn-small full-width" data-product-trigger>{{ ui.view_details }}</button>
@@ -77,9 +108,14 @@
                                 {% csrf_token %}
                                 <label class="quantity-field compact">
                                     <span>{{ ui.qty }}</span>
-                                    <span class="quantity-stepper" data-quantity-control>
+                                    <span class="quantity-stepper" data-quantity-control{% if product.effective_sold_by_weight %} data-weight-control{% endif %}>
                                         <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
-                                        <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                        {% if product.effective_sold_by_weight %}
+                                            <input type="hidden" name="quantity" value="0.5" min="0.5" max="10" step="0.5">
+                                            <output data-quantity-display>500 {% if current_language == "ar" %}غ{% else %}g{% endif %}</output>
+                                        {% else %}
+                                            <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                        {% endif %}
                                         <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
                                     </span>
                                 </label>
@@ -93,8 +129,29 @@
                                     data-option-id="{{ option.id }}"
                                     data-option-name="{{ option.name }}"
                                     data-option-price="{{ option.display_price }}"
+                                    data-option-unit-price="{{ option.effective_price }}"
                                     data-option-default="{{ option.is_default|yesno:'true,false' }}"
+                                    data-option-available="{{ option.is_available|yesno:'true,false' }}"
                                 ></span>
+                            {% endfor %}
+                        </div>
+                        <div data-product-companies-source hidden>
+                            {% for company in product.prefetched_companies %}
+                                <div
+                                    data-company-id="{{ company.id }}"
+                                    data-company-name="{{ company.name }}"
+                                    data-company-logo="{% if company.logo %}{{ company.logo.url }}{% elif company.external_logo_url %}{{ company.external_logo_url }}{% endif %}"
+                                >
+                                    {% for option in company.prefetched_options %}
+                                        <span
+                                            data-company-option-id="{{ option.id }}"
+                                            data-company-option-name="{{ option.name }}"
+                                            data-company-option-price="{{ option.display_price }}"
+                                            data-company-option-unit-price="{{ option.effective_price }}"
+                                            data-company-option-available="{{ option.is_available|yesno:'true,false' }}"
+                                        ></span>
+                                    {% endfor %}
+                                </div>
                             {% endfor %}
                         </div>
                     </div>

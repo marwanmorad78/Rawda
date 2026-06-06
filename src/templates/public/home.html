@@ -148,7 +148,7 @@
         </div>
         <div class="home-shelf-list" id="categories">
             {% for category in categories %}
-                {% if category.home_products %}
+                {% if category.home_subcategories or category.home_products %}
                     <section class="home-category-shelf" id="category-{{ category.slug }}" data-animate="card" style="--stagger: {{ forloop.counter0 }};">
                         <div class="home-shelf-header">
                             <h3>قسم {{ category.display_name }}</h3>
@@ -159,21 +159,44 @@
 
                         <div class="home-shelf-scroller" data-home-shelf-scroller tabindex="0" aria-label="قسم {{ category.display_name }}">
                             <div class="home-shelf-row" data-home-shelf-row>
+                                {% if category.home_subcategories %}
+                                    {% for subcategory in category.home_subcategories %}
+                                        <a class="home-subcategory-card" href="{{ subcategory.get_absolute_url }}" aria-label="{{ ui.explore }} {{ subcategory.display_name }}">
+                                            <div class="home-subcategory-media">
+                                                {% if subcategory.cover_image %}
+                                                    <img src="{{ subcategory.cover_image.url }}" alt="{{ subcategory.display_name }}">
+                                                {% elif subcategory.external_image_url %}
+                                                    <img src="{{ subcategory.external_image_url }}" alt="{{ subcategory.display_name }}">
+                                                {% else %}
+                                                    <span class="home-subcategory-placeholder">{{ subcategory.display_name|slice:":1" }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="home-subcategory-body">
+                                                <h4>{{ subcategory.display_name }}</h4>
+                                                <span class="home-subcategory-button">&#1593;&#1585;&#1590; &#1575;&#1604;&#1571;&#1589;&#1606;&#1575;&#1601;</span>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                {% else %}
                                 {% for product in category.home_products %}
                                     <article
-                                        class="product-card home-product-card home-shelf-product-card"
+                                        class="product-card home-product-card home-shelf-product-card{% if not product.is_available %} unavailable{% endif %}"
                                         data-product-card
+                                        data-product-available="{{ product.is_available|yesno:'true,false' }}"
                                         data-product-title="{{ product.display_name }}"
                                         data-product-description="{{ product.display_short_description|default:ui.product_fallback }}"
                                         data-product-category="{{ category.display_name }}"
                                         data-product-price="{{ product.display_price }}"
+                                        data-product-unit-price="{{ product.effective_price }}"
+                                        data-product-sold-by-weight="{{ product.effective_sold_by_weight|yesno:'true,false' }}"
                                         data-product-action="{% url 'catalog:add-to-cart' product.slug %}"
                                         data-product-url="{{ product.get_absolute_url }}"
+                                        data-product-type="{{ product.product_type }}"
                                         data-product-has-options="{{ product.has_options|yesno:'true,false' }}"
                                         data-product-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
                                     >
                                         <div class="home-shelf-product-media">
-                                            <a href="{{ product.get_absolute_url }}" aria-label="{{ product.display_name }}" data-product-trigger>
+                                            <a href="{{ product.get_absolute_url }}" aria-label="{{ product.display_name }}"{% if product.is_available %} data-product-trigger{% endif %}>
                                                 {% if product.primary_image %}
                                                     <img src="{{ product.primary_image.url }}" alt="{{ product.display_name }}">
                                                 {% elif product.external_image_url %}
@@ -183,7 +206,10 @@
                                                 {% endif %}
                                             </a>
 
-                                            {% if request.user.is_authenticated and not product.has_options %}
+                                            {% if not product.is_available %}
+                                                <span class="product-unavailable-badge">{{ ui.product_unavailable }}</span>
+                                                <button type="button" class="home-shelf-add-button" disabled aria-label="{{ ui.product_unavailable }}">+</button>
+                                            {% elif request.user.is_authenticated and not product.has_options and not product.is_company_grouped and not product.effective_sold_by_weight %}
                                                 <form
                                                     method="post"
                                                     action="{% url 'catalog:add-to-cart' product.slug %}"
@@ -213,12 +239,34 @@
                                                     data-option-id="{{ option.id }}"
                                                     data-option-name="{{ option.name }}"
                                                     data-option-price="{{ option.display_price }}"
+                                                    data-option-unit-price="{{ option.effective_price }}"
                                                     data-option-default="{{ option.is_default|yesno:'true,false' }}"
+                                                    data-option-available="{{ option.is_available|yesno:'true,false' }}"
                                                 ></span>
+                                            {% endfor %}
+                                        </div>
+                                        <div data-product-companies-source hidden>
+                                            {% for company in product.prefetched_companies %}
+                                                <div
+                                                    data-company-id="{{ company.id }}"
+                                                    data-company-name="{{ company.name }}"
+                                                    data-company-logo="{% if company.logo %}{{ company.logo.url }}{% elif company.external_logo_url %}{{ company.external_logo_url }}{% endif %}"
+                                                >
+                                                    {% for option in company.prefetched_options %}
+                                                        <span
+                                                            data-company-option-id="{{ option.id }}"
+                                                            data-company-option-name="{{ option.name }}"
+                                                            data-company-option-price="{{ option.display_price }}"
+                                                            data-company-option-unit-price="{{ option.effective_price }}"
+                                                            data-company-option-available="{{ option.is_available|yesno:'true,false' }}"
+                                                        ></span>
+                                                    {% endfor %}
+                                                </div>
                                             {% endfor %}
                                         </div>
                                     </article>
                                 {% endfor %}
+                                {% endif %}
                             </div>
                         </div>
                     </section>

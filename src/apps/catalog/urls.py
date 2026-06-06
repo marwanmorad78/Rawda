@@ -4,6 +4,7 @@ from .views import (
     AddOfferToCartView,
     AddToCartView,
     CartDetailView,
+    CartNoteUpdateView,
     CartRemoveView,
     CartUpdateView,
     CategoryDetailView,
@@ -18,6 +19,7 @@ app_name = "catalog"
 
 urlpatterns = [
     path("cart/", CartDetailView.as_view(), name="cart"),
+    path("checkout/", InvoiceView.as_view(), name="checkout"),
     path("checkout/service/", CheckoutServiceView.as_view(), name="checkout-service"),
     path("checkout/address/", CheckoutAddressView.as_view(), name="checkout-address"),
     path("invoice/", InvoiceView.as_view(), name="invoice"),
@@ -25,7 +27,9 @@ urlpatterns = [
     path("products/<slug:slug>/add-to-cart/", AddToCartView.as_view(), name="add-to-cart"),
     path("offers/<slug:slug>/add-to-cart/", AddOfferToCartView.as_view(), name="add-offer-to-cart"),
     path("cart/items/<str:item_type>/<int:item_id>/update/", CartUpdateView.as_view(), name="cart-update"),
+    path("cart/items/<str:item_type>/<int:item_id>/note/", CartNoteUpdateView.as_view(), name="cart-note"),
     path("cart/items/<str:item_type>/<int:item_id>/remove/", CartRemoveView.as_view(), name="cart-remove"),
-    path("categories/<slug:slug>/", CategoryDetailView.as_view(), name="category-detail"),
+    path("category/<slug:slug>/", CategoryDetailView.as_view(), name="category-detail"),
+    path("categories/<slug:slug>/", CategoryDetailView.as_view(), name="category-detail-legacy"),
     path("products/<slug:slug>/", ProductDetailView.as_view(), name="product-detail"),
 ]

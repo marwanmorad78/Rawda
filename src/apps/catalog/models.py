@@ -1,5 +1,6 @@
 import re
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -14,6 +15,10 @@ def category_upload_path(instance, filename):
 
 def product_upload_path(instance, filename):
     return f"products/{filename}"
+
+
+def company_upload_path(instance, filename):
+    return f"product-companies/{filename}"
 
 
 def gallery_upload_path(instance, filename):
@@ -33,6 +38,13 @@ def _generate_unique_slug(model_class, value, fallback_prefix, instance_pk=None)
 
 
 class Category(TimeStampedModel):
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        related_name="subcategories",
+        on_delete=models.CASCADE,
+    )
     name = models.CharField(max_length=120)
     name_ar = models.CharField(max_length=120, blank=True)
     slug = models.SlugField(max_length=140, unique=True, blank=True)
@@ -40,15 +52,45 @@ class Category(TimeStampedModel):
     description_ar = models.TextField(blank=True)
     display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
-    sold_by_weight = models.BooleanField(default=False)
-    is_price_linked_to_dollar = models.BooleanField(default=False)
+    sold_by_weight = models.BooleanField(null=True, blank=True, default=None)
+    is_price_linked_to_dollar = models.BooleanField(null=True, blank=True, default=None)
     cover_image = models.ImageField(upload_to=category_upload_path, blank=True)
     external_image_url = models.URLField(blank=True)
 
     class Meta:
         verbose_name_plural = "Categories"
         ordering = ["display_order", "name"]
-        indexes = [models.Index(fields=["is_active", "display_order"])]
+        indexes = [
+            models.Index(fields=["parent", "is_active", "display_order"]),
+            models.Index(fields=["is_active", "display_order"]),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.parent_id and self.parent_id == self.pk:
+            raise ValidationError({"parent": "A category cannot be its own parent."})
+
+        ancestor = self.parent
+        while ancestor is not None:
+            if ancestor.pk == self.pk:
+                raise ValidationError({"parent": "A category cannot use one of its subcategories as parent."})
+            ancestor = ancestor.parent
+
+    def get_effective_setting(self, field_name, default=False):
+        value = getattr(self, field_name)
+        if value is not None:
+            return value
+        if self.parent_id:
+            return self.parent.get_effective_setting(field_name, default)
+        return default
+
+    @property
+    def effective_sold_by_weight(self):
+        return self.get_effective_setting("sold_by_weight")
+
+    @property
+    def effective_is_price_linked_to_dollar(self):
+        return self.get_effective_setting("is_price_linked_to_dollar")
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -63,6 +105,13 @@ class Category(TimeStampedModel):
 
 
 class Product(TimeStampedModel):
+    PRODUCT_TYPE_NORMAL = "normal"
+    PRODUCT_TYPE_COMPANY_GROUPED = "company_grouped"
+    PRODUCT_TYPE_CHOICES = [
+        (PRODUCT_TYPE_NORMAL, "Normal product"),
+        (PRODUCT_TYPE_COMPANY_GROUPED, "Company/brand grouped product"),
+    ]
+
     BEHAVIOR_INHERIT = "inherit"
     BEHAVIOR_CUSTOM = "custom"
     BEHAVIOR_CHOICES = [
@@ -78,7 +127,12 @@ class Product(TimeStampedModel):
     short_description_ar = models.CharField(max_length=280, blank=True)
     description = models.TextField(blank=True)
     description_ar = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=0, validators=[MinValueValidator(0)])
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    product_type = models.CharField(
+        max_length=24,
+        choices=PRODUCT_TYPE_CHOICES,
+        default=PRODUCT_TYPE_NORMAL,
+    )
     price_link_mode = models.CharField(
         max_length=20,
         choices=BEHAVIOR_CHOICES,
@@ -145,17 +199,22 @@ class Product(TimeStampedModel):
     def __str__(self) -> str:
         return self.name
 
+    @property
+    def is_company_grouped(self):
+        return self.product_type == self.PRODUCT_TYPE_COMPANY_GROUPED
+
 
 class ProductOption(TimeStampedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="options")
     name = models.CharField(max_length=120)
-    price = models.DecimalField(max_digits=10, decimal_places=0, validators=[MinValueValidator(0)])
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     is_default = models.BooleanField(default=False)
+    is_available = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["display_order", "name", "id"]
-        indexes = [models.Index(fields=["product", "display_order"])]
+        indexes = [models.Index(fields=["product", "is_available", "display_order"])]
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -166,6 +225,41 @@ class ProductOption(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.product.name} - {self.name}"
+
+
+class ProductCompany(TimeStampedModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="companies")
+    name = models.CharField(max_length=120)
+    logo = models.ImageField(upload_to=company_upload_path, blank=True)
+    external_logo_url = models.URLField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Product company"
+        verbose_name_plural = "Product companies"
+        ordering = ["order", "name", "id"]
+        indexes = [models.Index(fields=["product", "is_active", "order"])]
+
+    def __str__(self) -> str:
+        return f"{self.product.name} - {self.name}"
+
+
+class ProductCompanyOption(TimeStampedModel):
+    company = models.ForeignKey(ProductCompany, on_delete=models.CASCADE, related_name="options")
+    name = models.CharField(max_length=120)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    is_available = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Product company option"
+        verbose_name_plural = "Product company options"
+        ordering = ["order", "name", "id"]
+        indexes = [models.Index(fields=["company", "is_available", "order"])]
+
+    def __str__(self) -> str:
+        return f"{self.company.name} - {self.name}"
 
 
 class ProductImage(TimeStampedModel):

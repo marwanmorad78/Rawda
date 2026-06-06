@@ -60,7 +60,7 @@
                                                         <div>{{ ui.sold_by_weight }}</div>
                                                     {% endif %}
                                                 </td>
-                                                <td>{{ item.quantity }}</td>
+                                                <td>{{ item.display_quantity }}</td>
                                                 <td>{{ item.display_unit_price }}</td>
                                                 <td>{% if item.is_weight_based %}{{ item.display_line_total_range }}{% else %}{{ item.display_line_total }}{% endif %}</td>
                                             </tr>
@@ -75,7 +75,7 @@
                             </div>
                         </div>
                         <div class="table-actions">
-                            <button type="submit" class="btn btn-primary">{{ ui.confirm_order }}</button>
+                            <button type="submit" class="btn btn-primary">{{ ui.proceed_checkout }}</button>
                         </div>
                     </form>
                 {% else %}

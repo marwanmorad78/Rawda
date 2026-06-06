@@ -1,0 +1,283 @@
+<section class="product-options-panel product-companies-panel" data-dashboard-product-companies-panel data-dashboard-company-formset{% if form.product_type.value != "company_grouped" %} hidden{% endif %}>
+    <div class="sub-area-panel-header">
+        <div>
+            <h3>{{ dashboard_ui.product_companies }}</h3>
+            <p>{{ dashboard_ui.product_companies_help }}</p>
+        </div>
+    </div>
+    {{ company_formset.management_form }}
+    {{ company_formset.non_form_errors }}
+    <div class="dashboard-company-list" data-dashboard-company-rows>
+        {% for block in company_blocks %}
+            <section class="dashboard-company-row">
+                {% for hidden in block.company_form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+                <div class="dashboard-company-fields">
+                    <div>
+                        <label>
+                            <span>{{ dashboard_ui.name }}</span>
+                            {{ block.company_form.name }}
+                        </label>
+                        {{ block.company_form.name.errors }}
+                    </div>
+                    <div>
+                        <label>
+                            <span>{{ dashboard_ui.logo }}</span>
+                            {{ block.company_form.logo }}
+                        </label>
+                        {{ block.company_form.logo.errors }}
+                    </div>
+                    <div>
+                        <label>
+                            <span>{{ dashboard_ui.external_logo_url }}</span>
+                            {{ block.company_form.external_logo_url }}
+                        </label>
+                        {{ block.company_form.external_logo_url.errors }}
+                    </div>
+                    <div>
+                        <label>
+                            <span>{{ dashboard_ui.order }}</span>
+                            {{ block.company_form.order }}
+                        </label>
+                        {{ block.company_form.order.errors }}
+                    </div>
+                    <label class="compact-checkbox">
+                        {{ block.company_form.is_active }}
+                        <span class="choice-copy">{{ dashboard_ui.available }}</span>
+                    </label>
+                    {% if block.company_form.DELETE %}
+                        <label class="compact-checkbox">
+                            {{ block.company_form.DELETE }}
+                            <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="dashboard-company-options">
+                    <h4>{{ dashboard_ui.company_options }}</h4>
+                    {{ block.option_formset.management_form }}
+                    {{ block.option_formset.non_form_errors }}
+                    <div class="dashboard-option-list" data-dashboard-company-option-rows>
+                        {% for option_form in block.option_formset %}
+                            <div class="dashboard-option-row">
+                                {% for hidden in option_form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                                <div>
+                                    <label>
+                                        <span>{{ dashboard_ui.name }}</span>
+                                        {{ option_form.name }}
+                                    </label>
+                                    {{ option_form.name.errors }}
+                                </div>
+                                <div>
+                                    <label>
+                                        <span>{{ dashboard_ui.price }}</span>
+                                        {{ option_form.price }}
+                                    </label>
+                                    {{ option_form.price.errors }}
+                                </div>
+                                <div>
+                                    <label>
+                                        <span>{{ dashboard_ui.order }}</span>
+                                        {{ option_form.order }}
+                                    </label>
+                                    {{ option_form.order.errors }}
+                                </div>
+                                <label class="compact-checkbox">
+                                    {{ option_form.is_available }}
+                                    <span class="choice-copy">{{ dashboard_ui.available }}</span>
+                                </label>
+                                {% if option_form.DELETE %}
+                                    <label class="compact-checkbox">
+                                        {{ option_form.DELETE }}
+                                        <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <template data-dashboard-company-option-empty-form>
+                        <div class="dashboard-option-row">
+                            {% for hidden in block.option_formset.empty_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            <div>
+                                <label>
+                                    <span>{{ dashboard_ui.name }}</span>
+                                    {{ block.option_formset.empty_form.name }}
+                                </label>
+                                {{ block.option_formset.empty_form.name.errors }}
+                            </div>
+                            <div>
+                                <label>
+                                    <span>{{ dashboard_ui.price }}</span>
+                                    {{ block.option_formset.empty_form.price }}
+                                </label>
+                                {{ block.option_formset.empty_form.price.errors }}
+                            </div>
+                            <div>
+                                <label>
+                                    <span>{{ dashboard_ui.order }}</span>
+                                    {{ block.option_formset.empty_form.order }}
+                                </label>
+                                {{ block.option_formset.empty_form.order.errors }}
+                            </div>
+                            <label class="compact-checkbox">
+                                {{ block.option_formset.empty_form.is_available }}
+                                <span class="choice-copy">{{ dashboard_ui.available }}</span>
+                            </label>
+                            {% if block.option_formset.empty_form.DELETE %}
+                                <label class="compact-checkbox">
+                                    {{ block.option_formset.empty_form.DELETE }}
+                                    <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </template>
+                    <button type="button" class="btn btn-secondary btn-small" data-dashboard-add-company-option>
+                        {{ dashboard_ui.add_product_option }}
+                    </button>
+                </div>
+            </section>
+        {% endfor %}
+    </div>
+    <template data-dashboard-company-empty-form>
+        <section class="dashboard-company-row">
+            {% for hidden in company_formset.empty_form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+            <div class="dashboard-company-fields">
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.name }}</span>
+                        {{ company_formset.empty_form.name }}
+                    </label>
+                    {{ company_formset.empty_form.name.errors }}
+                </div>
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.logo }}</span>
+                        {{ company_formset.empty_form.logo }}
+                    </label>
+                    {{ company_formset.empty_form.logo.errors }}
+                </div>
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.external_logo_url }}</span>
+                        {{ company_formset.empty_form.external_logo_url }}
+                    </label>
+                    {{ company_formset.empty_form.external_logo_url.errors }}
+                </div>
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.order }}</span>
+                        {{ company_formset.empty_form.order }}
+                    </label>
+                    {{ company_formset.empty_form.order.errors }}
+                </div>
+                <label class="compact-checkbox">
+                    {{ company_formset.empty_form.is_active }}
+                    <span class="choice-copy">{{ dashboard_ui.available }}</span>
+                </label>
+                {% if company_formset.empty_form.DELETE %}
+                    <label class="compact-checkbox">
+                        {{ company_formset.empty_form.DELETE }}
+                        <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                    </label>
+                {% endif %}
+            </div>
+
+            <div class="dashboard-company-options">
+                <h4>{{ dashboard_ui.company_options }}</h4>
+                {{ empty_company_option_formset.management_form }}
+                {{ empty_company_option_formset.non_form_errors }}
+                <div class="dashboard-option-list" data-dashboard-company-option-rows>
+                    {% for option_form in empty_company_option_formset %}
+                        <div class="dashboard-option-row">
+                            {% for hidden in option_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            <div>
+                                <label>
+                                    <span>{{ dashboard_ui.name }}</span>
+                                    {{ option_form.name }}
+                                </label>
+                                {{ option_form.name.errors }}
+                            </div>
+                            <div>
+                                <label>
+                                    <span>{{ dashboard_ui.price }}</span>
+                                    {{ option_form.price }}
+                                </label>
+                                {{ option_form.price.errors }}
+                            </div>
+                            <div>
+                                <label>
+                                    <span>{{ dashboard_ui.order }}</span>
+                                    {{ option_form.order }}
+                                </label>
+                                {{ option_form.order.errors }}
+                            </div>
+                            <label class="compact-checkbox">
+                                {{ option_form.is_available }}
+                                <span class="choice-copy">{{ dashboard_ui.available }}</span>
+                            </label>
+                            {% if option_form.DELETE %}
+                                <label class="compact-checkbox">
+                                    {{ option_form.DELETE }}
+                                    <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <template data-dashboard-company-option-empty-form>
+                    <div class="dashboard-option-row">
+                        {% for hidden in empty_company_option_formset.empty_form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        <div>
+                            <label>
+                                <span>{{ dashboard_ui.name }}</span>
+                                {{ empty_company_option_formset.empty_form.name }}
+                            </label>
+                            {{ empty_company_option_formset.empty_form.name.errors }}
+                        </div>
+                        <div>
+                            <label>
+                                <span>{{ dashboard_ui.price }}</span>
+                                {{ empty_company_option_formset.empty_form.price }}
+                            </label>
+                            {{ empty_company_option_formset.empty_form.price.errors }}
+                        </div>
+                        <div>
+                            <label>
+                                <span>{{ dashboard_ui.order }}</span>
+                                {{ empty_company_option_formset.empty_form.order }}
+                            </label>
+                            {{ empty_company_option_formset.empty_form.order.errors }}
+                        </div>
+                        <label class="compact-checkbox">
+                            {{ empty_company_option_formset.empty_form.is_available }}
+                            <span class="choice-copy">{{ dashboard_ui.available }}</span>
+                        </label>
+                        {% if empty_company_option_formset.empty_form.DELETE %}
+                            <label class="compact-checkbox">
+                                {{ empty_company_option_formset.empty_form.DELETE }}
+                                <span class="choice-copy">{{ dashboard_ui.delete }}</span>
+                            </label>
+                        {% endif %}
+                    </div>
+                </template>
+                <button type="button" class="btn btn-secondary btn-small" data-dashboard-add-company-option>
+                    {{ dashboard_ui.add_product_option }}
+                </button>
+            </div>
+        </section>
+    </template>
+    <button type="button" class="btn btn-secondary btn-small" data-dashboard-add-company>
+        {{ dashboard_ui.add_company }}
+    </button>
+</section>

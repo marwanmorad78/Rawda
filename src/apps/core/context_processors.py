@@ -36,5 +36,9 @@ def global_site_context(request):
         "switch_to_ar_url": with_lang_query("/language/", "ar"),
         "switch_to_en_url": with_lang_query("/language/", "en"),
         "cart_count": cart_summary["count"],
-        "cart_subtotal": cart_summary["display_subtotal"],
+        "cart_subtotal": (
+            cart_summary["display_subtotal_range"]
+            if cart_summary["has_weight_items"]
+            else cart_summary["display_subtotal"]
+        ),
     }

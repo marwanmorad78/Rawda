@@ -36,6 +36,9 @@
                 <p class="product-category">{{ ui.sold_by_weight }}</p>
             {% endif %}
             {% if product.sku %}<p><strong>{{ ui.sku }}:</strong> {{ product.sku }}</p>{% endif %}
+            {% if not product.is_available %}
+                <p class="product-unavailable-detail">{{ ui.product_unavailable }}</p>
+            {% endif %}
             {% if request.user.is_authenticated %}
                 <form
                     method="post"
@@ -46,7 +49,55 @@
                     data-cart-item-image="{% if product.primary_image %}{{ product.primary_image.url }}{% elif product.external_image_url %}{{ product.external_image_url }}{% endif %}"
                 >
                     {% csrf_token %}
-                    {% if product.has_options %}
+                    {% if product.is_company_grouped %}
+                        <fieldset class="product-company-groups product-detail-company-groups" data-product-company-options>
+                            <legend>{{ ui.choose_company }}</legend>
+                            {% for company in product.prefetched_companies %}
+                                <details class="product-company-card">
+                                    <summary class="product-company-summary">
+                                        <span class="product-company-logo">
+                                            {% if company.logo %}
+                                                <img src="{{ company.logo.url }}" alt="{{ company.name }}">
+                                            {% elif company.external_logo_url %}
+                                                <img src="{{ company.external_logo_url }}" alt="{{ company.name }}">
+                                            {% else %}
+                                                <span>{{ company.name|slice:":1" }}</span>
+                                            {% endif %}
+                                        </span>
+                                        <strong>{{ company.name }}</strong>
+                                        <span class="product-company-arrow" aria-hidden="true">v</span>
+                                    </summary>
+                                    <div class="product-company-options">
+                                        {% for option in company.prefetched_options %}
+                                            <label class="product-option-card product-company-option-row">
+                                                <input
+                                                    type="radio"
+                                                    name="company_option_id"
+                                                    value="{{ option.id }}"
+                                                    data-option-price="{{ option.display_price }}"
+                                                    data-option-unit-price="{{ option.effective_price }}"
+                                                    {% if not option.is_available or not product.is_available %}disabled{% endif %}
+                                                    required
+                                                >
+                                                <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                                <span class="choice-copy">
+                                                    <strong>{{ option.name }}</strong>
+                                                    <small>{{ option.display_price }}</small>
+                                                    {% if not option.is_available %}
+                                                        <em>{{ ui.option_unavailable }}</em>
+                                                    {% endif %}
+                                                </span>
+                                            </label>
+                                        {% empty %}
+                                            <p class="field-errors">{{ ui.product_options_unavailable }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </details>
+                            {% empty %}
+                                <p class="field-errors">{{ ui.product_options_unavailable }}</p>
+                            {% endfor %}
+                        </fieldset>
+                    {% elif product.has_options %}
                         <fieldset class="product-options" data-product-options>
                             <legend>{{ ui.product_options }}</legend>
                             {% for option in product.prefetched_options %}
@@ -56,13 +107,18 @@
                                         name="option_id"
                                         value="{{ option.id }}"
                                         data-option-price="{{ option.display_price }}"
-                                        {% if option.is_default %}checked{% endif %}
+                                        data-option-unit-price="{{ option.effective_price }}"
+                                        {% if option.is_default and option.is_available and product.is_available %}checked{% endif %}
+                                        {% if not option.is_available or not product.is_available %}disabled{% endif %}
                                         required
                                     >
                                     <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
                                     <span class="choice-copy">
                                         <strong>{{ option.name }}</strong>
                                         <small>{{ option.display_price }}</small>
+                                        {% if not option.is_available %}
+                                            <em>{{ ui.option_unavailable }}</em>
+                                        {% endif %}
                                     </span>
                                 </label>
                             {% empty %}
@@ -72,9 +128,14 @@
                     {% endif %}
                     <label class="quantity-field">
                         <span>{{ ui.qty }}</span>
-                        <span class="quantity-stepper" data-quantity-control>
+                        <span class="quantity-stepper" data-quantity-control{% if product.effective_sold_by_weight %} data-weight-control{% endif %}>
                             <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
-                            <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                            {% if product.effective_sold_by_weight %}
+                                <input type="hidden" name="quantity" value="0.5" min="0.5" max="10" step="0.5">
+                                <output data-quantity-display>500 {% if current_language == "ar" %}غ{% else %}g{% endif %}</output>
+                            {% else %}
+                                <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                            {% endif %}
                             <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
                         </span>
                     </label>
@@ -84,7 +145,7 @@
                             type="submit"
                             class="btn btn-primary"
                             data-product-options-submit
-                            {% if product.has_options and not product.prefetched_options %}disabled{% endif %}
+                            {% if not product.is_available or product.has_options and not product.prefetched_options or product.is_company_grouped %}disabled{% endif %}
                         >{{ ui.add_to_cart }}</button>
                     </div>
                 </form>
@@ -102,13 +163,17 @@
         <div class="product-grid">
             {% for item in related_products %}
                 <article
-                    class="product-card"
+                    class="product-card{% if not item.is_available %} unavailable{% endif %}"
                     data-product-card
+                    data-product-available="{{ item.is_available|yesno:'true,false' }}"
                     data-product-title="{{ item.display_name }}"
                     data-product-description="{{ item.display_short_description|default:ui.related_fallback }}"
                     data-product-category="{{ product.category.display_name }}"
                     data-product-price="{{ item.display_price }}"
+                    data-product-unit-price="{{ item.effective_price }}"
+                    data-product-sold-by-weight="{{ item.effective_sold_by_weight|yesno:'true,false' }}"
                     data-product-action="{% url 'catalog:add-to-cart' item.slug %}"
+                    data-product-type="{{ item.product_type }}"
                     data-product-has-options="{{ item.has_options|yesno:'true,false' }}"
                     data-product-image="{% if item.primary_image %}{{ item.primary_image.url }}{% elif item.external_image_url %}{{ item.external_image_url }}{% endif %}"
                 >
@@ -125,8 +190,29 @@
                                     data-option-id="{{ option.id }}"
                                     data-option-name="{{ option.name }}"
                                     data-option-price="{{ option.display_price }}"
+                                    data-option-unit-price="{{ option.effective_price }}"
                                     data-option-default="{{ option.is_default|yesno:'true,false' }}"
+                                    data-option-available="{{ option.is_available|yesno:'true,false' }}"
                                 ></span>
+                            {% endfor %}
+                        </div>
+                        <div data-product-companies-source hidden>
+                            {% for company in item.prefetched_companies %}
+                                <div
+                                    data-company-id="{{ company.id }}"
+                                    data-company-name="{{ company.name }}"
+                                    data-company-logo="{% if company.logo %}{{ company.logo.url }}{% elif company.external_logo_url %}{{ company.external_logo_url }}{% endif %}"
+                                >
+                                    {% for option in company.prefetched_options %}
+                                        <span
+                                            data-company-option-id="{{ option.id }}"
+                                            data-company-option-name="{{ option.name }}"
+                                            data-company-option-price="{{ option.display_price }}"
+                                            data-company-option-unit-price="{{ option.effective_price }}"
+                                            data-company-option-available="{{ option.is_available|yesno:'true,false' }}"
+                                        ></span>
+                                    {% endfor %}
+                                </div>
                             {% endfor %}
                         </div>
                     </div>

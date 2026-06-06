@@ -5,7 +5,7 @@ from django.utils import timezone
 from apps.catalog.cart import build_cart
 from apps.core.localization import format_price_range, format_syp, get_language
 from apps.core.models import CenterStatus, CustomerOrder, CustomerOrderItem
-from apps.core.pricing import round_money
+from apps.core.pricing import round_money, round_to_nearest_ten
 from apps.core.services import mark_order_accepted
 
 
@@ -50,8 +50,8 @@ def build_checkout_summary(request, address=None, service_type=CustomerOrder.SER
     language = get_language(request)
     cart = build_cart(request)
     delivery_fee = get_delivery_fee(address, service_type)
-    total_min = round_money(cart["subtotal_min"] + delivery_fee)
-    total_max = round_money(cart["subtotal_max"] + delivery_fee)
+    total_min = round_to_nearest_ten(cart["subtotal_min"] + delivery_fee)
+    total_max = round_to_nearest_ten(cart["subtotal_max"] + delivery_fee)
     return {
         "cart": cart,
         "service_type": service_type,
@@ -104,10 +104,18 @@ def create_order_from_checkout(profile, address, checkout_summary):
         [
             CustomerOrderItem(
                 order=order,
+                product_id=item.get("product_id") or (
+                    item["item_id"] if item["item_type"] == "product" else None
+                ),
+                company_id=item.get("company_id"),
+                selected_option_id=item.get("selected_option_id"),
                 item_type=item["item_type"],
                 cart_item_id=item["item_id"],
                 title=item["title"],
                 category_label=item["category_label"],
+                company_label=item.get("company_label", ""),
+                selected_option_label=item.get("option_label", "") if item.get("company_label") else "",
+                note=item.get("note", ""),
                 quantity=item["quantity"],
                 unit_label=item.get("unit_label", ""),
                 unit_price=item["unit_price"],

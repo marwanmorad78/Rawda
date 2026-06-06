@@ -1,78 +1,133 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ ui.invoice }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
+{% block title %}{{ ui.proceed_checkout }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
+{% block body_class %}checkout-page{% endblock %}
 
 {% block content %}
-<section class="page-hero compact">
+<section class="page-hero compact checkout-hero">
     <div class="container">
-        <span class="eyebrow">{{ ui.invoice }}</span>
-        <h1>{{ ui.invoice_heading }}</h1>
-        <p>{{ ui.currency_name }}</p>
+        <span class="eyebrow">{{ ui.cart }}</span>
+        <h1>{{ ui.proceed_checkout }}</h1>
     </div>
 </section>
 
-<section class="section">
+<section class="section checkout-page-section">
     <div class="container">
         {% if cart.items %}
-            <section class="panel invoice-panel">
-                <div class="invoice-meta">
-                    <div>
-                        <h2>{{ site_settings.display_store_name|default:ui.store_name_default }}</h2>
-                        <p>{{ site_settings.display_address }}</p>
-                        <p>{{ site_settings.primary_phone }}</p>
+            <form
+                method="post"
+                action="{% url 'catalog:checkout-confirm' %}"
+                class="checkout-flow"
+                data-checkout-flow
+                data-checkout-confirm-form
+                data-pickup-total="{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}"
+                data-pickup-fee="{{ ui.free_delivery }}"
+            >
+                {% csrf_token %}
+                <section class="checkout-summary-card" aria-label="{{ ui.review_order }}">
+                    <div class="checkout-card-header">
+                        <span class="eyebrow">{{ ui.review_order }}</span>
+                        <h2>{{ ui.total }}</h2>
                     </div>
-                    <div>
-                        <p><strong>{{ ui.invoice_number }}:</strong> {{ invoice_number }}</p>
-                        <p><strong>{{ ui.invoice_date }}:</strong> {{ invoice_date|date:"Y-m-d H:i" }}</p>
-                        <p><strong>{{ ui.fulfillment_method }}:</strong> {% if is_delivery %}{{ ui.delivery }}{% else %}{{ ui.pickup }}{% endif %}</p>
-                        {% if is_delivery %}
-                            <p><strong>{{ ui.delivery_address }}:</strong> {{ address_snapshot }}</p>
-                            <p><a href="{% url 'catalog:checkout-address' %}">{{ ui.edit }}</a></p>
+
+                    {% if cart.has_weight_items %}
+                        <p class="invoice-note">{{ ui.weighted_estimate_notice }}</p>
+                    {% endif %}
+
+                    <div class="checkout-item-list">
+                        {% for item in cart.items %}
+                            <article class="checkout-item-row">
+                                <div>
+                                    <span class="cart-category-badge">{{ item.category_label }}</span>
+                                    <strong>{{ item.title }}</strong>
+                                    {% if item.company_label %}
+                                        <small>{{ ui.company }}: {{ item.company_label }}</small>
+                                    {% endif %}
+                                    {% if item.company_label and item.option_label %}
+                                        <small>{{ ui.selected_option }}: {{ item.option_label }}</small>
+                                    {% endif %}
+                                    {% if item.is_weight_based %}
+                                        <small>{{ ui.sold_by_weight }}</small>
+                                    {% endif %}
+                                </div>
+                                <span>{{ item.display_quantity }} × {{ item.display_unit_price }}</span>
+                                <strong>{% if item.is_weight_based %}{{ item.display_line_total_range }}{% else %}{{ item.display_line_total }}{% endif %}</strong>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="checkout-summary-card checkout-payment-card">
+                    <div class="checkout-card-header">
+                        <span class="eyebrow">{{ ui.fulfillment_method }}</span>
+                        <h2>{{ ui.final_total }}</h2>
+                    </div>
+
+                    <fieldset class="choice-fieldset cart-service-fieldset">
+                        <legend>{{ ui.fulfillment_method }}</legend>
+                        <div class="cart-service-options">
+                            <label class="cart-service-card">
+                                <input type="radio" name="service_type" value="pickup" data-checkout-service-option {% if is_pickup %}checked{% endif %}>
+                                <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                <span>
+                                    <strong>{{ ui.pickup }}</strong>
+                                    <small>{{ ui.pickup_help }}</small>
+                                </span>
+                            </label>
+                            <label class="cart-service-card">
+                                <input type="radio" name="service_type" value="delivery" data-checkout-service-option {% if is_delivery %}checked{% endif %}>
+                                <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
+                                <span>
+                                    <strong>{{ ui.delivery }}</strong>
+                                    <small>{{ ui.delivery_help }}</small>
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div class="checkout-address-panel" data-checkout-address-panel{% if not is_delivery %} hidden{% endif %}>
+                        {% if addresses %}
+                            <label for="checkout-address-select" class="field-label">{{ ui.delivery_address }}</label>
+                            <select id="checkout-address-select" name="address" data-checkout-address-option>
+                                {% for address in addresses %}
+                                    <option
+                                        value="{{ address.pk }}"
+                                        data-delivery-fee-display="{% if address.is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ address.display_delivery_fee }}{% endif %}"
+                                        data-grand-total-display="{{ address.display_checkout_total }}"
+                                        {% if selected_address_id|stringformat:"s" == address.pk|stringformat:"s" %}selected{% endif %}
+                                    >
+                                        {{ address.area.name }}{% if address.sub_area %} - {{ address.sub_area.name }}{% endif %} - {{ address.street_address }}{% if address.is_default %} ({{ ui.default_badge }}){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <a href="{% url 'catalog:checkout-address' %}" class="checkout-address-link">{{ ui.change_address }}</a>
+                        {% else %}
+                            <p class="cart-weight-note">{{ ui.add_address_before_checkout }}</p>
+                            <a href="{% url 'catalog:checkout-address' %}" class="btn btn-secondary full-width">{{ ui.add_new_address }}</a>
                         {% endif %}
-                        <p><strong>{{ ui.delivery_fee }}:</strong> {% if is_pickup %}{{ ui.free_delivery }}{% elif is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ display_delivery_fee }}{% endif %}</p>
                     </div>
-                </div>
-                {% if cart.has_weight_items %}
-                    <p class="invoice-note">{{ ui.weighted_estimate_notice }}</p>
-                {% endif %}
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>{{ ui.category }}</th>
-                                <th>{{ ui.qty }}</th>
-                                <th>{{ ui.price }}</th>
-                                <th>{{ ui.total }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in cart.items %}
-                                <tr>
-                                    <td>
-                                        <div class="product-category">{{ item.category_label }}</div>
-                                        <strong>{{ item.title }}</strong>
-                                        {% if item.is_weight_based %}
-                                            <div>{{ ui.sold_by_weight }}</div>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>{{ item.display_unit_price }}</td>
-                                    <td>{% if item.is_weight_based %}{{ item.display_line_total_range }}{% else %}{{ item.display_line_total }}{% endif %}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="invoice-summary-grid">
-                    <p><strong>{{ ui.subtotal }}:</strong> {% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</p>
-                    <p><strong>{{ ui.delivery_fee }}:</strong> {% if is_pickup %}{{ ui.free_delivery }}{% elif is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ display_delivery_fee }}{% endif %}</p>
-                    <p class="invoice-total"><strong>{{ ui.grand_total }}:</strong> {{ display_total }}</p>
-                </div>
-                <form method="post" action="{% url 'catalog:checkout-confirm' %}" class="stack-form">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">{{ ui.confirm_order }}</button>
-                </form>
-            </section>
+
+                    <div class="checkout-total-panel">
+                        <p>
+                            <span>{{ ui.subtotal }}</span>
+                            <strong data-checkout-subtotal>{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</strong>
+                        </p>
+                        <p>
+                            <span>{{ ui.delivery_fee }}</span>
+                            <strong data-checkout-delivery-fee>{% if is_pickup or is_free_delivery %}{{ ui.free_delivery }}{% else %}{{ display_delivery_fee }}{% endif %}</strong>
+                        </p>
+                        <p class="checkout-grand-total">
+                            <span>{{ ui.grand_total }}</span>
+                            <strong data-checkout-grand-total>{{ display_total }}</strong>
+                        </p>
+                    </div>
+
+                    <div class="checkout-confirm-actions">
+                        <a href="{% url 'catalog:cart' %}" class="btn btn-secondary">{{ ui.go_to_cart }}</a>
+                        <button type="submit" class="btn btn-primary checkout-confirm-button" data-checkout-confirm-submit>{{ ui.confirm_order }}</button>
+                    </div>
+                </section>
+            </form>
         {% else %}
             <section class="panel panel-narrow">
                 <h2>{{ ui.empty_invoice }}</h2>
@@ -81,4 +136,16 @@
         {% endif %}
     </div>
 </section>
+
+<div class="checkout-confirm-modal" data-checkout-confirm-modal hidden>
+    <button type="button" class="checkout-confirm-backdrop" data-checkout-confirm-close aria-label="{{ ui.close }}"></button>
+    <section class="checkout-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
+        <h2 id="checkout-confirm-title">{{ ui.confirm_order }}</h2>
+        <p>{{ ui.confirm_order_prompt }}</p>
+        <div class="checkout-confirm-modal-actions">
+            <button type="button" class="btn btn-secondary" data-checkout-confirm-close>{{ ui.cancel }}</button>
+            <button type="button" class="btn btn-primary" data-checkout-confirm-approve>{{ ui.confirm_order }}</button>
+        </div>
+    </section>
+</div>
 {% endblock %}

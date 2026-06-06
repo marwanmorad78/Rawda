@@ -20,7 +20,7 @@
         {% endif %}
 
         {% if cart.items %}
-            <div class="cart-shell" data-cart-page>
+            <div class="cart-shell cart-shell-simple" data-cart-page>
                 <section class="cart-products" aria-label="{{ ui.cart }}">
                     <div class="cart-section-header">
                         <div>
@@ -37,49 +37,93 @@
                                 data-cart-item
                                 data-item-type="{{ item.item_type }}"
                                 data-item-id="{{ item.item_id }}"
+                                {% if item.is_unavailable %}data-item-unavailable="true"{% endif %}
                             >
-                                <div class="cart-item-media">
-                                    {% if item.image_url %}
-                                        <img src="{{ item.image_url }}" alt="{{ item.title }}">
-                                    {% else %}
-                                        <span class="cart-item-placeholder">{{ item.title|slice:":1" }}</span>
-                                    {% endif %}
+                                <div class="cart-item-product">
+                                    <div class="cart-item-media">
+                                        {% if item.image_url %}
+                                            <img src="{{ item.image_url }}" alt="{{ item.title }}">
+                                        {% else %}
+                                            <span class="cart-item-placeholder">{{ item.title|slice:":1" }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="cart-item-main">
+                                        <span class="cart-category-badge">{{ item.category_label }}</span>
+                                        <h3>{{ item.title }}</h3>
+                                        {% if item.subtitle %}
+                                            <p class="cart-item-subtitle">{{ item.subtitle }}</p>
+                                        {% endif %}
+                                        <div class="cart-item-meta">
+                                            <span>{{ ui.price }}: <strong>{{ item.display_unit_price }}</strong></span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div class="cart-item-main">
-                                    <div class="cart-item-title-row">
-                                        <div>
-                                            <span class="cart-category-badge">{{ item.category_label }}</span>
-                                            <h3>{{ item.title }}</h3>
-                                        </div>
-                                        <form method="post" action="{% url 'catalog:cart-remove' item.item_type item.item_id %}" class="cart-remove-form" data-cart-remove-form>
-                                            {% csrf_token %}
-                                            <button type="submit" class="cart-remove-button" aria-label="{{ ui.remove }} {{ item.title }}">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                                    <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h1.6v-7H10Zm3.4 0v7H15v-7h-1.6Z" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                    {% if item.subtitle %}
-                                        <p class="cart-item-subtitle">{{ item.subtitle }}</p>
+                                <div class="cart-item-details">
+                                    {% if item.company_label %}
+                                        <p class="cart-item-detail-line">{{ ui.company }}: {{ item.company_label }}</p>
                                     {% endif %}
-
-                                    <div class="cart-item-meta">
-                                        <span>{{ ui.price }}: <strong>{{ item.display_unit_price }}</strong></span>
+                                    {% if item.company_label and item.option_label %}
+                                        <p class="cart-item-detail-line">{{ ui.selected_option }}: {{ item.option_label }}</p>
+                                    {% elif item.option_label %}
+                                        <p class="cart-item-detail-line">{{ ui.selected_option }}: {{ item.option_label }}</p>
+                                    {% endif %}
+                                    <p class="cart-item-detail-line">{{ ui.qty }}: <strong data-cart-quantity-label>{{ item.display_quantity }}</strong></p>
+                                    <p class="cart-item-note-preview{% if not item.note %} is-empty{% endif %}" data-cart-note-preview {% if not item.note %}hidden{% endif %}>
+                                        <span>{{ ui.item_note }}:</span>
+                                        <strong data-cart-note-preview-text>{{ item.note }}</strong>
+                                    </p>
+                                    {% if item.is_unavailable %}
+                                        <p class="cart-item-unavailable">{{ ui.cart_item_unavailable }}</p>
+                                    {% endif %}
+                                    <div class="cart-note-controls">
+                                        <button
+                                            type="button"
+                                            class="cart-note-button"
+                                            data-cart-note-open
+                                            data-note-action="{% url 'catalog:cart-note' item.item_type item.item_id %}"
+                                            data-note-text="{{ item.note|escape }}"
+                                            data-note-title="{{ item.title|escape }}"
+                                            data-add-label="{{ ui.add_note }}"
+                                            data-edit-label="{{ ui.item_note_short }}"
+                                        >
+                                            {% if item.note %}{{ ui.item_note_short }}{% else %}{{ ui.add_note }}{% endif %}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="cart-note-delete{% if not item.note %} is-hidden{% endif %}"
+                                            data-cart-note-delete
+                                            data-note-action="{% url 'catalog:cart-note' item.item_type item.item_id %}"
+                                            aria-label="{{ ui.remove_note }}"
+                                        >
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h1.6v-7H10Zm3.4 0v7H15v-7h-1.6Z" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div class="cart-item-actions">
                                     <form method="post" action="{% url 'catalog:cart-update' item.item_type item.item_id %}" class="cart-quantity-form" data-cart-quantity-form>
                                         {% csrf_token %}
-                                        <div class="cart-quantity-stepper" data-cart-quantity-stepper>
+                                        <div class="cart-quantity-stepper" data-cart-quantity-stepper{% if item.is_weight_based %} data-weight-control{% endif %}>
                                             <button type="button" data-cart-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
-                                            <input type="number" name="quantity" min="0" value="{{ item.quantity }}" inputmode="numeric" data-cart-quantity-input>
+                                            {% if item.is_weight_based %}
+                                                <input type="hidden" name="quantity" min="0.5" max="10" step="0.5" value="{{ item.quantity }}" data-cart-quantity-input>
+                                                <output data-quantity-display>{{ item.display_quantity }}</output>
+                                            {% else %}
+                                                <input type="number" name="quantity" min="0" value="{{ item.quantity|stringformat:'g' }}" inputmode="numeric" data-cart-quantity-input>
+                                            {% endif %}
                                             <button type="button" data-cart-quantity-increase aria-label="{{ ui.qty }} +">+</button>
                                         </div>
-                                        <button type="submit" class="cart-quantity-submit">{{ ui.update_cart }}</button>
+                                    </form>
+                                    <form method="post" action="{% url 'catalog:cart-remove' item.item_type item.item_id %}" class="cart-remove-form" data-cart-remove-form>
+                                        {% csrf_token %}
+                                        <button type="submit" class="cart-remove-button" aria-label="{{ ui.remove }} {{ item.title }}">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h1.6v-7H10Zm3.4 0v7H15v-7h-1.6Z" />
+                                            </svg>
+                                        </button>
                                     </form>
                                     <div class="cart-item-total">
                                         <span>{{ ui.total }}</span>
@@ -89,58 +133,41 @@
                             </article>
                         {% endfor %}
                     </div>
-                </section>
 
-                <aside class="cart-summary-card" aria-label="{{ ui.final_total }}">
-                    <div class="cart-summary-header">
-                        <span class="eyebrow">{{ ui.final_total }}</span>
-                        <strong data-cart-summary-total>{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</strong>
-                    </div>
-
-                    <div class="cart-summary-lines">
-                        <p>
-                            <span>{{ ui.subtotal }}</span>
-                            <strong data-cart-summary-subtotal>{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</strong>
-                        </p>
-                        <p>
-                            <span>{{ ui.delivery_fee }}</span>
-                            <strong>{% if checkout_service_type == "pickup" %}{{ ui.free_delivery }}{% else %}{{ ui.delivery }}{% endif %}</strong>
-                        </p>
+                    <div class="cart-checkout-footer">
+                        <div class="cart-checkout-total">
+                            <span>{{ ui.final_total }}</span>
+                            <strong data-cart-summary-total>{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}</strong>
+                        </div>
                         {% if cart.has_weight_items %}
                             <p class="cart-weight-note">{{ ui.weighted_estimate_notice }}</p>
                         {% endif %}
+                        {% if cart.has_unavailable_items %}
+                            <p class="cart-weight-note">{{ ui.cart_has_unavailable_items }}</p>
+                            <button type="button" class="btn btn-primary cart-checkout-button" disabled>{{ ui.proceed_checkout }}</button>
+                        {% else %}
+                            <a href="{% url 'catalog:checkout' %}" class="btn btn-primary cart-checkout-button">{{ ui.proceed_checkout }}</a>
+                        {% endif %}
                     </div>
-
-                    <form method="post" action="{% url 'catalog:checkout-service' %}" class="cart-service-form">
+                </section>
+            </div>
+            <div class="dashboard-modal cart-note-modal" data-cart-note-modal hidden>
+                <button type="button" class="dashboard-modal-backdrop" data-cart-note-close aria-label="{{ ui.close }}"></button>
+                <section class="dashboard-modal-dialog cart-note-dialog" role="dialog" aria-modal="true" aria-labelledby="cart-note-modal-title">
+                    <button type="button" class="dashboard-modal-close" data-cart-note-close aria-label="{{ ui.close }}">&times;</button>
+                    <h2 id="cart-note-modal-title" data-cart-note-modal-title>{{ ui.item_note }}</h2>
+                    <form method="post" action="" class="cart-note-modal-form" data-cart-note-form data-cart-note-modal-form>
                         {% csrf_token %}
-                        <fieldset class="choice-fieldset cart-service-fieldset">
-                            <legend>{{ ui.fulfillment_method }}</legend>
-                            <div class="cart-service-options">
-                                <label class="cart-service-card">
-                                    <input type="radio" name="service_type" value="pickup" {% if checkout_service_type == "pickup" %}checked{% endif %}>
-                                    <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
-                                    <span>
-                                        <strong>{{ ui.pickup }}</strong>
-                                        <small>{{ ui.pickup_help }}</small>
-                                    </span>
-                                </label>
-                                <label class="cart-service-card">
-                                    <input type="radio" name="service_type" value="delivery" {% if checkout_service_type == "delivery" %}checked{% endif %}>
-                                    <span class="choice-mark choice-mark-radio" aria-hidden="true"></span>
-                                    <span>
-                                        <strong>{{ ui.delivery }}</strong>
-                                        <small>{{ ui.delivery_help }}</small>
-                                    </span>
-                                </label>
-                            </div>
-                        </fieldset>
-
-                        <div class="cart-checkout-actions">
-                            <button type="submit" class="btn btn-primary cart-checkout-button">{{ ui.proceed_checkout }}</button>
-                            <a href="{% url 'core:home' %}" class="btn btn-secondary cart-secondary-button">{{ ui.continue_shopping }}</a>
+                        <label>
+                            <span>{{ ui.item_note }}</span>
+                            <textarea name="note" rows="4" maxlength="500" placeholder="{{ ui.item_note_placeholder }}" data-cart-note-input></textarea>
+                        </label>
+                        <div class="cart-note-modal-actions">
+                            <button type="button" class="btn btn-secondary" data-cart-note-close>{{ ui.cancel }}</button>
+                            <button type="submit" class="btn btn-primary">{{ ui.save_note }}</button>
                         </div>
                     </form>
-                </aside>
+                </section>
             </div>
         {% else %}
             <section class="cart-empty-state">

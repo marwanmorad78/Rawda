@@ -13,13 +13,14 @@ from django.views.generic import FormView, TemplateView, UpdateView
 
 from apps.catalog.cart import (
     PRODUCT_ITEM_TYPE,
+    PRODUCT_COMPANY_OPTION_ITEM_TYPE,
     PRODUCT_OPTION_ITEM_TYPE,
     PROMOTION_ITEM_TYPE,
     add_item,
     preserve_cart_for_next_request,
     set_checkout_service_type,
 )
-from apps.catalog.models import Category, Product, ProductOption
+from apps.catalog.models import Category, Product, ProductCompany, ProductCompanyOption, ProductOption
 from apps.core.forms import (
     CustomerAddressForm,
     CustomerLoginForm,
@@ -37,7 +38,11 @@ from apps.core.localization import (
 )
 from apps.core.models import CustomerAddress, CustomerOrder, CustomerProfile, DeliveryArea, SiteSettings
 from apps.core.order_status import attach_order_display, attach_orders_display, get_active_customer_order
-from apps.core.pricing import set_product_display_price, set_promotion_display_price
+from apps.core.pricing import (
+    product_is_sold_by_weight,
+    set_product_display_price,
+    set_promotion_display_price,
+)
 from apps.core.services import sync_center_status_and_auto_accept_waiting_orders
 from apps.promotions.models import Promotion
 
@@ -115,22 +120,51 @@ class HomeView(TemplateView):
 
     def get_home_categories(self, language, site_content):
         product_queryset = (
-            Product.objects.filter(is_available=True)
+            Product.objects.all()
             .order_by("name", "id")
-            .prefetch_related("options")[:13]
+            .prefetch_related(
+                "options",
+                Prefetch(
+                    "companies",
+                    queryset=ProductCompany.objects.filter(is_active=True).prefetch_related(
+                        Prefetch(
+                            "options",
+                            queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
+                            to_attr="prefetched_options",
+                        )
+                    ),
+                    to_attr="prefetched_companies",
+                ),
+            )[:8]
         )
+        subcategory_queryset = Category.objects.filter(is_active=True).order_by("display_order", "name")
         categories = list(
-            Category.objects.filter(is_active=True)
+            Category.objects.filter(is_active=True, parent__isnull=True)
             .order_by("display_order", "name")
-            .prefetch_related(Prefetch("products", queryset=product_queryset, to_attr="home_products"))
+            .prefetch_related(
+                Prefetch("products", queryset=product_queryset, to_attr="home_products"),
+                Prefetch("subcategories", queryset=subcategory_queryset, to_attr="home_subcategories"),
+            )
         )
         for category in categories:
             localize_instance(category, language, ["name", "description"])
+            for subcategory in category.home_subcategories:
+                localize_instance(subcategory, language, ["name", "description"])
+            if category.home_subcategories:
+                category.home_products = []
+                continue
             for product in category.home_products:
                 product.category = category
-                product.prefetched_options = list(product.options.all())
-                for option in product.prefetched_options:
-                    option.product = product
+                if product.is_company_grouped:
+                    product.prefetched_companies = list(getattr(product, "prefetched_companies", []))
+                    for company in product.prefetched_companies:
+                        company.product = product
+                        for option in getattr(company, "prefetched_options", []):
+                            option.company = company
+                else:
+                    product.prefetched_options = list(product.options.all())
+                    for option in product.prefetched_options:
+                        option.product = product
                 localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
                 set_product_display_price(product, language, site_content)
         return categories
@@ -428,11 +462,36 @@ class PreviousOrdersView(CustomerContextMixin, LoginRequiredMixin, TemplateView)
 
 
 class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
+    def target_is_weight_based(self, item_type, item_id):
+        if item_type == PRODUCT_ITEM_TYPE:
+            product = Product.objects.select_related("category", "category__parent").filter(pk=item_id).first()
+        elif item_type == PRODUCT_OPTION_ITEM_TYPE:
+            option = (
+                ProductOption.objects.select_related("product__category", "product__category__parent")
+                .filter(pk=item_id)
+                .first()
+            )
+            product = option.product if option else None
+        elif item_type == PRODUCT_COMPANY_OPTION_ITEM_TYPE:
+            option = (
+                ProductCompanyOption.objects.select_related(
+                    "company__product__category",
+                    "company__product__category__parent",
+                )
+                .filter(pk=item_id)
+                .first()
+            )
+            product = option.company.product if option else None
+        else:
+            product = None
+        return bool(product and product_is_sold_by_weight(product))
+
     def resolve_order_item(self, item):
         if item.cart_item_id:
             if item.item_type == PRODUCT_ITEM_TYPE:
                 exists = Product.objects.filter(
                     pk=item.cart_item_id,
+                    product_type=Product.PRODUCT_TYPE_NORMAL,
                     is_available=True,
                     category__is_active=True,
                     has_options=False,
@@ -441,10 +500,21 @@ class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
             if item.item_type == PRODUCT_OPTION_ITEM_TYPE:
                 exists = ProductOption.objects.filter(
                     pk=item.cart_item_id,
+                    product__product_type=Product.PRODUCT_TYPE_NORMAL,
                     product__is_available=True,
                     product__category__is_active=True,
                 ).exists()
                 return (PRODUCT_OPTION_ITEM_TYPE, item.cart_item_id) if exists else None
+            if item.item_type == PRODUCT_COMPANY_OPTION_ITEM_TYPE:
+                exists = ProductCompanyOption.objects.filter(
+                    pk=item.cart_item_id,
+                    is_available=True,
+                    company__is_active=True,
+                    company__product__product_type=Product.PRODUCT_TYPE_COMPANY_GROUPED,
+                    company__product__is_available=True,
+                    company__product__category__is_active=True,
+                ).exists()
+                return (PRODUCT_COMPANY_OPTION_ITEM_TYPE, item.cart_item_id) if exists else None
             if item.item_type == PROMOTION_ITEM_TYPE:
                 exists = Promotion.active().filter(pk=item.cart_item_id).exists()
                 return (PROMOTION_ITEM_TYPE, item.cart_item_id) if exists else None
@@ -456,6 +526,7 @@ class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
         if item.item_type == PRODUCT_ITEM_TYPE:
             product = Product.objects.filter(
                 Q(name__iexact=title) | Q(name_ar__iexact=title),
+                product_type=Product.PRODUCT_TYPE_NORMAL,
                 is_available=True,
                 category__is_active=True,
                 has_options=False,
@@ -478,6 +549,25 @@ class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
             option = option_query.first()
             return (PRODUCT_OPTION_ITEM_TYPE, option.pk) if option else None
 
+        if item.item_type == PRODUCT_COMPANY_OPTION_ITEM_TYPE:
+            option_query = ProductCompanyOption.objects.filter(
+                is_available=True,
+                company__is_active=True,
+                company__product__product_type=Product.PRODUCT_TYPE_COMPANY_GROUPED,
+                company__product__is_available=True,
+                company__product__category__is_active=True,
+            )
+            if item.selected_option_label:
+                option_query = option_query.filter(name__iexact=item.selected_option_label.strip())
+            if item.company_label:
+                option_query = option_query.filter(company__name__iexact=item.company_label.strip())
+            if title:
+                option_query = option_query.filter(
+                    Q(company__product__name__iexact=title) | Q(company__product__name_ar__iexact=title)
+                )
+            option = option_query.first()
+            return (PRODUCT_COMPANY_OPTION_ITEM_TYPE, option.pk) if option else None
+
         if item.item_type == PROMOTION_ITEM_TYPE:
             promotion = Promotion.active().filter(Q(title__iexact=title) | Q(title_ar__iexact=title)).first()
             return (PROMOTION_ITEM_TYPE, promotion.pk) if promotion else None
@@ -494,7 +584,18 @@ class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
             if target is None:
                 continue
             item_type, item_id = target
-            add_item(request, item_type, item_id, max(item.quantity, 1))
+            is_weight_based = self.target_is_weight_based(item_type, item_id)
+            quantity = item.quantity if is_weight_based else max(item.quantity, 1)
+            try:
+                add_item(
+                    request,
+                    item_type,
+                    item_id,
+                    quantity,
+                    is_weight_based=is_weight_based,
+                )
+            except ValueError:
+                continue
             added_count += 1
 
         ui = get_ui_strings(self.get_language())

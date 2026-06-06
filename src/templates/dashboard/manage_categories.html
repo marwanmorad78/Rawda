@@ -21,6 +21,7 @@
                 <thead>
                     <tr>
                         <th>{{ dashboard_ui.name }}</th>
+                        <th>{{ dashboard_ui.category }}</th>
                         <th>{{ dashboard_ui.order }}</th>
                         <th>{{ dashboard_ui.pricing_flags }}</th>
                         <th>{{ dashboard_ui.status }}</th>
@@ -31,10 +32,11 @@
                     {% for item in items %}
                         <tr>
                             <td>{{ item.display_name }}</td>
+                            <td>{% if item.parent %}{{ item.parent.display_name }}{% else %}{{ dashboard_ui.top_level_category }}{% endif %}</td>
                             <td>{{ item.display_order }}</td>
                             <td>
-                                {% if item.sold_by_weight %}{{ dashboard_ui.sold_by_weight }}{% endif %}
-                                {% if item.is_price_linked_to_dollar %}{{ dashboard_ui.dollar_priced }}{% endif %}
+                                {% if item.effective_sold_by_weight %}{{ dashboard_ui.sold_by_weight }}{% endif %}
+                                {% if item.effective_is_price_linked_to_dollar %}{{ dashboard_ui.dollar_priced }}{% endif %}
                             </td>
                             <td>{% if item.is_active %}{{ dashboard_ui.active }}{% else %}{{ dashboard_ui.hidden }}{% endif %}</td>
                             <td class="table-actions">
@@ -46,7 +48,7 @@
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="5">{{ dashboard_ui.no_categories }}</td></tr>
+                        <tr><td colspan="6">{{ dashboard_ui.no_categories }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

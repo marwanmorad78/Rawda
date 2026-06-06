@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -9,6 +10,7 @@ from django.views.generic import DetailView, TemplateView
 
 from apps.catalog.cart import (
     add_product,
+    add_product_company_option,
     add_product_option,
     add_promotion,
     build_cart,
@@ -16,10 +18,13 @@ from apps.catalog.cart import (
     get_checkout_address_id,
     get_checkout_service_type,
     preserve_cart_for_next_request,
+    serialize_quantity,
     remove_item,
     set_checkout_address,
     set_checkout_service_type,
     update_item,
+    update_item_note,
+    validate_quantity,
 )
 from apps.catalog.checkout import build_checkout_summary, create_order_from_checkout, get_address_delivery_fee
 from apps.catalog.forms import CheckoutAddressForm
@@ -27,10 +32,32 @@ from apps.core.forms import CustomerAddressForm
 from apps.core.localization import format_price_range, format_syp, get_language, get_ui_strings, localize_instance, localize_queryset
 from apps.core.models import CustomerOrder, CustomerProfile
 from apps.core.order_status import attach_order_display, get_active_customer_order
-from apps.core.pricing import get_active_site_settings, set_product_display_price
+from apps.core.pricing import (
+    get_active_site_settings,
+    product_is_sold_by_weight,
+    round_to_nearest_ten,
+    set_product_display_price,
+)
 from apps.promotions.models import Promotion
 
-from .models import Category, Product, ProductOption
+from .models import Category, Product, ProductCompany, ProductCompanyOption, ProductOption
+
+
+def attach_product_selection_data(product, language, site_settings):
+    if product.is_company_grouped:
+        company_queryset = product.companies.filter(is_active=True).prefetch_related(
+            Prefetch(
+                "options",
+                queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
+                to_attr="prefetched_options",
+            )
+        )
+        product.prefetched_companies = list(company_queryset)
+    else:
+        product.prefetched_options = list(product.options.all())
+    localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
+    set_product_display_price(product, language, site_settings)
+    return product
 
 
 def parse_quantity(value, default=1):
@@ -38,6 +65,37 @@ def parse_quantity(value, default=1):
         return max(int(value), 0)
     except (TypeError, ValueError):
         return default
+
+
+def get_cart_item_product(item_type, item_id):
+    if item_type == "product":
+        return Product.objects.select_related("category", "category__parent").filter(pk=item_id).first()
+    if item_type == "product-option":
+        option = (
+            ProductOption.objects.select_related("product__category", "product__category__parent")
+            .filter(pk=item_id)
+            .first()
+        )
+        return option.product if option else None
+    if item_type == "product-company-option":
+        option = (
+            ProductCompanyOption.objects.select_related(
+                "company__product__category",
+                "company__product__category__parent",
+            )
+            .filter(pk=item_id)
+            .first()
+        )
+        return option.company.product if option else None
+    return None
+
+
+def invalid_quantity_response(request, message, redirect_url):
+    if wants_json_response(request):
+        return JsonResponse({"ok": False, "message": message}, status=400)
+    messages.error(request, message)
+    preserve_cart_for_next_request(request)
+    return redirect(redirect_url)
 
 
 def wants_json_response(request):
@@ -63,10 +121,12 @@ def cart_json_payload(request, item_type=None, item_id=None):
         "cart_total": cart["display_subtotal"],
         "cart_total_range": cart["display_subtotal_range"],
         "has_weight_items": cart["has_weight_items"],
+        "has_unavailable_items": cart["has_unavailable_items"],
         "is_empty": not cart["items"],
         "item": (
             {
-                "quantity": item["quantity"],
+                "quantity": serialize_quantity(item["quantity"]),
+                "display_quantity": item["display_quantity"],
                 "is_weight_based": item["is_weight_based"],
                 "line_total": item["display_line_total"],
                 "line_total_range": item["display_line_total_range"],
@@ -107,8 +167,8 @@ def attach_address_delivery_fee_display(addresses, language, cart=None):
         address.display_delivery_fee = format_syp(delivery_fee, language)
         if cart is not None:
             address.display_checkout_total = format_price_range(
-                cart["subtotal_min"] + delivery_fee,
-                cart["subtotal_max"] + delivery_fee,
+                round_to_nearest_ten(cart["subtotal_min"] + delivery_fee),
+                round_to_nearest_ten(cart["subtotal_max"] + delivery_fee),
                 language,
             )
     return addresses
@@ -120,7 +180,7 @@ class CategoryDetailView(DetailView):
     context_object_name = "category"
 
     def get_queryset(self):
-        return Category.objects.filter(is_active=True)
+        return Category.objects.filter(is_active=True).select_related("parent")
 
     def get_object(self, queryset=None):
         category = get_object_or_404(self.get_queryset(), slug=self.kwargs["slug"])
@@ -130,11 +190,31 @@ class CategoryDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         language = get_language(self.request)
         site_settings = get_active_site_settings()
-        products = list(self.object.products.filter(is_available=True))
+        subcategories = list(
+            self.object.subcategories.filter(is_active=True).order_by("display_order", "name")
+        )
+        for subcategory in subcategories:
+            localize_instance(subcategory, language, ["name", "description"])
+        products = [] if subcategories else list(
+            self.object.products.prefetch_related(
+                "options",
+                Prefetch(
+                    "companies",
+                    queryset=ProductCompany.objects.filter(is_active=True).prefetch_related(
+                        Prefetch(
+                            "options",
+                            queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
+                            to_attr="prefetched_options",
+                        )
+                    ),
+                    to_attr="prefetched_companies",
+                ),
+            )
+        )
         for product in products:
-            product.prefetched_options = list(product.options.all())
-            localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
-            set_product_display_price(product, language, site_settings)
+            product.category = self.object
+            attach_product_selection_data(product, language, site_settings)
+        context["subcategories"] = subcategories
         context["products"] = products
         return context
 
@@ -145,8 +225,9 @@ class ProductDetailView(DetailView):
     context_object_name = "product"
 
     def get_queryset(self):
-        return Product.objects.filter(is_available=True, category__is_active=True).select_related(
-            "category"
+        return Product.objects.filter(category__is_active=True).select_related(
+            "category",
+            "category__parent",
         )
 
     def get_object(self, queryset=None):
@@ -155,8 +236,7 @@ class ProductDetailView(DetailView):
         site_settings = get_active_site_settings()
         localize_instance(product.category, language, ["name", "description"])
         product = localize_instance(product, language, ["name", "short_description", "description", "unit_label"])
-        product.prefetched_options = list(product.options.all())
-        set_product_display_price(product, language, site_settings)
+        attach_product_selection_data(product, language, site_settings)
         return product
 
     def get_context_data(self, **kwargs):
@@ -164,7 +244,23 @@ class ProductDetailView(DetailView):
         language = get_language(self.request)
         site_settings = get_active_site_settings()
         related_products = list(
-            Product.objects.filter(category=self.object.category, is_available=True).exclude(pk=self.object.pk)[:4]
+            Product.objects.filter(category=self.object.category)
+            .select_related("category", "category__parent")
+            .prefetch_related(
+                "options",
+                Prefetch(
+                    "companies",
+                    queryset=ProductCompany.objects.filter(is_active=True).prefetch_related(
+                        Prefetch(
+                            "options",
+                            queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
+                            to_attr="prefetched_options",
+                        )
+                    ),
+                    to_attr="prefetched_companies",
+                ),
+            )
+            .exclude(pk=self.object.pk)[:4]
         )
         context["related_products"] = localize_queryset(
             related_products,
@@ -172,8 +268,7 @@ class ProductDetailView(DetailView):
             ["name", "short_description", "description", "unit_label"],
         )
         for item in context["related_products"]:
-            item.prefetched_options = list(item.options.all())
-            set_product_display_price(item, language, site_settings)
+            attach_product_selection_data(item, language, site_settings)
         return context
 
 
@@ -181,13 +276,61 @@ class AddToCartView(LoginRequiredMixin, View):
     login_url = "core:login"
 
     def post(self, request, slug):
-        product = get_object_or_404(Product, slug=slug, is_available=True)
-        quantity = max(parse_quantity(request.POST.get("quantity", 1), default=1), 1)
+        product = get_object_or_404(
+            Product.objects.select_related("category", "category__parent"),
+            slug=slug,
+        )
+        note = request.POST.get("note", "").strip()
         language = get_language(request)
         ui = get_ui_strings(language)
+        is_weight_based = product_is_sold_by_weight(product)
+        default_quantity = "0.5" if is_weight_based else "1"
+        try:
+            quantity = validate_quantity(
+                request.POST.get("quantity", default_quantity),
+                is_weight_based=is_weight_based,
+            )
+        except ValueError:
+            return invalid_quantity_response(
+                request,
+                ui["invalid_weight_quantity"] if is_weight_based else ui["invalid_quantity"],
+                request.POST.get("next") or product.get_absolute_url(),
+            )
         product = localize_instance(product, language, ["name"])
+        if not product.is_available:
+            message = ui.get("product_unavailable", "This item is currently unavailable.")
+            if wants_json_response(request):
+                return JsonResponse({"ok": False, "message": message}, status=400)
+            messages.error(request, message)
+            preserve_cart_for_next_request(request)
+            return redirect(request.POST.get("next") or product.get_absolute_url())
         selected_option = None
-        if product.has_options:
+        selected_company = None
+        if product.is_company_grouped:
+            selected_option = ProductCompanyOption.objects.filter(
+                pk=request.POST.get("company_option_id"),
+                company__product=product,
+                company__is_active=True,
+            ).select_related("company").first()
+            if selected_option is None:
+                message = ui.get(
+                    "select_company_option",
+                    "Please select a company and option before adding to cart.",
+                )
+                if wants_json_response(request):
+                    return JsonResponse({"ok": False, "message": message}, status=400)
+                messages.error(request, message)
+                preserve_cart_for_next_request(request)
+                return redirect(request.POST.get("next") or product.get_absolute_url())
+            if not selected_option.is_available:
+                message = ui.get("product_unavailable", "This item is currently unavailable.")
+                if wants_json_response(request):
+                    return JsonResponse({"ok": False, "message": message}, status=400)
+                messages.error(request, message)
+                preserve_cart_for_next_request(request)
+                return redirect(request.POST.get("next") or product.get_absolute_url())
+            selected_company = selected_option.company
+        elif product.has_options:
             selected_option = ProductOption.objects.filter(
                 pk=request.POST.get("option_id"),
                 product=product,
@@ -199,12 +342,44 @@ class AddToCartView(LoginRequiredMixin, View):
                 messages.error(request, message)
                 preserve_cart_for_next_request(request)
                 return redirect(request.POST.get("next") or product.get_absolute_url())
-            add_product_option(request, selected_option.id, quantity)
-        else:
-            add_product(request, product.id, quantity)
+            if not selected_option.is_available:
+                message = ui.get("product_unavailable", "This item is currently unavailable.")
+                if wants_json_response(request):
+                    return JsonResponse({"ok": False, "message": message}, status=400)
+                messages.error(request, message)
+                preserve_cart_for_next_request(request)
+                return redirect(request.POST.get("next") or product.get_absolute_url())
+        try:
+            if selected_company is not None:
+                add_product_company_option(
+                    request,
+                    selected_option.id,
+                    quantity,
+                    note,
+                    is_weight_based,
+                )
+            elif selected_option is not None:
+                add_product_option(
+                    request,
+                    selected_option.id,
+                    quantity,
+                    note,
+                    is_weight_based,
+                )
+            else:
+                add_product(request, product.id, quantity, note, is_weight_based)
+        except ValueError:
+            return invalid_quantity_response(
+                request,
+                ui["invalid_weight_quantity"] if is_weight_based else ui["invalid_quantity"],
+                request.POST.get("next") or product.get_absolute_url(),
+            )
         item_title = product.display_name
         if selected_option is not None:
-            item_title = f"{item_title} - {selected_option.name}"
+            if selected_company is not None:
+                item_title = f"{item_title} - {selected_company.name} - {selected_option.name}"
+            else:
+                item_title = f"{item_title} - {selected_option.name}"
         message = f"{item_title}: {ui['cart_added']}"
         if wants_json_response(request):
             cart = build_cart(request)
@@ -214,7 +389,11 @@ class AddToCartView(LoginRequiredMixin, View):
                     "message": message,
                     "item_title": item_title,
                     "cart_count": cart["count"],
-                    "cart_total": cart["display_subtotal"],
+                    "cart_total": (
+                        cart["display_subtotal_range"]
+                        if cart["has_weight_items"]
+                        else cart["display_subtotal"]
+                    ),
                     "cart_url": request.build_absolute_uri(reverse("catalog:cart")),
                 }
             )
@@ -242,7 +421,11 @@ class AddOfferToCartView(LoginRequiredMixin, View):
                     "message": message,
                     "item_title": promotion.display_title,
                     "cart_count": cart["count"],
-                    "cart_total": cart["display_subtotal"],
+                    "cart_total": (
+                        cart["display_subtotal_range"]
+                        if cart["has_weight_items"]
+                        else cart["display_subtotal"]
+                    ),
                     "cart_url": request.build_absolute_uri(reverse("catalog:cart")),
                 }
             )
@@ -281,25 +464,65 @@ class CheckoutServiceView(LoginRequiredMixin, View):
         cart = build_cart(request)
         if not cart["items"]:
             return redirect("catalog:cart")
+        if cart["has_unavailable_items"]:
+            messages.error(request, get_ui_strings(get_language(request))["cart_has_unavailable_items"])
+            preserve_cart_for_next_request(request)
+            return redirect("catalog:cart")
         service_type = request.POST.get("service_type")
         if service_type not in {CustomerOrder.SERVICE_PICKUP, CustomerOrder.SERVICE_DELIVERY}:
             service_type = CustomerOrder.SERVICE_PICKUP
         set_checkout_service_type(request, service_type)
         preserve_cart_for_next_request(request)
-        if service_type == CustomerOrder.SERVICE_DELIVERY:
-            return redirect("catalog:checkout-address")
-        return redirect("catalog:invoice")
+        return redirect("catalog:checkout")
 
 
 class CartUpdateView(LoginRequiredMixin, View):
     login_url = "core:login"
 
     def post(self, request, item_type, item_id):
-        quantity = parse_quantity(request.POST.get("quantity", 1), default=1)
-        update_item(request, item_type, item_id, quantity)
+        product = get_cart_item_product(item_type, item_id)
+        is_weight_based = bool(product and product_is_sold_by_weight(product))
+        ui = get_ui_strings(get_language(request))
+        try:
+            quantity = validate_quantity(
+                request.POST.get("quantity", "0.5" if is_weight_based else "1"),
+                is_weight_based=is_weight_based,
+                allow_zero=not is_weight_based,
+            )
+            update_item(
+                request,
+                item_type,
+                item_id,
+                quantity,
+                is_weight_based=is_weight_based,
+            )
+        except ValueError:
+            message = ui["invalid_weight_quantity"] if is_weight_based else ui["invalid_quantity"]
+            if wants_json_response(request):
+                return JsonResponse({"ok": False, "message": message}, status=400)
+            messages.error(request, message)
+            preserve_cart_for_next_request(request)
+            return redirect("catalog:cart")
         if wants_json_response(request):
             return JsonResponse(cart_json_payload(request, item_type, item_id))
-        messages.success(request, get_ui_strings(get_language(request))["cart_updated"])
+        messages.success(request, ui["cart_updated"])
+        preserve_cart_for_next_request(request)
+        return redirect("catalog:cart")
+
+
+class CartNoteUpdateView(LoginRequiredMixin, View):
+    login_url = "core:login"
+
+    def post(self, request, item_type, item_id):
+        note = request.POST.get("note", "")
+        updated = update_item_note(request, item_type, item_id, note)
+        ui = get_ui_strings(get_language(request))
+        if wants_json_response(request):
+            payload = cart_json_payload(request, item_type, item_id)
+            payload["note"] = note.strip()[:500] if updated else ""
+            payload["message"] = ui["cart_updated"] if updated else ui["cart_item_unavailable"]
+            return JsonResponse(payload, status=200 if updated else 404)
+        messages.success(request, ui["cart_updated"] if updated else ui["cart_item_unavailable"])
         preserve_cart_for_next_request(request)
         return redirect("catalog:cart")
 
@@ -364,8 +587,10 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         cart = build_cart(request)
         if not cart["items"]:
             return redirect("catalog:cart")
-        if get_checkout_service_type(request) != CustomerOrder.SERVICE_DELIVERY:
-            return redirect("catalog:invoice")
+        if cart["has_unavailable_items"]:
+            messages.error(request, get_ui_strings(get_language(request))["cart_has_unavailable_items"])
+            preserve_cart_for_next_request(request)
+            return redirect("catalog:cart")
         profile, addresses = get_checkout_addresses(request)
         addresses = addresses.filter(area__is_active=True)
         addresses = attach_address_delivery_fee_display(addresses, get_language(request), cart)
@@ -375,8 +600,10 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         cart = build_cart(request)
         if not cart["items"]:
             return redirect("catalog:cart")
-        if get_checkout_service_type(request) != CustomerOrder.SERVICE_DELIVERY:
-            return redirect("catalog:invoice")
+        if cart["has_unavailable_items"]:
+            messages.error(request, get_ui_strings(get_language(request))["cart_has_unavailable_items"])
+            preserve_cart_for_next_request(request)
+            return redirect("catalog:cart")
         profile, addresses = get_checkout_addresses(request)
         addresses = addresses.filter(area__is_active=True)
         addresses = attach_address_delivery_fee_display(addresses, get_language(request), cart)
@@ -413,14 +640,9 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         if form.is_valid():
             address = form.cleaned_data["address"]
             set_checkout_address(request, address.pk)
-            checkout_summary = build_checkout_summary(request, address, CustomerOrder.SERVICE_DELIVERY)
-            order = create_order_from_checkout(profile, address, checkout_summary)
-            clear_cart(request)
-            messages.success(
-                request,
-                get_ui_strings(get_language(request))["order_confirmed"].format(invoice_number=order.invoice_number),
-            )
-            return redirect("catalog:cart")
+            set_checkout_service_type(request, CustomerOrder.SERVICE_DELIVERY)
+            preserve_cart_for_next_request(request)
+            return redirect("catalog:checkout")
         return self.render_address_step(
             request,
             cart,
@@ -436,29 +658,36 @@ class InvoiceView(LoginRequiredMixin, TemplateView):
     login_url = "core:login"
 
     def dispatch(self, request, *args, **kwargs):
-        if not build_cart(request)["items"]:
+        cart = build_cart(request)
+        if not cart["items"]:
+            return redirect("catalog:cart")
+        if cart["has_unavailable_items"]:
+            messages.error(request, get_ui_strings(get_language(request))["cart_has_unavailable_items"])
+            preserve_cart_for_next_request(request)
             return redirect("catalog:cart")
         self.service_type = get_checkout_service_type(request)
-        self.selected_address = None
-        if self.service_type == CustomerOrder.SERVICE_DELIVERY:
-            _, addresses = get_checkout_addresses(request)
-            selected_address = get_selected_checkout_address(request, addresses)
-            if selected_address is None:
-                messages.info(request, get_ui_strings(get_language(request))["add_address_before_checkout"])
-                preserve_cart_for_next_request(request)
-                return redirect("catalog:checkout-address")
-            set_checkout_address(request, selected_address.pk)
-            self.selected_address = selected_address
+        self.profile, self.addresses = get_checkout_addresses(request)
+        self.addresses = self.addresses.filter(area__is_active=True)
+        self.selected_address = get_selected_checkout_address(request, self.addresses)
+        if self.service_type == CustomerOrder.SERVICE_DELIVERY and self.selected_address is not None:
+            set_checkout_address(request, self.selected_address.pk)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         checkout_summary = build_checkout_summary(
             self.request,
-            self.selected_address,
+            self.selected_address if self.service_type == CustomerOrder.SERVICE_DELIVERY else None,
             self.service_type,
         )
+        addresses = attach_address_delivery_fee_display(
+            self.addresses,
+            get_language(self.request),
+            checkout_summary["cart"],
+        )
         context.update(checkout_summary)
+        context["addresses"] = addresses
+        context["selected_address_id"] = self.selected_address.pk if self.selected_address is not None else None
         context["invoice_number"] = timezone.now().strftime("AR-%Y%m%d-%H%M")
         context["invoice_date"] = timezone.localtime()
         return context
@@ -471,15 +700,28 @@ class CheckoutConfirmView(LoginRequiredMixin, View):
         cart = build_cart(request)
         if not cart["items"]:
             return redirect("catalog:cart")
+        if cart["has_unavailable_items"]:
+            messages.error(request, get_ui_strings(get_language(request))["cart_has_unavailable_items"])
+            preserve_cart_for_next_request(request)
+            return redirect("catalog:cart")
 
-        service_type = get_checkout_service_type(request)
+        service_type = request.POST.get("service_type") or get_checkout_service_type(request)
+        if service_type not in {CustomerOrder.SERVICE_PICKUP, CustomerOrder.SERVICE_DELIVERY}:
+            service_type = CustomerOrder.SERVICE_PICKUP
+        set_checkout_service_type(request, service_type)
         profile, addresses = get_checkout_addresses(request)
         selected_address = None
         if service_type == CustomerOrder.SERVICE_DELIVERY:
-            selected_address = get_selected_checkout_address(request, addresses)
+            address_id = request.POST.get("address")
+            if address_id:
+                selected_address = addresses.filter(pk=address_id, area__is_active=True).first()
+            if selected_address is None:
+                selected_address = get_selected_checkout_address(request, addresses)
             if selected_address is None:
                 messages.info(request, get_ui_strings(get_language(request))["select_address_first"])
-                return redirect("catalog:checkout-address")
+                preserve_cart_for_next_request(request)
+                return redirect("catalog:checkout")
+            set_checkout_address(request, selected_address.pk)
 
         checkout_summary = build_checkout_summary(request, selected_address, service_type)
         order = create_order_from_checkout(profile, selected_address, checkout_summary)

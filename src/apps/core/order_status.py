@@ -1,6 +1,6 @@
 import math
 
-from apps.core.localization import format_price_range, format_syp
+from apps.core.localization import format_price_range, format_quantity, format_syp
 from apps.core.models import CenterStatus, CustomerOrder
 
 
@@ -89,6 +89,7 @@ def attach_order_display(order, labels, language, print_auto_accepted_order=Fals
     for item in order.items.all():
         item.display_line_total = format_price_range(item.line_total_min, item.line_total_max, language)
         item.display_unit_price = format_syp(item.unit_price, language)
+        item.display_quantity = format_quantity(item.quantity, item.is_weight_based, language)
     return order
 
 

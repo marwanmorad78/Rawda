@@ -19,14 +19,14 @@
     </label>
     {{ field.errors }}
 {% elif field.field.widget.input_type == "checkbox" %}
-    <label class="checkbox-field">
+    <label class="checkbox-field"{% if field.name == "has_options" %} data-dashboard-has-options-field{% if form.product_type.value == "company_grouped" %} hidden{% endif %}{% endif %}>
         {{ field }}
         <span class="choice-mark choice-mark-checkbox" aria-hidden="true"></span>
         <span class="choice-copy">{{ field.label }}</span>
     </label>
     {{ field.errors }}
 {% else %}
-    <label{% if field.name == "price" %} data-dashboard-product-base-price-field{% if form.has_options.value %} hidden{% endif %}{% endif %}>
+    <label{% if field.name == "price" %} data-dashboard-product-base-price-field{% if form.has_options.value or form.product_type.value == "company_grouped" %} hidden{% endif %}{% elif field.name == "product_type" %} data-dashboard-product-type-field{% endif %}>
         <span>{{ field.label }}</span>
         {{ field }}
         {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}

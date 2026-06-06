@@ -1,6 +1,37 @@
 from django.contrib import admin
 
-from .models import CenterStatus, CustomerAddress, CustomerOrder, DeliveryArea, DeliverySubArea, SiteSettings
+from .models import (
+    CenterStatus,
+    CustomerAddress,
+    CustomerOrder,
+    CustomerOrderItem,
+    DeliveryArea,
+    DeliverySubArea,
+    SiteSettings,
+)
+
+
+class CustomerOrderItemInline(admin.TabularInline):
+    model = CustomerOrderItem
+    extra = 0
+    readonly_fields = (
+        "item_type",
+        "title",
+        "company_label",
+        "selected_option_label",
+        "display_quantity",
+        "unit_price",
+        "line_total_min",
+        "line_total_max",
+    )
+    fields = readonly_fields
+    can_delete = False
+
+    @admin.display(description="Quantity")
+    def display_quantity(self, obj):
+        from apps.core.localization import format_quantity
+
+        return format_quantity(obj.quantity, obj.is_weight_based, "en")
 
 
 @admin.register(SiteSettings)
@@ -50,3 +81,4 @@ class CustomerOrderAdmin(admin.ModelAdmin):
     )
     list_filter = ("service_type", "status", "print_status")
     search_fields = ("invoice_number", "profile__full_name", "address_snapshot")
+    inlines = [CustomerOrderItemInline]

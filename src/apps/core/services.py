@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from apps.core.models import CenterStatus, CustomerOrder
+from apps.core.localization import format_quantity
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,8 @@ def format_invoice_text(order):
         lines.append(f"Address: {order.address_snapshot}")
     lines.extend(["", "Items:"])
     for item in order.items.all():
-        lines.append(f"- {item.title} x {item.quantity}: {item.line_total_min:g}")
+        quantity = format_quantity(item.quantity, item.is_weight_based, "en")
+        lines.append(f"- {item.title} x {quantity}: {item.line_total_min:g}")
     lines.extend(
         [
             "",
@@ -61,7 +63,9 @@ def build_invoice_payload(order):
             {
                 "title": item.title,
                 "category": item.category_label,
-                "quantity": item.quantity,
+                "quantity": str(item.quantity),
+                "display_quantity": format_quantity(item.quantity, item.is_weight_based, "en"),
+                "is_weight_based": item.is_weight_based,
                 "unit_price": str(item.unit_price),
                 "line_total": str(item.line_total_min),
             }

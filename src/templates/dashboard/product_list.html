@@ -15,11 +15,97 @@
         <table>
             <thead>
                 <tr>
-                    <th>{{ dashboard_ui.name }}</th>
-                    <th>{{ dashboard_ui.category }}</th>
+                    <th>
+                        <details class="column-filter" data-column-filter{% if product_filters.name %} open{% endif %}>
+                            <summary>{{ dashboard_ui.name }}</summary>
+                            <form method="get" class="column-filter-menu">
+                                <input type="hidden" name="q" value="{{ search_query }}">
+                                <input type="hidden" name="filter_category" value="{{ product_filters.category }}">
+                                <input type="hidden" name="filter_pricing_type" value="{{ product_filters.pricing_type }}">
+                                <input type="hidden" name="filter_status" value="{{ product_filters.status }}">
+                                <label>
+                                    <span>{{ dashboard_ui.search }}</span>
+                                    <input type="search" name="filter_name" value="{{ product_filters.name }}" placeholder="{{ dashboard_ui.name }}">
+                                </label>
+                                <div class="column-filter-actions">
+                                    <button type="submit" class="btn btn-primary btn-small">{{ dashboard_ui.search }}</button>
+                                    <a class="btn btn-secondary btn-small" href="?q={{ search_query|urlencode }}&filter_category={{ product_filters.category|urlencode }}&filter_pricing_type={{ product_filters.pricing_type|urlencode }}&filter_status={{ product_filters.status|urlencode }}">{{ dashboard_ui.clear_search }}</a>
+                                </div>
+                            </form>
+                        </details>
+                    </th>
+                    <th>
+                        <details class="column-filter" data-column-filter{% if product_filters.category %} open{% endif %}>
+                            <summary>{{ dashboard_ui.category }}</summary>
+                            <form method="get" class="column-filter-menu">
+                                <input type="hidden" name="q" value="{{ search_query }}">
+                                <input type="hidden" name="filter_name" value="{{ product_filters.name }}">
+                                <input type="hidden" name="filter_pricing_type" value="{{ product_filters.pricing_type }}">
+                                <input type="hidden" name="filter_status" value="{{ product_filters.status }}">
+                                <label>
+                                    <span>{{ dashboard_ui.category }}</span>
+                                    <select name="filter_category">
+                                        <option value="">{{ dashboard_ui.all_categories }}</option>
+                                        {% for category in product_filter_categories %}
+                                            <option value="{{ category.pk }}" {% if product_filters.category == category.pk|stringformat:"s" %}selected{% endif %}>{{ category.display_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                                <div class="column-filter-actions">
+                                    <button type="submit" class="btn btn-primary btn-small">{{ dashboard_ui.search }}</button>
+                                    <a class="btn btn-secondary btn-small" href="?q={{ search_query|urlencode }}&filter_name={{ product_filters.name|urlencode }}&filter_pricing_type={{ product_filters.pricing_type|urlencode }}&filter_status={{ product_filters.status|urlencode }}">{{ dashboard_ui.clear_search }}</a>
+                                </div>
+                            </form>
+                        </details>
+                    </th>
                     <th>{{ dashboard_ui.price }}</th>
-                    <th>{{ dashboard_ui.pricing_flags }}</th>
-                    <th>{{ dashboard_ui.status }}</th>
+                    <th>
+                        <details class="column-filter" data-column-filter{% if product_filters.pricing_type %} open{% endif %}>
+                            <summary>{{ dashboard_ui.pricing_type }}</summary>
+                            <form method="get" class="column-filter-menu">
+                                <input type="hidden" name="q" value="{{ search_query }}">
+                                <input type="hidden" name="filter_name" value="{{ product_filters.name }}">
+                                <input type="hidden" name="filter_category" value="{{ product_filters.category }}">
+                                <input type="hidden" name="filter_status" value="{{ product_filters.status }}">
+                                <label>
+                                    <span>{{ dashboard_ui.pricing_type }}</span>
+                                    <select name="filter_pricing_type">
+                                        <option value="">{{ dashboard_ui.all_pricing_types }}</option>
+                                        <option value="regular" {% if product_filters.pricing_type == "regular" %}selected{% endif %}>{{ dashboard_ui.regular_pricing }}</option>
+                                        <option value="sold_by_weight" {% if product_filters.pricing_type == "sold_by_weight" %}selected{% endif %}>{{ dashboard_ui.sold_by_weight }}</option>
+                                        <option value="dollar_priced" {% if product_filters.pricing_type == "dollar_priced" %}selected{% endif %}>{{ dashboard_ui.dollar_priced }}</option>
+                                    </select>
+                                </label>
+                                <div class="column-filter-actions">
+                                    <button type="submit" class="btn btn-primary btn-small">{{ dashboard_ui.search }}</button>
+                                    <a class="btn btn-secondary btn-small" href="?q={{ search_query|urlencode }}&filter_name={{ product_filters.name|urlencode }}&filter_category={{ product_filters.category|urlencode }}&filter_status={{ product_filters.status|urlencode }}">{{ dashboard_ui.clear_search }}</a>
+                                </div>
+                            </form>
+                        </details>
+                    </th>
+                    <th>
+                        <details class="column-filter" data-column-filter{% if product_filters.status %} open{% endif %}>
+                            <summary>{{ dashboard_ui.status }}</summary>
+                            <form method="get" class="column-filter-menu">
+                                <input type="hidden" name="q" value="{{ search_query }}">
+                                <input type="hidden" name="filter_name" value="{{ product_filters.name }}">
+                                <input type="hidden" name="filter_category" value="{{ product_filters.category }}">
+                                <input type="hidden" name="filter_pricing_type" value="{{ product_filters.pricing_type }}">
+                                <label>
+                                    <span>{{ dashboard_ui.status }}</span>
+                                    <select name="filter_status">
+                                        <option value="">{{ dashboard_ui.all_statuses }}</option>
+                                        <option value="available" {% if product_filters.status == "available" %}selected{% endif %}>{{ dashboard_ui.available }}</option>
+                                        <option value="unavailable" {% if product_filters.status == "unavailable" %}selected{% endif %}>{{ dashboard_ui.unavailable }}</option>
+                                    </select>
+                                </label>
+                                <div class="column-filter-actions">
+                                    <button type="submit" class="btn btn-primary btn-small">{{ dashboard_ui.search }}</button>
+                                    <a class="btn btn-secondary btn-small" href="?q={{ search_query|urlencode }}&filter_name={{ product_filters.name|urlencode }}&filter_category={{ product_filters.category|urlencode }}&filter_pricing_type={{ product_filters.pricing_type|urlencode }}">{{ dashboard_ui.clear_search }}</a>
+                                </div>
+                            </form>
+                        </details>
+                    </th>
                     <th>{{ dashboard_ui.actions }}</th>
                 </tr>
             </thead>

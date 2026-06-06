@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     {% block extra_head %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=mobile-hero-title-23">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=kilo-counter-2">
 </head>
 <body class="{% if is_rtl %}rtl {% endif %}{% block body_class %}{% endblock %}">
     {% include "partials/header.html" %}
@@ -39,12 +39,22 @@
                     </div>
                 </header>
                 <div class="offer-modal-body product-modal-body">
-                    <form method="post" action="" data-product-modal-form data-cart-form{% if not request.user.is_authenticated %} hidden{% endif %}>
+                    <form
+                        method="post"
+                        action=""
+                        data-product-modal-form
+                        data-cart-form
+                        data-company-option-message="{{ ui.select_company_option }}"
+                        {% if not request.user.is_authenticated %} hidden{% endif %}
+                    >
                         {% csrf_token %}
                         <div class="product-modal-options-scroll">
                             <fieldset class="product-options" data-product-modal-options hidden>
                                 <legend>{{ ui.product_options }}</legend>
                             </fieldset>
+                            <section class="product-company-groups" data-product-modal-companies hidden>
+                                <h3>{{ ui.choose_company }}</h3>
+                            </section>
                         </div>
                         <input type="hidden" name="next" value="{{ request.path }}">
                         <div class="product-modal-action-bar">
@@ -53,6 +63,7 @@
                                 <span class="quantity-stepper" data-quantity-control>
                                     <button type="button" data-quantity-decrease aria-label="{{ ui.qty }} -">-</button>
                                     <input type="number" name="quantity" value="1" min="1" inputmode="numeric">
+                                    <output data-quantity-display hidden>1</output>
                                     <button type="button" data-quantity-increase aria-label="{{ ui.qty }} +">+</button>
                                 </span>
                             </label>
@@ -63,6 +74,12 @@
                             <button type="submit" class="btn btn-primary" data-product-modal-submit>{{ ui.add_to_cart }}</button>
                         </div>
                     </form>
+                    {% if not request.user.is_authenticated %}
+                        <div class="product-modal-login-panel">
+                            <p>{{ ui.login_required_cart }}</p>
+                            <a href="{% url 'core:login' %}" class="btn btn-primary full-width">{{ ui.login }}</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -97,6 +114,6 @@
     {% endif %}
     {% include "partials/footer.html" %}
     {% block extra_scripts %}{% endblock %}
-    <script src="{% static 'js/site.js' %}?v=mobile-hero-title-23"></script>
+    <script src="{% static 'js/site.js' %}?v=kilo-counter-2"></script>
 </body>
 </html>

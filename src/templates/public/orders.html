@@ -58,8 +58,17 @@
                                                     <td>
                                                         <div class="product-category">{{ item.category_label }}</div>
                                                         <strong>{{ item.title }}</strong>
+                                                        {% if item.company_label %}
+                                                            <div class="product-category">{{ ui.company }}: {{ item.company_label }}</div>
+                                                        {% endif %}
+                                                        {% if item.selected_option_label %}
+                                                            <div class="product-category">{{ ui.selected_option }}: {{ item.selected_option_label }}</div>
+                                                        {% endif %}
+                                                        {% if item.note %}
+                                                            <div class="product-category">{{ ui.item_note }}: {{ item.note }}</div>
+                                                        {% endif %}
                                                     </td>
-                                                    <td>{{ item.quantity }}</td>
+                                                    <td>{{ item.display_quantity }}</td>
                                                     <td>{{ item.display_line_total }}</td>
                                                 </tr>
                                             {% endfor %}

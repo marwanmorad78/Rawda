@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -400,11 +402,35 @@ class CustomerOrderItem(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="items",
     )
-    item_type = models.CharField(max_length=20)
+    product = models.ForeignKey(
+        "catalog.Product",
+        on_delete=models.SET_NULL,
+        related_name="order_items",
+        blank=True,
+        null=True,
+    )
+    company = models.ForeignKey(
+        "catalog.ProductCompany",
+        on_delete=models.SET_NULL,
+        related_name="order_items",
+        blank=True,
+        null=True,
+    )
+    selected_option = models.ForeignKey(
+        "catalog.ProductCompanyOption",
+        on_delete=models.SET_NULL,
+        related_name="order_items",
+        blank=True,
+        null=True,
+    )
+    item_type = models.CharField(max_length=32)
     cart_item_id = models.PositiveIntegerField(blank=True, null=True)
     title = models.CharField(max_length=180)
     category_label = models.CharField(max_length=120, blank=True)
-    quantity = models.PositiveIntegerField(default=1)
+    company_label = models.CharField(max_length=120, blank=True)
+    selected_option_label = models.CharField(max_length=120, blank=True)
+    note = models.TextField(blank=True)
+    quantity = models.DecimalField(max_digits=10, decimal_places=1, default=1)
     unit_label = models.CharField(max_length=50, blank=True)
     unit_price = models.DecimalField(max_digits=12, decimal_places=0, default=0)
     line_total_min = models.DecimalField(max_digits=12, decimal_places=0, default=0)
@@ -413,6 +439,17 @@ class CustomerOrderItem(TimeStampedModel):
 
     class Meta:
         ordering = ["id"]
+
+    def clean(self):
+        super().clean()
+        quantity = Decimal(self.quantity or 0)
+        if self.is_weight_based:
+            if quantity < Decimal("0.5") or quantity > Decimal("10") or quantity % Decimal("0.5"):
+                raise ValidationError(
+                    {"quantity": "Weight must be from 0.5 kg to 10 kg in 0.5 kg steps."}
+                )
+        elif quantity < 1 or quantity != quantity.to_integral_value():
+            raise ValidationError({"quantity": "Item quantity must be a positive whole number."})
 
     def __str__(self) -> str:
         return self.title

@@ -5,7 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils import timezone
 from django.forms import inlineformset_factory
 
-from apps.catalog.models import Category, Product, ProductOption
+from apps.catalog.models import Category, Product, ProductCompany, ProductCompanyOption, ProductOption
 from apps.core.localization import DEFAULT_LANGUAGE
 from apps.core.models import CenterStatus, DeliveryArea, DeliverySubArea, SiteSettings
 from apps.dashboard.localization import (
@@ -149,6 +149,7 @@ class CategoryForm(DashboardLocalizedFormMixin, forms.ModelForm):
     class Meta:
         model = Category
         fields = [
+            "parent",
             "name",
             "description",
             "display_order",
@@ -158,6 +159,26 @@ class CategoryForm(DashboardLocalizedFormMixin, forms.ModelForm):
             "cover_image",
             "external_image_url",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        parent_field = self.fields.get("parent")
+        if parent_field is not None:
+            parent_field.required = False
+            parent_field.queryset = Category.objects.select_related("parent").exclude(
+                pk=self.instance.pk
+            ).order_by("display_order", "name")
+            parent_field.label_from_instance = self.format_category_choice
+        for field_name in ("sold_by_weight", "is_price_linked_to_dollar"):
+            if field_name in self.fields:
+                self.fields[field_name].required = False
+
+    def format_category_choice(self, category):
+        label = category.name_ar if self.language == "ar" and category.name_ar else category.name
+        if category.parent_id:
+            parent_label = category.parent.name_ar if self.language == "ar" and category.parent.name_ar else category.parent.name
+            return f"{parent_label} / {label}"
+        return label
 
 
 class ProductForm(DashboardLocalizedFormMixin, forms.ModelForm):
@@ -169,6 +190,7 @@ class ProductForm(DashboardLocalizedFormMixin, forms.ModelForm):
             "short_description",
             "description",
             "price",
+            "product_type",
             "price_link_mode",
             "is_price_linked_to_dollar",
             "unit_label",
@@ -183,15 +205,31 @@ class ProductForm(DashboardLocalizedFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if "category" in self.fields and self.language == "ar":
-            self.fields["category"].label_from_instance = lambda obj: obj.name_ar or obj.name
+        if "category" in self.fields:
+            self.fields["category"].queryset = Category.objects.select_related("parent").order_by(
+                "parent__display_order",
+                "parent__name",
+                "display_order",
+                "name",
+            )
+            self.fields["category"].label_from_instance = self.format_category_choice
         self.fields["price"].required = False
         self.fields["is_price_linked_to_dollar"].help_text = self.dashboard_ui["custom_dollar_help"]
         self.fields["sold_by_weight"].help_text = self.dashboard_ui["custom_kilo_help"]
 
+    def format_category_choice(self, category):
+        label = category.name_ar if self.language == "ar" and category.name_ar else category.name
+        if category.parent_id:
+            parent_label = category.parent.name_ar if self.language == "ar" and category.parent.name_ar else category.parent.name
+            return f"{parent_label} / {label}"
+        return label
+
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get("has_options"):
+        if cleaned_data.get("product_type") == Product.PRODUCT_TYPE_COMPANY_GROUPED:
+            cleaned_data["has_options"] = False
+            cleaned_data["price"] = Decimal("0")
+        elif cleaned_data.get("has_options"):
             cleaned_data["price"] = Decimal("0")
         elif cleaned_data.get("price") is None and not self.errors.get("price"):
             self.add_error("price", self.fields["price"].error_messages["required"])
@@ -228,8 +266,26 @@ class DeliveryAreaExcelUploadForm(ProductExcelUploadForm):
 ProductOptionFormSet = inlineformset_factory(
     Product,
     ProductOption,
-    fields=("name", "price", "is_default", "display_order"),
+    fields=("name", "price", "is_default", "is_available", "display_order"),
     extra=5,
+    can_delete=True,
+)
+
+
+ProductCompanyFormSet = inlineformset_factory(
+    Product,
+    ProductCompany,
+    fields=("name", "logo", "external_logo_url", "order", "is_active"),
+    extra=3,
+    can_delete=True,
+)
+
+
+ProductCompanyOptionFormSet = inlineformset_factory(
+    ProductCompany,
+    ProductCompanyOption,
+    fields=("name", "price", "is_available", "order"),
+    extra=4,
     can_delete=True,
 )
 
