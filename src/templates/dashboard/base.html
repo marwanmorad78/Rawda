@@ -7,7 +7,7 @@
     <title>{% block title %}{{ dashboard_ui.dashboard_title }}{% endblock %}</title>
     <link rel="icon" type="image/jpeg" href="{% static 'images/rawda.jpeg' %}">
     {% block extra_head %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=orders-day-filter-25">
+    {% include "partials/stylesheets.html" %}
 </head>
 <body class="dashboard-body{% if is_rtl %} rtl{% endif %}">
     <button

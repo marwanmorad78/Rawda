@@ -504,6 +504,7 @@ class CartUpdateView(LoginRequiredMixin, View):
             preserve_cart_for_next_request(request)
             return redirect("catalog:cart")
         if wants_json_response(request):
+            preserve_cart_for_next_request(request)
             return JsonResponse(cart_json_payload(request, item_type, item_id))
         messages.success(request, ui["cart_updated"])
         preserve_cart_for_next_request(request)
@@ -533,6 +534,7 @@ class CartRemoveView(LoginRequiredMixin, View):
     def post(self, request, item_type, item_id):
         remove_item(request, item_type, item_id)
         if wants_json_response(request):
+            preserve_cart_for_next_request(request)
             return JsonResponse(cart_json_payload(request, item_type, item_id))
         messages.success(request, get_ui_strings(get_language(request))["cart_removed"])
         preserve_cart_for_next_request(request)

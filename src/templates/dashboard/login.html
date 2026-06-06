@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ dashboard_ui.manager_login }}</title>
     <link rel="icon" type="image/jpeg" href="{% static 'images/rawda.jpeg' %}">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% include "partials/stylesheets.html" %}
 </head>
 <body class="auth-body{% if is_rtl %} rtl{% endif %}">
     <main class="auth-card">

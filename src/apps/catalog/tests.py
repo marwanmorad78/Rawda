@@ -1,9 +1,12 @@
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase
+from django.urls import reverse
 
 from apps.catalog.cart import (
+    CART_SESSION_KEY,
     add_product,
     add_product_company_option,
     add_product_option,
@@ -115,3 +118,80 @@ class KiloCartTests(TestCase):
 
         with self.assertRaises(ValueError):
             add_product(request, product.pk, Decimal("0.5"), is_weight_based=True)
+
+
+class CartRemovalTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username="0999999999",
+            password="test-password",
+        )
+        self.client.force_login(self.user)
+        self.category = Category.objects.create(name="Regular")
+        self.products = [
+            Product.objects.create(
+                category=self.category,
+                name=f"Product {index}",
+                price=Decimal("100"),
+                sold_by_weight_mode=Product.BEHAVIOR_CUSTOM,
+                sold_by_weight=False,
+            )
+            for index in range(1, 4)
+        ]
+        session = self.client.session
+        session[CART_SESSION_KEY] = {
+            f"product:{product.pk}": {"quantity": "1", "note": ""}
+            for product in self.products
+        }
+        session.save()
+
+    def test_ajax_remove_keeps_remaining_items_after_cart_reload(self):
+        removed_product = self.products[0]
+        response = self.client.post(
+            reverse(
+                "catalog:cart-remove",
+                kwargs={"item_type": "product", "item_id": removed_product.pk},
+            ),
+            HTTP_ACCEPT="application/json",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["is_empty"])
+        self.assertEqual(response.json()["cart_count"], 2)
+
+        reload_response = self.client.get(
+            reverse("catalog:cart"),
+            HTTP_ACCEPT="text/html",
+            HTTP_CACHE_CONTROL="max-age=0",
+            HTTP_SEC_FETCH_DEST="document",
+        )
+
+        self.assertEqual(reload_response.status_code, 200)
+        self.assertEqual(len(reload_response.context["cart"]["items"]), 2)
+
+    def test_ajax_quantity_zero_keeps_other_items_after_cart_reload(self):
+        removed_product = self.products[0]
+        response = self.client.post(
+            reverse(
+                "catalog:cart-update",
+                kwargs={"item_type": "product", "item_id": removed_product.pk},
+            ),
+            {"quantity": "0"},
+            HTTP_ACCEPT="application/json",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["is_empty"])
+        self.assertEqual(response.json()["cart_count"], 2)
+
+        reload_response = self.client.get(
+            reverse("catalog:cart"),
+            HTTP_ACCEPT="text/html",
+            HTTP_CACHE_CONTROL="max-age=0",
+            HTTP_SEC_FETCH_DEST="document",
+        )
+
+        self.assertEqual(len(reload_response.context["cart"]["items"]), 2)
