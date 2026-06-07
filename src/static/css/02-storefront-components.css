@@ -564,6 +564,30 @@ input[type="reset"] {
     background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 251, 255, 0.96));
 }
 
+.product-modal-image-button {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    cursor: zoom-in;
+}
+
+.product-modal-image-button[hidden] {
+    display: none;
+}
+
+.product-modal-image-button:focus-visible {
+    outline: 3px solid rgba(16, 79, 157, 0.55);
+    outline-offset: -3px;
+}
+
 .product-modal .product-modal-media img[data-product-modal-image] {
     display: block;
     width: 100% !important;
@@ -574,6 +598,117 @@ input[type="reset"] {
     object-position: center center !important;
     border-radius: 14px;
     background: transparent;
+}
+
+.product-photo-viewer[hidden] {
+    display: none;
+}
+
+.product-photo-viewer {
+    position: fixed;
+    top: var(--app-viewport-offset-top, 0px);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    z-index: 110;
+    box-sizing: border-box;
+    width: 100vw;
+    height: var(--app-viewport-height, 100dvh);
+    display: grid;
+    place-items: center;
+    padding: max(3.75rem, calc(1rem + env(safe-area-inset-top, 0px)))
+        max(1rem, env(safe-area-inset-right, 0px))
+        max(1rem, env(safe-area-inset-bottom, 0px))
+        max(1rem, env(safe-area-inset-left, 0px));
+    overflow: hidden;
+    touch-action: pan-x pan-y pinch-zoom;
+}
+
+.product-photo-viewer-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(3, 8, 16, 0.94);
+    cursor: zoom-out;
+}
+
+.product-photo-viewer-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 1200px);
+    height: min(100%, 900px);
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.product-photo-viewer-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.product-photo-viewer-dialog img {
+    display: block;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    pointer-events: auto;
+}
+
+.product-photo-viewer-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    background: rgba(10, 18, 30, 0.76);
+    color: var(--white);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.product-photo-viewer-close:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 3px;
+}
+
+.rtl .product-photo-viewer-close {
+    right: auto;
+    left: 0;
+}
+
+@media (max-width: 700px) {
+    .product-photo-viewer {
+        padding-top: max(3.5rem, calc(0.75rem + env(safe-area-inset-top, 0px)));
+        padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+        padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    }
+
+    .product-photo-viewer-dialog {
+        width: 100%;
+        height: 100%;
+    }
 }
 
 .product-modal .product-modal-media img[data-product-modal-image][hidden],

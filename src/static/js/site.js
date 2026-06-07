@@ -12,6 +12,7 @@ const offerModalPrice = offerModal?.querySelector("[data-offer-modal-price]");
 const offerModalForm = offerModal?.querySelector("[data-offer-modal-form]");
 const productModal = document.querySelector("[data-product-modal]");
 const productModalDialog = productModal?.querySelector(".product-modal-dialog");
+const productModalImageButton = productModal?.querySelector("[data-product-modal-image-button]");
 const productModalImage = productModal?.querySelector("[data-product-modal-image]");
 const productModalPlaceholder = productModal?.querySelector("[data-product-modal-placeholder]");
 const productModalTitle = productModal?.querySelector("[data-product-modal-title]");
@@ -25,6 +26,10 @@ const productModalCompanies = productModal?.querySelector("[data-product-modal-c
 const productModalSubmit = productModal?.querySelector("[data-product-modal-submit]");
 const productModalOptionsScroll = productModal?.querySelector(".product-modal-options-scroll");
 const productModalLoginPanel = productModal?.querySelector(".product-modal-login-panel");
+const productPhotoViewer = document.querySelector("[data-product-photo-viewer]");
+const productPhotoViewerImage = productPhotoViewer?.querySelector("[data-product-photo-viewer-image]");
+const productPhotoViewerTitle = productPhotoViewer?.querySelector("[data-product-photo-viewer-title]");
+const productPhotoViewerClose = productPhotoViewer?.querySelector(".product-photo-viewer-close");
 
 const floatingCart = document.querySelector("[data-floating-cart]");
 const floatingCartCount = floatingCart?.querySelector("[data-floating-cart-count]");
@@ -135,6 +140,7 @@ const getAnyOpenModal = () =>
     Boolean(
         (offerModal && !offerModal.hidden) ||
             (productModal && !productModal.hidden) ||
+            (productPhotoViewer && !productPhotoViewer.hidden) ||
             (excelModal && !excelModal.hidden) ||
             (cartNoteModal && !cartNoteModal.hidden) ||
             (checkoutConfirmModal && !checkoutConfirmModal.hidden) ||
@@ -432,6 +438,10 @@ const syncProductModalTotal = () => {
 };
 
 const resetProductModalMedia = () => {
+    if (productModalImageButton) {
+        productModalImageButton.hidden = true;
+        productModalImageButton.removeAttribute("aria-label");
+    }
     if (productModalImage) {
         productModalImage.onerror = null;
         productModalImage.removeAttribute("src");
@@ -444,6 +454,43 @@ const resetProductModalMedia = () => {
         productModalPlaceholder.textContent = "";
         productModalPlaceholder.hidden = false;
     }
+};
+
+const closeProductPhotoViewer = () => {
+    if (!productPhotoViewer) {
+        return;
+    }
+
+    productPhotoViewer.hidden = true;
+    if (productPhotoViewerImage) {
+        productPhotoViewerImage.removeAttribute("src");
+        productPhotoViewerImage.alt = "";
+    }
+    if (productPhotoViewerTitle) {
+        productPhotoViewerTitle.textContent = "";
+    }
+    syncModalOpenState();
+
+    if (productModal && !productModal.hidden && productModalImageButton && !productModalImageButton.hidden) {
+        productModalImageButton.focus({ preventScroll: true });
+    }
+};
+
+const openProductPhotoViewer = () => {
+    const imageSource = productModalImage?.currentSrc || productModalImage?.src;
+    if (!productPhotoViewer || !productPhotoViewerImage || !imageSource || productModalImage?.hidden) {
+        return;
+    }
+
+    const title = productModalTitle?.textContent?.trim() || productModalImage.alt || "";
+    productPhotoViewerImage.src = imageSource;
+    productPhotoViewerImage.alt = productModalImage.alt || title;
+    if (productPhotoViewerTitle) {
+        productPhotoViewerTitle.textContent = title;
+    }
+    productPhotoViewer.hidden = false;
+    syncModalOpenState();
+    productPhotoViewerClose?.focus({ preventScroll: true });
 };
 
 const resetProductModalContent = () => {
@@ -1626,22 +1673,36 @@ const openProductModal = (card) => {
     if (productModalImage && productModalPlaceholder) {
         if (image) {
             productModalImage.onerror = () => {
+                closeProductPhotoViewer();
                 productModalImage.removeAttribute("src");
                 productModalImage.removeAttribute("srcset");
                 productModalImage.alt = "";
                 productModalImage.hidden = true;
+                if (productModalImageButton) {
+                    productModalImageButton.hidden = true;
+                    productModalImageButton.removeAttribute("aria-label");
+                }
                 productModalPlaceholder.hidden = false;
                 productModalPlaceholder.textContent = title.slice(0, 1);
             };
             productModalImage.src = image;
             productModalImage.alt = title;
             productModalImage.hidden = false;
+            if (productModalImageButton) {
+                const viewImageLabel = document.documentElement.lang === "ar" ? `عرض صورة ${title} بالحجم الكامل` : `View ${title} full size`;
+                productModalImageButton.setAttribute("aria-label", viewImageLabel);
+                productModalImageButton.hidden = false;
+            }
             productModalPlaceholder.hidden = true;
         } else {
             productModalImage.removeAttribute("src");
             productModalImage.removeAttribute("srcset");
             productModalImage.alt = "";
             productModalImage.hidden = true;
+            if (productModalImageButton) {
+                productModalImageButton.hidden = true;
+                productModalImageButton.removeAttribute("aria-label");
+            }
             productModalPlaceholder.hidden = false;
             productModalPlaceholder.textContent = title.slice(0, 1);
         }
@@ -1660,6 +1721,7 @@ const closeProductModal = (event) => {
         return;
     }
 
+    closeProductPhotoViewer();
     productModal.hidden = true;
     syncModalOpenState();
 };
@@ -2552,6 +2614,11 @@ productModal?.querySelectorAll("[data-product-modal-close]").forEach((element) =
     element.addEventListener("click", closeProductModal);
 });
 
+productModalImageButton?.addEventListener("click", openProductPhotoViewer);
+productPhotoViewer?.querySelectorAll("[data-product-photo-viewer-close]").forEach((element) => {
+    element.addEventListener("click", closeProductPhotoViewer);
+});
+
 enhanceBusyCountdowns();
 enhanceDashboardCenterCountdown();
 activeOrderStatusRegions.forEach(enhanceActiveOrderStatusRegion);
@@ -2643,6 +2710,10 @@ dashboardColumnFilters.forEach((filter) => {
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+        if (productPhotoViewer && !productPhotoViewer.hidden) {
+            closeProductPhotoViewer();
+            return;
+        }
         closeModals();
         setDashboardDrawerOpen(false);
         setMobileNavOpen(false);

@@ -452,12 +452,16 @@
 
 body.modal-open {
     overscroll-behavior: none;
-    touch-action: none;
 }
 
 body.modal-open .offer-modal,
 body.modal-open .dashboard-modal {
-    touch-action: auto;
+    touch-action: pan-y;
+}
+
+body.modal-open .product-modal-dialog,
+body.modal-open .product-modal-options-scroll {
+    touch-action: pan-y;
 }
 
 .product-modal-dialog.offer-modal-dialog {
