@@ -437,6 +437,18 @@ const syncProductModalTotal = () => {
     );
 };
 
+const syncProductModalSubmitState = () => {
+    if (!productModalSubmit || !productModalForm) {
+        return;
+    }
+
+    const requiresSelection = productModalDialog?.classList.contains("has-options");
+    const selectedOption = productModalForm.querySelector(
+        'input[name="option_id"]:checked:not(:disabled), input[name="company_option_id"]:checked:not(:disabled)',
+    );
+    productModalSubmit.disabled = Boolean(requiresSelection && !selectedOption);
+};
+
 const resetProductModalMedia = () => {
     if (productModalImageButton) {
         productModalImageButton.hidden = true;
@@ -1498,9 +1510,7 @@ const buildProductCompanyCard = (companyNode, basePrice) => {
             if (productModalPrice) {
                 productModalPrice.textContent = productModalUnitPriceText;
             }
-            if (productModalSubmit) {
-                productModalSubmit.disabled = false;
-            }
+            syncProductModalSubmitState();
             syncProductModalTotal();
         });
 
@@ -1600,7 +1610,7 @@ const openProductModal = (card) => {
     if (productModalOptions && productModalSubmit) {
         productModalOptions.querySelectorAll(".product-option-card").forEach((option) => option.remove());
         productModalOptions.hidden = !hasOptions;
-        productModalSubmit.disabled = hasSelections || isCompanyGrouped;
+        productModalSubmit.disabled = hasSelections;
 
         if (hasOptions) optionNodes.forEach((optionNode) => {
             const label = document.createElement("label");
@@ -1614,7 +1624,6 @@ const openProductModal = (card) => {
             input.dataset.optionPrice = optionNode.dataset.optionPrice || "";
             input.dataset.optionUnitPrice = optionNode.dataset.optionUnitPrice || "";
             input.disabled = optionNode.dataset.optionAvailable === "false";
-            input.checked = optionNode.dataset.optionDefault === "true" && !input.disabled;
 
             const mark = document.createElement("span");
             mark.className = "choice-mark choice-mark-radio";
@@ -1637,18 +1646,12 @@ const openProductModal = (card) => {
             input.addEventListener("change", () => {
                 productModalUnitPriceText = input.dataset.optionPrice || price;
                 productModalPrice.textContent = productModalUnitPriceText;
-                productModalSubmit.disabled = false;
+                syncProductModalSubmitState();
                 syncProductModalTotal();
             });
 
             label.append(input, mark, copy);
             productModalOptions.append(label);
-
-            if (input.checked) {
-                productModalUnitPriceText = input.dataset.optionPrice || price;
-                productModalPrice.textContent = productModalUnitPriceText;
-                productModalSubmit.disabled = false;
-            }
         });
     }
 
@@ -1659,6 +1662,7 @@ const openProductModal = (card) => {
             productModalCompanies.append(buildProductCompanyCard(companyNode, price));
         });
     }
+    syncProductModalSubmitState();
 
     if (productModalDescription) {
         productModalDescription.textContent = description;
