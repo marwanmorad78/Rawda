@@ -1,3 +1,4 @@
+import importlib.util
 import os
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -8,6 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 
 load_dotenv(PROJECT_ROOT / ".env")
+
+WHITENOISE_AVAILABLE = importlib.util.find_spec("whitenoise") is not None
 
 def env_to_bool(name, default=False):
     value = os.getenv(name)
@@ -85,7 +88,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "apps.catalog.middleware.ClearCartOnReloadMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -94,6 +96,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+if WHITENOISE_AVAILABLE:
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 ROOT_URLCONF = "config.urls"
 
@@ -174,7 +179,11 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if WHITENOISE_AVAILABLE
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        ),
     },
 }
 
