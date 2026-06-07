@@ -94,7 +94,7 @@ uv run python src/manage.py runserver
 
 ### Useful Commands
 ```bash
-uv add Django psycopg[binary] Pillow python-dotenv whitenoise
+uv add Django psycopg[binary] Pillow python-dotenv
 uv add --dev ruff django-browser-reload
 uv sync
 uv run python src/manage.py makemigrations
@@ -111,7 +111,7 @@ This repo now includes a [`render.yaml`](render.yaml) Blueprint and [`build.sh`]
 - Web service runtime: Python
 - App server: `gunicorn`
 - Database: Render Postgres via `DATABASE_URL`
-- Static files: WhiteNoise
+- Static files: collected by Django to `STATIC_ROOT`
 - Uploaded media: a persistent disk mounted at `/opt/render/project/src/src/media`
 
 ### Important pricing note

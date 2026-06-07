@@ -1,4 +1,3 @@
-import importlib.util
 import os
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -9,8 +8,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 
 load_dotenv(PROJECT_ROOT / ".env")
-
-WHITENOISE_AVAILABLE = importlib.util.find_spec("whitenoise") is not None
 
 def env_to_bool(name, default=False):
     value = os.getenv(name)
@@ -97,9 +94,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-if WHITENOISE_AVAILABLE:
-    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
-
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
@@ -174,18 +168,6 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": (
-            "whitenoise.storage.CompressedManifestStaticFilesStorage"
-            if WHITENOISE_AVAILABLE
-            else "django.contrib.staticfiles.storage.StaticFilesStorage"
-        ),
-    },
-}
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(os.getenv("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
