@@ -778,7 +778,7 @@ input[type="reset"] {
     height: auto;
     min-height: 0;
     display: grid;
-    grid-template-rows: auto auto;
+    grid-template-rows: minmax(0, auto) auto;
     gap: 0;
 }
 
@@ -786,11 +786,14 @@ input[type="reset"] {
     grid-template-rows: minmax(0, auto) auto;
 }
 
+.product-modal-dialog.has-many-options .product-modal-body form[data-cart-form] {
+    grid-template-rows: minmax(0, auto) auto;
+}
+
 .product-modal-options-scroll {
     min-height: 0;
-    height: auto;
-    max-height: none;
-    overflow-y: visible;
+    max-height: min(440px, calc(100dvh - 350px));
+    overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
