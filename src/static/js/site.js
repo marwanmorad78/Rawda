@@ -1468,7 +1468,6 @@ const buildProductCompanyCard = (companyNode, basePrice) => {
     const arrow = document.createElement("span");
     arrow.className = "product-company-arrow";
     arrow.setAttribute("aria-hidden", "true");
-    arrow.textContent = "v";
 
     const optionsWrap = document.createElement("div");
     optionsWrap.className = "product-company-options";
