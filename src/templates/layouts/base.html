@@ -28,7 +28,9 @@
             <div class="product-modal-shell">
                 <header class="product-modal-header">
                     <div class="offer-modal-media product-modal-media">
-                        <img src="" alt="" data-product-modal-image hidden>
+                        <button type="button" class="product-modal-image-button" data-product-modal-image-button hidden>
+                            <img src="" alt="" data-product-modal-image hidden>
+                        </button>
                         <div class="offer-modal-placeholder" data-product-modal-placeholder></div>
                     </div>
                     <div class="product-modal-heading">
@@ -84,6 +86,22 @@
             </div>
         </div>
     </div>
+    <div class="product-photo-viewer" data-product-photo-viewer hidden>
+        <button
+            type="button"
+            class="product-photo-viewer-backdrop"
+            data-product-photo-viewer-close
+            tabindex="-1"
+            aria-label="{{ ui.close }}"
+        ></button>
+        <div class="product-photo-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="product-photo-viewer-title">
+            <h2 id="product-photo-viewer-title" class="product-photo-viewer-title" data-product-photo-viewer-title></h2>
+            <button type="button" class="product-photo-viewer-close" data-product-photo-viewer-close aria-label="{{ ui.close }}">
+                &times;
+            </button>
+            <img alt="" data-product-photo-viewer-image>
+        </div>
+    </div>
     {% if request.user.is_authenticated %}
         <a
             href="{% url 'catalog:cart' %}"
@@ -114,6 +132,6 @@
     {% endif %}
     {% include "partials/footer.html" %}
     {% block extra_scripts %}{% endblock %}
-    <script src="{% static 'js/site.js' %}?v=kilo-counter-2"></script>
+    <script src="{% static 'js/site.js' %}?v=product-modal-options-1"></script>
 </body>
 </html>
