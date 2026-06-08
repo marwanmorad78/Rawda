@@ -126,7 +126,9 @@ class HomeView(TemplateView):
                 "options",
                 Prefetch(
                     "companies",
-                    queryset=ProductCompany.objects.filter(is_active=True).prefetch_related(
+                    queryset=ProductCompany.objects.filter(company__is_active=True)
+                    .select_related("company")
+                    .prefetch_related(
                         Prefetch(
                             "options",
                             queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
@@ -509,7 +511,7 @@ class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
                 exists = ProductCompanyOption.objects.filter(
                     pk=item.cart_item_id,
                     is_available=True,
-                    company__is_active=True,
+                    company__company__is_active=True,
                     company__product__product_type=Product.PRODUCT_TYPE_COMPANY_GROUPED,
                     company__product__is_available=True,
                     company__product__category__is_active=True,
@@ -552,7 +554,7 @@ class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
         if item.item_type == PRODUCT_COMPANY_OPTION_ITEM_TYPE:
             option_query = ProductCompanyOption.objects.filter(
                 is_available=True,
-                company__is_active=True,
+                company__company__is_active=True,
                 company__product__product_type=Product.PRODUCT_TYPE_COMPANY_GROUPED,
                 company__product__is_available=True,
                 company__product__category__is_active=True,
@@ -560,7 +562,9 @@ class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):
             if item.selected_option_label:
                 option_query = option_query.filter(name__iexact=item.selected_option_label.strip())
             if item.company_label:
-                option_query = option_query.filter(company__name__iexact=item.company_label.strip())
+                option_query = option_query.filter(
+                    company__company__name__iexact=item.company_label.strip()
+                )
             if title:
                 option_query = option_query.filter(
                     Q(company__product__name__iexact=title) | Q(company__product__name_ar__iexact=title)

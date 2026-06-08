@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ProductCompany, ProductCompanyOption, Category, Product, ProductImage, ProductOption
+from .models import Company, ProductCompany, ProductCompanyOption, Category, Product, ProductImage, ProductOption
 
 
 class ProductImageInline(admin.TabularInline):
@@ -17,7 +17,7 @@ class ProductOptionInline(admin.TabularInline):
 class ProductCompanyInline(admin.TabularInline):
     model = ProductCompany
     extra = 1
-    fields = ("name", "logo", "external_logo_url", "order", "is_active")
+    fields = ("company",)
 
 
 class ProductCompanyOptionInline(admin.TabularInline):
@@ -96,8 +96,15 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductCompany)
 class ProductCompanyAdmin(admin.ModelAdmin):
-    list_display = ("name", "product", "order", "is_active", "updated_at")
-    list_editable = ("order", "is_active")
-    list_filter = ("is_active", "product__category")
-    search_fields = ("name", "product__name", "product__name_ar")
+    list_display = ("company", "product", "updated_at")
+    list_filter = ("company__is_active", "product__category")
+    search_fields = ("company__code", "company__name", "product__name", "product__name_ar")
     inlines = [ProductCompanyOptionInline]
+
+
+@admin.register(Company)
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = ("code", "name", "display_order", "is_active", "updated_at")
+    list_editable = ("display_order", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("code", "name")

@@ -4,6 +4,7 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 
 from apps.core.models import TimeStampedModel
+from media.utils.image_optimizer import OptimizedImageField
 
 
 def promotion_upload_path(instance, filename):
@@ -44,7 +45,11 @@ class Promotion(TimeStampedModel):
     cta_text = models.CharField(max_length=60, blank=True)
     cta_text_ar = models.CharField(max_length=60, blank=True)
     cta_url = models.CharField(max_length=255, blank=True)
-    image = models.ImageField(upload_to=promotion_upload_path, blank=True)
+    image = OptimizedImageField(
+        upload_to=promotion_upload_path,
+        optimization_profile="banner",
+        blank=True,
+    )
     external_image_url = models.URLField(blank=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)

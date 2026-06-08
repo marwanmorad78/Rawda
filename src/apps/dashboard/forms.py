@@ -275,7 +275,7 @@ ProductOptionFormSet = inlineformset_factory(
 ProductCompanyFormSet = inlineformset_factory(
     Product,
     ProductCompany,
-    fields=("name", "logo", "external_logo_url", "order", "is_active"),
+    fields=("company",),
     extra=3,
     can_delete=True,
 )

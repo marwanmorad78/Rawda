@@ -15,6 +15,7 @@ from apps.catalog.cart import (
 )
 from apps.catalog.models import (
     Category,
+    Company,
     Product,
     ProductCompany,
     ProductCompanyOption,
@@ -91,7 +92,8 @@ class KiloCartTests(TestCase):
         product = self.weighted_product(
             product_type=Product.PRODUCT_TYPE_COMPANY_GROUPED,
         )
-        company = ProductCompany.objects.create(product=product, name="Farm")
+        global_company = Company.objects.create(code="farm", name="Farm")
+        company = ProductCompany.objects.create(product=product, company=global_company)
         option = ProductCompanyOption.objects.create(
             company=company,
             name="Large",

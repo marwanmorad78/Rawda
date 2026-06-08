@@ -20,7 +20,13 @@ build/
 *.egg-info/
 
 media/
-src/media/
+!src/media/
+src/media/*
+!src/media/__init__.py
+!src/media/utils/
+src/media/utils/*
+!src/media/utils/__init__.py
+!src/media/utils/image_optimizer.py
 staticfiles/
 src/staticfiles/
 uploads/

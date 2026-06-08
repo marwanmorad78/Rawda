@@ -16,36 +16,11 @@
                 <div class="dashboard-company-fields">
                     <div>
                         <label>
-                            <span>{{ dashboard_ui.name }}</span>
-                            {{ block.company_form.name }}
+                            <span>{{ dashboard_ui.product_companies }}</span>
+                            {{ block.company_form.company }}
                         </label>
-                        {{ block.company_form.name.errors }}
+                        {{ block.company_form.company.errors }}
                     </div>
-                    <div>
-                        <label>
-                            <span>{{ dashboard_ui.logo }}</span>
-                            {{ block.company_form.logo }}
-                        </label>
-                        {{ block.company_form.logo.errors }}
-                    </div>
-                    <div>
-                        <label>
-                            <span>{{ dashboard_ui.external_logo_url }}</span>
-                            {{ block.company_form.external_logo_url }}
-                        </label>
-                        {{ block.company_form.external_logo_url.errors }}
-                    </div>
-                    <div>
-                        <label>
-                            <span>{{ dashboard_ui.order }}</span>
-                            {{ block.company_form.order }}
-                        </label>
-                        {{ block.company_form.order.errors }}
-                    </div>
-                    <label class="compact-checkbox">
-                        {{ block.company_form.is_active }}
-                        <span class="choice-copy">{{ dashboard_ui.available }}</span>
-                    </label>
                     {% if block.company_form.DELETE %}
                         <label class="compact-checkbox">
                             {{ block.company_form.DELETE }}
@@ -151,36 +126,11 @@
             <div class="dashboard-company-fields">
                 <div>
                     <label>
-                        <span>{{ dashboard_ui.name }}</span>
-                        {{ company_formset.empty_form.name }}
+                        <span>{{ dashboard_ui.product_companies }}</span>
+                        {{ company_formset.empty_form.company }}
                     </label>
-                    {{ company_formset.empty_form.name.errors }}
+                    {{ company_formset.empty_form.company.errors }}
                 </div>
-                <div>
-                    <label>
-                        <span>{{ dashboard_ui.logo }}</span>
-                        {{ company_formset.empty_form.logo }}
-                    </label>
-                    {{ company_formset.empty_form.logo.errors }}
-                </div>
-                <div>
-                    <label>
-                        <span>{{ dashboard_ui.external_logo_url }}</span>
-                        {{ company_formset.empty_form.external_logo_url }}
-                    </label>
-                    {{ company_formset.empty_form.external_logo_url.errors }}
-                </div>
-                <div>
-                    <label>
-                        <span>{{ dashboard_ui.order }}</span>
-                        {{ company_formset.empty_form.order }}
-                    </label>
-                    {{ company_formset.empty_form.order.errors }}
-                </div>
-                <label class="compact-checkbox">
-                    {{ company_formset.empty_form.is_active }}
-                    <span class="choice-copy">{{ dashboard_ui.available }}</span>
-                </label>
                 {% if company_formset.empty_form.DELETE %}
                     <label class="compact-checkbox">
                         {{ company_formset.empty_form.DELETE }}

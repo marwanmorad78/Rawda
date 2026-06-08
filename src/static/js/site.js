@@ -1455,6 +1455,12 @@ const buildProductCompanyCard = (companyNode, basePrice) => {
         const image = document.createElement("img");
         image.src = logoUrl;
         image.alt = companyName;
+        image.addEventListener("error", () => {
+            image.remove();
+            const placeholder = document.createElement("span");
+            placeholder.textContent = companyName.slice(0, 1);
+            logo.append(placeholder);
+        }, { once: true });
         logo.append(image);
     } else {
         const placeholder = document.createElement("span");

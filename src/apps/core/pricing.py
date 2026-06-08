@@ -69,7 +69,11 @@ def set_product_display_price(product, language, site_settings=None):
     if getattr(product, "is_company_grouped", False):
         companies = getattr(product, "prefetched_companies", None)
         if companies is None:
-            companies = list(product.companies.filter(is_active=True).prefetch_related("options"))
+            companies = list(
+                product.companies.filter(company__is_active=True)
+                .select_related("company")
+                .prefetch_related("options")
+            )
         for company in companies:
             company_options = getattr(company, "prefetched_options", None)
             if company_options is None:

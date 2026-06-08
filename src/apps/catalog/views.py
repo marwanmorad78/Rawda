@@ -45,11 +45,15 @@ from .models import Category, Product, ProductCompany, ProductCompanyOption, Pro
 
 def attach_product_selection_data(product, language, site_settings):
     if product.is_company_grouped:
-        company_queryset = product.companies.filter(is_active=True).prefetch_related(
-            Prefetch(
-                "options",
-                queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
-                to_attr="prefetched_options",
+        company_queryset = (
+            product.companies.filter(company__is_active=True)
+            .select_related("company")
+            .prefetch_related(
+                Prefetch(
+                    "options",
+                    queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
+                    to_attr="prefetched_options",
+                )
             )
         )
         product.prefetched_companies = list(company_queryset)
@@ -200,7 +204,9 @@ class CategoryDetailView(DetailView):
                 "options",
                 Prefetch(
                     "companies",
-                    queryset=ProductCompany.objects.filter(is_active=True).prefetch_related(
+                    queryset=ProductCompany.objects.filter(company__is_active=True)
+                    .select_related("company")
+                    .prefetch_related(
                         Prefetch(
                             "options",
                             queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
@@ -250,7 +256,9 @@ class ProductDetailView(DetailView):
                 "options",
                 Prefetch(
                     "companies",
-                    queryset=ProductCompany.objects.filter(is_active=True).prefetch_related(
+                    queryset=ProductCompany.objects.filter(company__is_active=True)
+                    .select_related("company")
+                    .prefetch_related(
                         Prefetch(
                             "options",
                             queryset=ProductCompanyOption.objects.order_by("order", "name", "id"),
@@ -310,8 +318,8 @@ class AddToCartView(LoginRequiredMixin, View):
             selected_option = ProductCompanyOption.objects.filter(
                 pk=request.POST.get("company_option_id"),
                 company__product=product,
-                company__is_active=True,
-            ).select_related("company").first()
+                company__company__is_active=True,
+            ).select_related("company", "company__company").first()
             if selected_option is None:
                 message = ui.get(
                     "select_company_option",

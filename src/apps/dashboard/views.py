@@ -1,9 +1,15 @@
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, time
 from io import BytesIO
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+from urllib.request import Request, urlopen
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.files.base import ContentFile
+from django.core.files.utils import validate_file_name
 from django.db import transaction
 from django.db.models import ProtectedError, Q, Sum
 from django.http import HttpResponse
@@ -14,8 +20,16 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, TemplateView, UpdateView
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
+from PIL import Image, UnidentifiedImageError
 
-from apps.catalog.models import Category, Product, ProductCompany, ProductCompanyOption, ProductOption
+from apps.catalog.models import (
+    Category,
+    Company,
+    Product,
+    ProductCompany,
+    ProductCompanyOption,
+    ProductOption,
+)
 from apps.core.localization import DEFAULT_LANGUAGE, format_syp, localize_instance, localize_queryset
 from apps.core.models import (
     CenterStatus,
@@ -72,6 +86,7 @@ PRODUCT_EXCEL_HEADERS = [
     "unit_label",
     "is_available",
     "is_featured",
+    "image",
     "external_image_url",
     "sku",
 ]
@@ -88,7 +103,8 @@ PRODUCT_OPTION_EXCEL_REQUIRED_HEADERS = ["product_sku", "option_name", "price"]
 PRODUCT_COMPANY_EXCEL_HEADERS = [
     "company_id",
     "company_name",
-    "logo_url",
+    "logo",
+    "external_logo_url",
     "display_order",
     "is_active",
 ]
@@ -102,6 +118,16 @@ PRODUCT_COMPANY_OPTION_EXCEL_HEADERS = [
     "display_order",
 ]
 PRODUCT_COMPANY_OPTION_EXCEL_REQUIRED_HEADERS = ["product_sku", "company_id", "option_name", "price"]
+CATEGORY_IMAGE_EXCEL_HEADERS = [
+    "category",
+    "type",
+    "parent",
+    "name",
+    "slug",
+    "image",
+    "external_image_url",
+]
+MAX_EXCEL_IMAGE_BYTES = 10 * 1024 * 1024
 BOOLEAN_COLUMNS = ["is_price_linked_to_dollar", "sold_by_weight", "has_options", "is_available", "is_featured"]
 PRODUCT_MODE_COLUMNS = {
     "price_link_mode": {Product.BEHAVIOR_INHERIT, Product.BEHAVIOR_CUSTOM},
@@ -146,6 +172,153 @@ def normalize_excel_text(value):
     if value is None:
         return ""
     return str(value).strip()
+
+
+def get_excel_image_search_paths(excel_file):
+    paths = []
+    file_name = getattr(excel_file, "name", "")
+    if file_name:
+        workbook_path = Path(file_name).expanduser()
+        if workbook_path.is_absolute():
+            paths.append(workbook_path.parent)
+    temporary_file_path = getattr(excel_file, "temporary_file_path", None)
+    if callable(temporary_file_path):
+        try:
+            paths.append(Path(temporary_file_path()).resolve().parent)
+        except (OSError, ValueError):
+            pass
+    paths.extend(
+        [
+            Path(settings.PROJECT_ROOT),
+            Path(settings.MEDIA_ROOT),
+            Path.cwd(),
+        ]
+    )
+    return list(dict.fromkeys(path.resolve() for path in paths))
+
+
+def validate_excel_image_content(content, filename):
+    if not content:
+        raise ValueError("The image file is empty.")
+    if len(content) > MAX_EXCEL_IMAGE_BYTES:
+        raise ValueError("The image file is larger than 10 MB.")
+    try:
+        with Image.open(BytesIO(content)) as image:
+            image.verify()
+            image_format = (image.format or "").lower()
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ValueError("The file is not a valid image.") from exc
+
+    safe_name = validate_file_name(
+        Path(filename).name or f"excel-image.{image_format}",
+        allow_relative_path=False,
+    )
+    if not Path(safe_name).suffix and image_format:
+        safe_name = f"{safe_name}.{image_format}"
+    return {"name": safe_name, "content": content}
+
+
+def load_excel_image(value, search_paths):
+    source = normalize_excel_text(value)
+    if not source:
+        return None
+
+    parsed = urlparse(source)
+    if parsed.scheme.lower() in {"http", "https"}:
+        request = Request(source, headers={"User-Agent": "AlRawdaExcelImporter/1.0"})
+        try:
+            with urlopen(request, timeout=15) as response:
+                content_length = response.headers.get("Content-Length")
+                if content_length and int(content_length) > MAX_EXCEL_IMAGE_BYTES:
+                    raise ValueError("The image file is larger than 10 MB.")
+                content = response.read(MAX_EXCEL_IMAGE_BYTES + 1)
+                final_url = response.geturl()
+        except ValueError:
+            raise
+        except Exception as exc:
+            raise ValueError("The image URL could not be downloaded.") from exc
+        filename = Path(unquote(urlparse(final_url).path)).name or "excel-image"
+        return validate_excel_image_content(content, filename)
+
+    source_path = Path(source).expanduser()
+    candidates = [source_path] if source_path.is_absolute() else [
+        base_path / source_path
+        for base_path in search_paths
+    ]
+    image_path = next((candidate for candidate in candidates if candidate.is_file()), None)
+    if image_path is None:
+        raise ValueError(f"Image file not found: {source}")
+    try:
+        content = image_path.read_bytes()
+    except OSError as exc:
+        raise ValueError(f"Image file could not be read: {source}") from exc
+    return validate_excel_image_content(content, image_path.name)
+
+
+def save_imported_image(instance, field_name, image_data):
+    if not image_data:
+        return
+    image_field = getattr(instance, field_name)
+    old_name = image_field.name
+    image_field.save(
+        image_data["name"],
+        ContentFile(image_data["content"]),
+        save=False,
+    )
+    instance.__class__.objects.filter(pk=instance.pk).update(
+        **{
+            field_name: image_field.name,
+            "updated_at": timezone.now(),
+        }
+    )
+    if old_name and old_name != image_field.name:
+        transaction.on_commit(
+            lambda storage=image_field.storage, name=old_name: storage.delete(name)
+        )
+
+
+def merge_legacy_company_records(canonical_company):
+    legacy_companies = list(
+        Company.objects.filter(
+            code__startswith="legacy-",
+            name__iexact=canonical_company.name,
+        ).exclude(pk=canonical_company.pk)
+    )
+    for legacy_company in legacy_companies:
+        if not canonical_company.logo and legacy_company.logo:
+            canonical_company.logo = legacy_company.logo
+        if not canonical_company.external_logo_url and legacy_company.external_logo_url:
+            canonical_company.external_logo_url = legacy_company.external_logo_url
+        canonical_company.save()
+
+        for source_relation in list(legacy_company.products.all()):
+            target_relation = ProductCompany.objects.filter(
+                product=source_relation.product,
+                company=canonical_company,
+            ).first()
+            if target_relation is None:
+                source_relation.company = canonical_company
+                source_relation.save(update_fields=["company", "updated_at"])
+                continue
+
+            for source_option in list(source_relation.options.all()):
+                target_option = target_relation.options.filter(
+                    name__iexact=source_option.name
+                ).first()
+                if target_option is None:
+                    source_option.company = target_relation
+                    source_option.save(update_fields=["company", "updated_at"])
+                else:
+                    CustomerOrderItem.objects.filter(selected_option=source_option).update(
+                        selected_option=target_option
+                    )
+                    source_option.delete()
+            CustomerOrderItem.objects.filter(company=source_relation).update(
+                company=target_relation
+            )
+            source_relation.delete()
+
+        legacy_company.delete()
 
 
 def parse_excel_boolean(value, default=False):
@@ -233,12 +406,12 @@ def get_product_excel_category_lookup():
             if category.parent_id and category.parent.slug:
                 lookup[f"{category.parent.slug.strip().lower()}/{slug_key}"] = category
         if name_key:
-            if name_key in lookup:
+            if name_key in lookup and lookup[name_key].pk != category.pk:
                 duplicate_names.add(name_key)
             else:
                 lookup[name_key] = category
         if name_ar_key:
-            if name_ar_key in lookup:
+            if name_ar_key in lookup and lookup[name_ar_key].pk != category.pk:
                 duplicate_names.add(name_ar_key)
             else:
                 lookup[name_ar_key] = category
@@ -367,6 +540,8 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
     company_option_header_positions = {}
     company_option_sheet_rows = []
     company_option_product_skus = set()
+    category_sheet_rows = []
+    image_search_paths = get_excel_image_search_paths(excel_file)
     if "Options" in workbook.sheetnames:
         option_header_positions, option_sheet_rows = build_sheet_rows(workbook["Options"])
         if "product_sku" in option_header_positions:
@@ -385,6 +560,8 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                 for _, row in company_option_sheet_rows
                 if normalize_excel_text(row.get("product_sku"))
             }
+    if "Categories" in workbook.sheetnames:
+        _, category_sheet_rows = build_sheet_rows(workbook["Categories"])
     missing_headers = [
         header for header in PRODUCT_EXCEL_REQUIRED_HEADERS if header not in header_positions
     ]
@@ -392,12 +569,40 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
         return [], [f"Missing required column: {', '.join(missing_headers)}"]
 
     category_lookup, duplicate_names = get_product_excel_category_lookup()
+    valid_categories = []
     valid_rows = []
     valid_options = []
     valid_companies = []
     valid_company_options = []
     errors = []
     seen_import_keys = set()
+
+    for row_number, row in category_sheet_rows:
+        image_source = normalize_excel_text(row.get("image") or row.get("cover_image"))
+        external_image_url = normalize_excel_text(row.get("external_image_url"))
+        if not image_source and not external_image_url:
+            continue
+        category_key = normalize_excel_text(row.get("slug") or row.get("category")).lower()
+        category = category_lookup.get(category_key)
+        if category is None:
+            errors.append(
+                f"Categories row {row_number}: category '{category_key}' does not exist."
+            )
+            continue
+        image_data = None
+        if image_source:
+            try:
+                image_data = load_excel_image(image_source, image_search_paths)
+            except ValueError as exc:
+                errors.append(f"Categories row {row_number}: image: {exc}")
+                continue
+        valid_categories.append(
+            {
+                "category": category,
+                "image": image_data,
+                "external_image_url": external_image_url,
+            }
+        )
 
     for row_number, row in product_sheet_rows:
         row_errors = []
@@ -468,6 +673,14 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                     f"sku '{sku}' belongs to a different product than '{product_name}'."
                 )
 
+        image_data = None
+        image_source = normalize_excel_text(row.get("image") or row.get("primary_image"))
+        if image_source and not row_errors:
+            try:
+                image_data = load_excel_image(image_source, image_search_paths)
+            except ValueError as exc:
+                row_errors.append(f"image: {exc}")
+
         if row_errors:
             errors.append(f"Row {row_number}: {' '.join(row_errors)}")
             continue
@@ -489,6 +702,7 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             "is_featured": parsed_booleans["is_featured"],
             "external_image_url": normalize_excel_text(row.get("external_image_url")),
             "sku": sku,
+            "_image": image_data,
         }
         row_data["_import_keys"] = [import_key]
         if sku:
@@ -567,7 +781,10 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                 }
             )
 
-    known_company_ids = set()
+    known_company_ids = {
+        code.lower()
+        for code in Company.objects.values_list("code", flat=True)
+    }
     if "Companies" in workbook.sheetnames:
         if company_sheet_rows:
             missing_company_headers = [
@@ -601,6 +818,14 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                 seen_company_ids.add(company_key)
                 known_company_ids.add(company_key)
 
+            logo_data = None
+            logo_source = normalize_excel_text(row.get("logo") or row.get("logo_url"))
+            if logo_source and not row_errors:
+                try:
+                    logo_data = load_excel_image(logo_source, image_search_paths)
+                except ValueError as exc:
+                    row_errors.append(f"logo: {exc}")
+
             if row_errors:
                 errors.append(f"Companies row {row_number}: {' '.join(row_errors)}")
                 continue
@@ -609,7 +834,8 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                 {
                     "company_id": company_id,
                     "name": company_name,
-                    "external_logo_url": normalize_excel_text(row.get("logo_url")),
+                    "logo": logo_data,
+                    "external_logo_url": normalize_excel_text(row.get("external_logo_url")),
                     "order": display_order,
                     "is_active": is_active,
                 }
@@ -683,6 +909,7 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
         errors.append("The uploaded workbook has no product rows.")
 
     return {
+        "categories": valid_categories,
         "products": valid_rows,
         "options": valid_options,
         "companies": valid_companies,
@@ -733,6 +960,7 @@ def resolve_imported_product(product_lookup, product_key):
 def import_product_excel_rows(valid_rows):
     # Existing products are matched by SKU when present, otherwise by category and product name.
     product_rows = valid_rows["products"] if isinstance(valid_rows, dict) else valid_rows
+    category_rows = valid_rows.get("categories", []) if isinstance(valid_rows, dict) else []
     option_rows = valid_rows.get("options", []) if isinstance(valid_rows, dict) else []
     company_rows = valid_rows.get("companies", []) if isinstance(valid_rows, dict) else []
     company_option_rows = valid_rows.get("company_options", []) if isinstance(valid_rows, dict) else []
@@ -741,13 +969,23 @@ def import_product_excel_rows(valid_rows):
     now = timezone.now()
 
     with transaction.atomic():
+        for row in category_rows:
+            category = row["category"]
+            Category.objects.filter(pk=category.pk).update(
+                external_image_url=row["external_image_url"],
+                updated_at=now,
+            )
+            save_imported_image(category, "cover_image", row.get("image"))
+
         merge_duplicate_products_for_import()
         product_lookup = {}
         for row in product_rows:
-            import_keys = row.pop("_import_keys", [])
-            existing_product = find_existing_product_for_import(row)
+            product_data = row.copy()
+            import_keys = product_data.pop("_import_keys", [])
+            image_data = product_data.pop("_image", None)
+            existing_product = find_existing_product_for_import(product_data)
             if existing_product:
-                update_data = row.copy()
+                update_data = product_data.copy()
                 if not update_data["sku"]:
                     update_data.pop("sku")
                 update_data["updated_at"] = now
@@ -755,9 +993,10 @@ def import_product_excel_rows(valid_rows):
                 product = Product.objects.get(pk=existing_product.pk)
                 updated += 1
             else:
-                product = Product(**row)
+                product = Product(**product_data)
                 product.save()
                 created += 1
+            save_imported_image(product, "primary_image", image_data)
             if product.is_company_grouped:
                 product.options.all().delete()
                 Product.objects.filter(pk=product.pk).update(has_options=False, price=Decimal("0"), updated_at=now)
@@ -793,11 +1032,26 @@ def import_product_excel_rows(valid_rows):
                 updated_at=now,
             )
 
-        company_definitions = {
-            row["company_id"].lower(): row
-            for row in company_rows
-        }
         company_lookup = {}
+        for row in company_rows:
+            company = Company.objects.filter(code__iexact=row["company_id"]).first()
+            company_data = {
+                "code": row["company_id"],
+                "name": row["name"],
+                "external_logo_url": row["external_logo_url"],
+                "display_order": row["order"],
+                "is_active": row["is_active"],
+            }
+            if company is None:
+                company = Company.objects.create(**company_data)
+            else:
+                Company.objects.filter(pk=company.pk).update(**company_data, updated_at=now)
+                company = Company.objects.get(pk=company.pk)
+            merge_legacy_company_records(company)
+            save_imported_image(company, "logo", row.get("logo"))
+            company_lookup[row["company_id"].lower()] = company
+
+        product_company_lookup = {}
         company_products = set()
 
         for row in company_option_rows:
@@ -805,42 +1059,34 @@ def import_product_excel_rows(valid_rows):
             if product is None:
                 continue
             company_id = row["company_id"].lower()
-            company_definition = company_definitions.get(company_id)
-            if company_definition is None:
+            company = company_lookup.get(company_id)
+            if company is None:
+                company = Company.objects.filter(code__iexact=row["company_id"]).first()
+            if company is None:
                 continue
             company_products.add(product.pk)
-            company_data = {
-                "external_logo_url": company_definition["external_logo_url"],
-                "order": company_definition["order"],
-                "is_active": company_definition["is_active"],
-            }
             company_key = (row["product_key"], company_id)
-            company = company_lookup.get(company_key)
-            if company is None:
-                company = product.companies.filter(name__iexact=company_definition["name"]).first()
-            if company is None:
-                company = ProductCompany.objects.create(
+            product_company = product_company_lookup.get(company_key)
+            if product_company is None:
+                product_company, _ = ProductCompany.objects.get_or_create(
                     product=product,
-                    name=company_definition["name"],
-                    **company_data,
+                    company=company,
                 )
-            else:
-                ProductCompany.objects.filter(pk=company.pk).update(
-                    name=company_definition["name"],
-                    **company_data,
-                )
-                company = ProductCompany.objects.get(pk=company.pk)
-            company_lookup[company_key] = company
+                product_company_lookup[company_key] = product_company
             option_data = {
                 "price": row["price"],
                 "is_available": row["is_available"],
                 "order": row["order"],
             }
-            option = company.options.filter(name__iexact=row["name"]).first()
+            option = product_company.options.filter(name__iexact=row["name"]).first()
             if option:
                 ProductCompanyOption.objects.filter(pk=option.pk).update(name=row["name"], **option_data)
             else:
-                ProductCompanyOption.objects.create(company=company, name=row["name"], **option_data)
+                ProductCompanyOption.objects.create(
+                    company=product_company,
+                    name=row["name"],
+                    **option_data,
+                )
 
         if company_products:
             Product.objects.filter(pk__in=company_products).update(
@@ -1050,7 +1296,7 @@ def product_options_have_rows(option_formset):
 
 def product_company_form_has_row(company_form):
     cleaned_data = getattr(company_form, "cleaned_data", None) or {}
-    return bool(cleaned_data and not cleaned_data.get("DELETE") and cleaned_data.get("name"))
+    return bool(cleaned_data and not cleaned_data.get("DELETE") and cleaned_data.get("company"))
 
 
 def product_company_options_have_rows(option_formset):
@@ -1109,14 +1355,14 @@ def save_product_companies(product, company_formset, company_option_formsets):
             if company_form.instance.pk:
                 company_form.instance.delete()
             continue
-        if not cleaned_data.get("name"):
+        if not cleaned_data.get("company"):
             continue
 
-        company = company_form.save(commit=False)
-        company.product = product
-        company.save()
+        product_company = company_form.save(commit=False)
+        product_company.product = product
+        product_company.save()
         option_formset = company_option_formsets[index]
-        option_formset.instance = company
+        option_formset.instance = product_company
         option_formset.save()
 
 
@@ -1892,6 +2138,7 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                 "true",
                 "false",
                 "https://example.com/product.jpg",
+                "",
                 "SAMPLE-001",
             ]
         )
@@ -1912,6 +2159,7 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                 "true",
                 "false",
                 "https://example.com/shoes.jpg",
+                "",
                 "SHOES-001",
             ]
         )
@@ -1922,8 +2170,12 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
 
         companies_sheet = workbook.create_sheet("Companies")
         companies_sheet.append(PRODUCT_COMPANY_EXCEL_HEADERS)
-        companies_sheet.append(["adidas", "Adidas", "https://example.com/adidas-logo.png", "0", "true"])
-        companies_sheet.append(["nike", "Nike", "https://example.com/nike-logo.png", "1", "true"])
+        companies_sheet.append(
+            ["adidas", "Adidas", "https://example.com/adidas-logo.png", "", "0", "true"]
+        )
+        companies_sheet.append(
+            ["nike", "Nike", "https://example.com/nike-logo.png", "", "1", "true"]
+        )
 
         company_options_sheet = workbook.create_sheet("CompanyOptions")
         company_options_sheet.append(PRODUCT_COMPANY_OPTION_EXCEL_HEADERS)
@@ -1932,7 +2184,7 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
         company_options_sheet.append(["SHOES-001", "nike", "Size 42 Blue", "18.00", "true", "0"])
 
         categories_sheet = workbook.create_sheet("Categories")
-        categories_sheet.append(["category", "type", "parent", "name", "slug"])
+        categories_sheet.append(CATEGORY_IMAGE_EXCEL_HEADERS)
         for category in categories:
             categories_sheet.append(
                 [
@@ -1941,6 +2193,8 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                     format_category_path(category.parent, language) if category.parent_id else "",
                     format_category_path(category, language),
                     category.slug,
+                    category.cover_image.name if category.cover_image else "",
+                    category.external_image_url,
                 ]
             )
 
@@ -1949,13 +2203,19 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
         help_sheet.append(["Use the category column for the category or subcategory slug."])
         help_sheet.append(["For products under a parent section, use the subcategory slug, not the parent slug."])
         help_sheet.append(["product_type accepts normal or company_grouped. Leave blank for normal."])
+        help_sheet.append(["Use image for a local image path or image URL saved into the primary image field."])
+        help_sheet.append(["Use external_image_url only when the storefront should keep using an external URL."])
         help_sheet.append(["You can copy valid values from the Categories sheet."])
         help_sheet.append(["Options sheet"])
         help_sheet.append(["Use product_sku to connect normal product options to a product row in the Products sheet."])
         help_sheet.append(["Companies sheet"])
         help_sheet.append(["Use company_id and company_name to define reusable companies. Do not add product_sku here."])
+        help_sheet.append(["Use logo for a local image path or image URL saved into the logo field."])
+        help_sheet.append(["Use external_logo_url only when the storefront should keep using an external URL."])
         help_sheet.append(["CompanyOptions sheet"])
         help_sheet.append(["Use product_sku, company_id, and option_name for variants under a company."])
+        help_sheet.append(["Categories sheet"])
+        help_sheet.append(["For an existing category row, image updates its cover image before products import."])
         help_sheet.append(["Dollar-linked prices can use decimals such as 1.08 or 2.48."])
 
         header_fill = PatternFill("solid", fgColor="DDEBFF")

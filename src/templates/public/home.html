@@ -249,8 +249,8 @@
                                             {% for company in product.prefetched_companies %}
                                                 <div
                                                     data-company-id="{{ company.id }}"
-                                                    data-company-name="{{ company.name }}"
-                                                    data-company-logo="{% if company.logo %}{{ company.logo.url }}{% elif company.external_logo_url %}{{ company.external_logo_url }}{% endif %}"
+                                                    data-company-name="{{ company.company.name }}"
+                                                    data-company-logo="{% if company.company.logo %}{{ company.company.logo.url }}{% elif company.company.external_logo_url %}{{ company.company.external_logo_url }}{% endif %}"
                                                 >
                                                     {% for option in company.prefetched_options %}
                                                         <span

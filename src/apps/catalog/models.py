@@ -7,6 +7,7 @@ from django.template.defaultfilters import slugify
 from django.urls import reverse
 
 from apps.core.models import TimeStampedModel
+from media.utils.image_optimizer import OptimizedImageField
 
 
 def category_upload_path(instance, filename):
@@ -54,7 +55,11 @@ class Category(TimeStampedModel):
     is_active = models.BooleanField(default=True)
     sold_by_weight = models.BooleanField(null=True, blank=True, default=None)
     is_price_linked_to_dollar = models.BooleanField(null=True, blank=True, default=None)
-    cover_image = models.ImageField(upload_to=category_upload_path, blank=True)
+    cover_image = OptimizedImageField(
+        upload_to=category_upload_path,
+        optimization_profile="category",
+        blank=True,
+    )
     external_image_url = models.URLField(blank=True)
 
     class Meta:
@@ -151,7 +156,11 @@ class Product(TimeStampedModel):
     is_available = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     sku = models.CharField(max_length=50, blank=True)
-    primary_image = models.ImageField(upload_to=product_upload_path, blank=True)
+    primary_image = OptimizedImageField(
+        upload_to=product_upload_path,
+        optimization_profile="product",
+        blank=True,
+    )
     external_image_url = models.URLField(blank=True)
 
     class Meta:
@@ -227,22 +236,69 @@ class ProductOption(TimeStampedModel):
         return f"{self.product.name} - {self.name}"
 
 
+class Company(TimeStampedModel):
+    code = models.CharField(max_length=120, unique=True)
+    name = models.CharField(max_length=120)
+    logo = OptimizedImageField(
+        upload_to=company_upload_path,
+        optimization_profile="company",
+        blank=True,
+    )
+    external_logo_url = models.URLField(blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name_plural = "Companies"
+        ordering = ["display_order", "name", "id"]
+        indexes = [models.Index(fields=["is_active", "display_order"])]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.code})"
+
+
 class ProductCompany(TimeStampedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="companies")
-    name = models.CharField(max_length=120)
-    logo = models.ImageField(upload_to=company_upload_path, blank=True)
-    external_logo_url = models.URLField(blank=True)
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="products")
 
     class Meta:
         verbose_name = "Product company"
         verbose_name_plural = "Product companies"
-        ordering = ["order", "name", "id"]
-        indexes = [models.Index(fields=["product", "is_active", "order"])]
+        ordering = ["company__display_order", "company__name", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "company"],
+                name="unique_product_company",
+            )
+        ]
+        indexes = [models.Index(fields=["product", "company"])]
+
+    @property
+    def code(self):
+        return self.company.code
+
+    @property
+    def name(self):
+        return self.company.name
+
+    @property
+    def logo(self):
+        return self.company.logo
+
+    @property
+    def external_logo_url(self):
+        return self.company.external_logo_url
+
+    @property
+    def is_active(self):
+        return self.company.is_active
+
+    @property
+    def order(self):
+        return self.company.display_order
 
     def __str__(self) -> str:
-        return f"{self.product.name} - {self.name}"
+        return f"{self.product.name} - {self.company.name}"
 
 
 class ProductCompanyOption(TimeStampedModel):
@@ -264,7 +320,10 @@ class ProductCompanyOption(TimeStampedModel):
 
 class ProductImage(TimeStampedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="gallery_images")
-    image = models.ImageField(upload_to=gallery_upload_path)
+    image = OptimizedImageField(
+        upload_to=gallery_upload_path,
+        optimization_profile="product",
+    )
     alt_text = models.CharField(max_length=180, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
 

@@ -261,6 +261,7 @@ def build_cart(request):
         company__product__category__is_active=True,
     ).select_related(
         "company",
+        "company__company",
         "company__product",
         "company__product__category",
         "company__product__category__parent",
@@ -427,7 +428,7 @@ def build_cart(request):
                     "is_weight_based": is_weight_based,
                     "is_unavailable": (
                         (not product.is_available)
-                        or (not company.is_active)
+                        or (not company.company.is_active)
                         or (not option.is_available)
                     ),
                     "unavailable_message": "هذا الصنف لم يعد متوفراً" if language == "ar" else "This item is no longer available.",

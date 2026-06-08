@@ -56,15 +56,15 @@
                                 <details class="product-company-card">
                                     <summary class="product-company-summary">
                                         <span class="product-company-logo">
-                                            {% if company.logo %}
-                                                <img src="{{ company.logo.url }}" alt="{{ company.name }}">
-                                            {% elif company.external_logo_url %}
-                                                <img src="{{ company.external_logo_url }}" alt="{{ company.name }}">
+                                            {% if company.company.logo %}
+                                                <img src="{{ company.company.logo.url }}" alt="{{ company.company.name }}">
+                                            {% elif company.company.external_logo_url %}
+                                                <img src="{{ company.company.external_logo_url }}" alt="{{ company.company.name }}">
                                             {% else %}
-                                                <span>{{ company.name|slice:":1" }}</span>
+                                                <span>{{ company.company.name|slice:":1" }}</span>
                                             {% endif %}
                                         </span>
-                                        <strong>{{ company.name }}</strong>
+                                        <strong>{{ company.company.name }}</strong>
                                         <span class="product-company-arrow" aria-hidden="true"></span>
                                     </summary>
                                     <div class="product-company-options">
@@ -200,8 +200,8 @@
                             {% for company in item.prefetched_companies %}
                                 <div
                                     data-company-id="{{ company.id }}"
-                                    data-company-name="{{ company.name }}"
-                                    data-company-logo="{% if company.logo %}{{ company.logo.url }}{% elif company.external_logo_url %}{{ company.external_logo_url }}{% endif %}"
+                                    data-company-name="{{ company.company.name }}"
+                                    data-company-logo="{% if company.company.logo %}{{ company.company.logo.url }}{% elif company.company.external_logo_url %}{{ company.company.external_logo_url }}{% endif %}"
                                 >
                                     {% for option in company.prefetched_options %}
                                         <span
