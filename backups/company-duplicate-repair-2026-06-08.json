@@ -1,0 +1,4990 @@
+[
+{
+  "model": "catalog.company",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.577Z",
+    "updated_at": "2026-06-08T17:43:29.577Z",
+    "code": "legacy-1",
+    "name": "سيدي هشام",
+    "logo": "product-companies/sss.webp",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.581Z",
+    "updated_at": "2026-06-08T17:43:29.581Z",
+    "code": "legacy-5",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.581Z",
+    "updated_at": "2026-06-08T17:43:29.581Z",
+    "code": "legacy-7",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.581Z",
+    "updated_at": "2026-06-08T17:43:29.581Z",
+    "code": "legacy-10",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.581Z",
+    "updated_at": "2026-06-08T17:43:29.581Z",
+    "code": "legacy-17",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.581Z",
+    "updated_at": "2026-06-08T17:43:29.581Z",
+    "code": "legacy-19",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.581Z",
+    "updated_at": "2026-06-08T17:43:29.581Z",
+    "code": "legacy-20",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.581Z",
+    "updated_at": "2026-06-08T17:43:29.581Z",
+    "code": "legacy-22",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-26",
+    "name": "سيدي هشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-2",
+    "name": "الشيف نديم",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-27",
+    "name": "مسرابي",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-16",
+    "name": "ليو",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 13,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-21",
+    "name": "ليو",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 14,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-25",
+    "name": "ليو",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 15,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-3",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 16,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.586Z",
+    "updated_at": "2026-06-08T17:43:29.586Z",
+    "code": "legacy-6",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 17,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-8",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 18,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-11",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 19,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-14",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 20,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-23",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 21,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-28",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 22,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-4",
+    "name": "الأحلام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 23,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-9",
+    "name": "الأحلام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 24,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.590Z",
+    "updated_at": "2026-06-08T17:43:29.590Z",
+    "code": "legacy-12",
+    "name": "الأحلام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 25,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.594Z",
+    "updated_at": "2026-06-08T17:43:29.594Z",
+    "code": "legacy-15",
+    "name": "الأحلام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 26,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.595Z",
+    "updated_at": "2026-06-08T17:43:29.595Z",
+    "code": "legacy-24",
+    "name": "الأحلام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 27,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.595Z",
+    "updated_at": "2026-06-08T17:43:29.595Z",
+    "code": "legacy-29",
+    "name": "الأحلام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 28,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.595Z",
+    "updated_at": "2026-06-08T17:43:29.595Z",
+    "code": "legacy-13",
+    "name": "بيوت الشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 8,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 29,
+  "fields": {
+    "created_at": "2026-06-08T17:43:29.595Z",
+    "updated_at": "2026-06-08T17:43:29.595Z",
+    "code": "legacy-18",
+    "name": "كريستال",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 9,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 30,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.833Z",
+    "updated_at": "2026-06-08T17:50:03.570Z",
+    "code": "Com-1",
+    "name": "سيدي هشام",
+    "logo": "product-companies/sss_fO57Gll.webp",
+    "external_logo_url": "",
+    "display_order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 31,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.838Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-2",
+    "name": "مسرابي",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 32,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.839Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-3",
+    "name": "ليو",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 33,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.842Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-4",
+    "name": "الدرة",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 34,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.844Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-5",
+    "name": "بوك",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 4,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 35,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.845Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-6",
+    "name": "العافية",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 5,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 36,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.847Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-7",
+    "name": "معدنلي",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 6,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 37,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.849Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-8",
+    "name": "الأحلام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 38,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.849Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-9",
+    "name": "بيوت الشام",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 8,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 39,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.849Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-10",
+    "name": "كريستال",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 9,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 40,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.852Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-11",
+    "name": "دولي",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 10,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.company",
+  "pk": 41,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.854Z",
+    "updated_at": "2026-06-08T17:50:03.468Z",
+    "code": "Com-12",
+    "name": "عافية",
+    "logo": "",
+    "external_logo_url": "",
+    "display_order": 11,
+    "is_active": true
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-06-03T09:16:00.882Z",
+    "updated_at": "2026-06-03T09:31:19.516Z",
+    "product": 125,
+    "company": 1
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-06-03T09:16:00.898Z",
+    "updated_at": "2026-06-03T09:31:19.524Z",
+    "product": 125,
+    "company": 10
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.585Z",
+    "updated_at": "2026-06-06T11:00:22.585Z",
+    "product": 125,
+    "company": 15
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.593Z",
+    "updated_at": "2026-06-06T11:00:22.593Z",
+    "product": 125,
+    "company": 22
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.606Z",
+    "updated_at": "2026-06-06T11:00:22.606Z",
+    "product": 126,
+    "company": 2
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.616Z",
+    "updated_at": "2026-06-06T11:00:22.616Z",
+    "product": 126,
+    "company": 16
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.623Z",
+    "updated_at": "2026-06-06T11:00:22.623Z",
+    "product": 127,
+    "company": 3
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.636Z",
+    "updated_at": "2026-06-06T11:00:22.636Z",
+    "product": 127,
+    "company": 17
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.657Z",
+    "updated_at": "2026-06-06T11:00:22.657Z",
+    "product": 127,
+    "company": 23
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.662Z",
+    "updated_at": "2026-06-06T11:00:22.662Z",
+    "product": 129,
+    "company": 4
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.688Z",
+    "updated_at": "2026-06-06T11:00:22.688Z",
+    "product": 129,
+    "company": 18
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.705Z",
+    "updated_at": "2026-06-06T11:00:22.705Z",
+    "product": 129,
+    "company": 24
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 13,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.718Z",
+    "updated_at": "2026-06-06T11:00:22.718Z",
+    "product": 130,
+    "company": 28
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 14,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.727Z",
+    "updated_at": "2026-06-06T11:00:22.727Z",
+    "product": 130,
+    "company": 19
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 15,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.731Z",
+    "updated_at": "2026-06-06T11:00:22.731Z",
+    "product": 130,
+    "company": 25
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 16,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.736Z",
+    "updated_at": "2026-06-06T11:00:22.736Z",
+    "product": 130,
+    "company": 12
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 17,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.747Z",
+    "updated_at": "2026-06-06T11:00:22.747Z",
+    "product": 131,
+    "company": 5
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 18,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.753Z",
+    "updated_at": "2026-06-06T11:00:22.753Z",
+    "product": 131,
+    "company": 29
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 19,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.757Z",
+    "updated_at": "2026-06-06T11:00:22.757Z",
+    "product": 132,
+    "company": 6
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 20,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.770Z",
+    "updated_at": "2026-06-06T11:00:22.770Z",
+    "product": 133,
+    "company": 7
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 21,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.787Z",
+    "updated_at": "2026-06-06T11:00:22.787Z",
+    "product": 133,
+    "company": 13
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 22,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.796Z",
+    "updated_at": "2026-06-06T11:00:22.796Z",
+    "product": 134,
+    "company": 8
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 23,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.808Z",
+    "updated_at": "2026-06-06T11:00:22.808Z",
+    "product": 134,
+    "company": 20
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 24,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.817Z",
+    "updated_at": "2026-06-06T11:00:22.817Z",
+    "product": 134,
+    "company": 26
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 25,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.821Z",
+    "updated_at": "2026-06-06T11:00:22.821Z",
+    "product": 134,
+    "company": 14
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 26,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.850Z",
+    "updated_at": "2026-06-06T11:00:22.850Z",
+    "product": 135,
+    "company": 9
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 27,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.861Z",
+    "updated_at": "2026-06-06T11:00:22.861Z",
+    "product": 135,
+    "company": 11
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 28,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.884Z",
+    "updated_at": "2026-06-06T11:00:22.884Z",
+    "product": 135,
+    "company": 21
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 29,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.934Z",
+    "updated_at": "2026-06-06T11:00:22.934Z",
+    "product": 135,
+    "company": 27
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 30,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.856Z",
+    "updated_at": "2026-06-08T17:47:33.856Z",
+    "product": 125,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 31,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.864Z",
+    "updated_at": "2026-06-08T17:47:33.865Z",
+    "product": 125,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 32,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.869Z",
+    "updated_at": "2026-06-08T17:47:33.869Z",
+    "product": 125,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 33,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.877Z",
+    "updated_at": "2026-06-08T17:47:33.877Z",
+    "product": 126,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 34,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.883Z",
+    "updated_at": "2026-06-08T17:47:33.883Z",
+    "product": 126,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 35,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.888Z",
+    "updated_at": "2026-06-08T17:47:33.888Z",
+    "product": 127,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 36,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.895Z",
+    "updated_at": "2026-06-08T17:47:33.895Z",
+    "product": 127,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 37,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.907Z",
+    "updated_at": "2026-06-08T17:47:33.907Z",
+    "product": 127,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 38,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.910Z",
+    "updated_at": "2026-06-08T17:47:33.910Z",
+    "product": 129,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 39,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.922Z",
+    "updated_at": "2026-06-08T17:47:33.922Z",
+    "product": 129,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 40,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.930Z",
+    "updated_at": "2026-06-08T17:47:33.930Z",
+    "product": 129,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 41,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.940Z",
+    "updated_at": "2026-06-08T17:47:33.940Z",
+    "product": 130,
+    "company": 38
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 42,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.945Z",
+    "updated_at": "2026-06-08T17:47:33.945Z",
+    "product": 130,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 43,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.949Z",
+    "updated_at": "2026-06-08T17:47:33.949Z",
+    "product": 130,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 44,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.952Z",
+    "updated_at": "2026-06-08T17:47:33.952Z",
+    "product": 130,
+    "company": 32
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 45,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.957Z",
+    "updated_at": "2026-06-08T17:47:33.957Z",
+    "product": 131,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 46,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.962Z",
+    "updated_at": "2026-06-08T17:47:33.962Z",
+    "product": 131,
+    "company": 39
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 47,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.966Z",
+    "updated_at": "2026-06-08T17:47:33.966Z",
+    "product": 132,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 48,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.973Z",
+    "updated_at": "2026-06-08T17:47:33.973Z",
+    "product": 133,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 49,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.980Z",
+    "updated_at": "2026-06-08T17:47:33.980Z",
+    "product": 133,
+    "company": 32
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 50,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.984Z",
+    "updated_at": "2026-06-08T17:47:33.984Z",
+    "product": 134,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 51,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.994Z",
+    "updated_at": "2026-06-08T17:47:33.994Z",
+    "product": 134,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 52,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.999Z",
+    "updated_at": "2026-06-08T17:47:33.999Z",
+    "product": 134,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 53,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.002Z",
+    "updated_at": "2026-06-08T17:47:34.002Z",
+    "product": 134,
+    "company": 32
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 54,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.014Z",
+    "updated_at": "2026-06-08T17:47:34.014Z",
+    "product": 135,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 55,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.019Z",
+    "updated_at": "2026-06-08T17:47:34.019Z",
+    "product": 135,
+    "company": 31
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 56,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.031Z",
+    "updated_at": "2026-06-08T17:47:34.031Z",
+    "product": 135,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 57,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.048Z",
+    "updated_at": "2026-06-08T17:47:34.048Z",
+    "product": 135,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 58,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.051Z",
+    "updated_at": "2026-06-08T17:47:34.051Z",
+    "product": 136,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 59,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.055Z",
+    "updated_at": "2026-06-08T17:47:34.055Z",
+    "product": 136,
+    "company": 32
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 60,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.057Z",
+    "updated_at": "2026-06-08T17:47:34.057Z",
+    "product": 136,
+    "company": 40
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 61,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.065Z",
+    "updated_at": "2026-06-08T17:47:34.065Z",
+    "product": 137,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 62,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.068Z",
+    "updated_at": "2026-06-08T17:47:34.068Z",
+    "product": 137,
+    "company": 31
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 63,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.071Z",
+    "updated_at": "2026-06-08T17:47:34.071Z",
+    "product": 138,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 64,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.074Z",
+    "updated_at": "2026-06-08T17:47:34.074Z",
+    "product": 138,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 65,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.078Z",
+    "updated_at": "2026-06-08T17:47:34.078Z",
+    "product": 139,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 66,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.083Z",
+    "updated_at": "2026-06-08T17:47:34.083Z",
+    "product": 139,
+    "company": 31
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 67,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.088Z",
+    "updated_at": "2026-06-08T17:47:34.088Z",
+    "product": 139,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 68,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.092Z",
+    "updated_at": "2026-06-08T17:47:34.092Z",
+    "product": 139,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 69,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.098Z",
+    "updated_at": "2026-06-08T17:47:34.098Z",
+    "product": 142,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 70,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.101Z",
+    "updated_at": "2026-06-08T17:47:34.101Z",
+    "product": 142,
+    "company": 31
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 71,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.104Z",
+    "updated_at": "2026-06-08T17:47:34.104Z",
+    "product": 142,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 72,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.109Z",
+    "updated_at": "2026-06-08T17:47:34.109Z",
+    "product": 142,
+    "company": 37
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 73,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.111Z",
+    "updated_at": "2026-06-08T17:47:34.111Z",
+    "product": 143,
+    "company": 30
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 74,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.125Z",
+    "updated_at": "2026-06-08T17:47:34.125Z",
+    "product": 143,
+    "company": 38
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 75,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.129Z",
+    "updated_at": "2026-06-08T17:47:34.129Z",
+    "product": 146,
+    "company": 33
+  }
+},
+{
+  "model": "catalog.productcompany",
+  "pk": 76,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.132Z",
+    "updated_at": "2026-06-08T17:47:34.132Z",
+    "product": 146,
+    "company": 41
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-06-03T09:16:00.882Z",
+    "updated_at": "2026-06-03T09:16:00.882Z",
+    "company": 1,
+    "name": "200 غ",
+    "price": "1.04",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-06-03T09:16:00.890Z",
+    "updated_at": "2026-06-03T09:16:00.890Z",
+    "company": 1,
+    "name": "400 غ",
+    "price": "2.08",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-06-03T09:16:00.894Z",
+    "updated_at": "2026-06-03T09:16:00.894Z",
+    "company": 1,
+    "name": "800 غ",
+    "price": "3.87",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-06-03T09:16:00.898Z",
+    "updated_at": "2026-06-03T09:16:00.898Z",
+    "company": 2,
+    "name": "100 غ",
+    "price": "0.90",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-06-03T09:16:00.902Z",
+    "updated_at": "2026-06-03T09:16:00.902Z",
+    "company": 2,
+    "name": "150 غ",
+    "price": "1.12",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.585Z",
+    "updated_at": "2026-06-06T11:00:22.585Z",
+    "company": 3,
+    "name": "400 غ",
+    "price": "1.91",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.593Z",
+    "updated_at": "2026-06-06T11:00:22.593Z",
+    "company": 3,
+    "name": "800 غ",
+    "price": "3.58",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.598Z",
+    "updated_at": "2026-06-06T11:00:22.598Z",
+    "company": 4,
+    "name": "200 غ",
+    "price": "1.00",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.600Z",
+    "updated_at": "2026-06-06T11:00:22.600Z",
+    "company": 4,
+    "name": "400 غ",
+    "price": "1.81",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.602Z",
+    "updated_at": "2026-06-06T11:00:22.602Z",
+    "company": 4,
+    "name": "800 غ",
+    "price": "3.41",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.606Z",
+    "updated_at": "2026-06-06T11:00:22.606Z",
+    "company": 5,
+    "name": "400 غ",
+    "price": "2.16",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.614Z",
+    "updated_at": "2026-06-06T11:00:22.614Z",
+    "company": 5,
+    "name": "800 غ",
+    "price": "4.07",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 13,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.619Z",
+    "updated_at": "2026-06-06T11:00:22.619Z",
+    "company": 6,
+    "name": "بالفستق 400 غ",
+    "price": "1.93",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 14,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.619Z",
+    "updated_at": "2026-06-06T11:00:22.619Z",
+    "company": 6,
+    "name": "بالفستق 800 غ",
+    "price": "3.86",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 15,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.627Z",
+    "updated_at": "2026-06-06T11:00:22.627Z",
+    "company": 7,
+    "name": "375 غ",
+    "price": "0.78",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 16,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.631Z",
+    "updated_at": "2026-06-06T11:00:22.631Z",
+    "company": 7,
+    "name": "660 غ",
+    "price": "1.22",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 17,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.632Z",
+    "updated_at": "2026-06-06T11:00:22.632Z",
+    "company": 7,
+    "name": "1.35 كغ",
+    "price": "2.12",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 18,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.636Z",
+    "updated_at": "2026-06-06T11:00:22.636Z",
+    "company": 8,
+    "name": "375 غ",
+    "price": "1.09",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 19,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.640Z",
+    "updated_at": "2026-06-06T11:00:22.640Z",
+    "company": 8,
+    "name": "650 غ",
+    "price": "1.45",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 20,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.647Z",
+    "updated_at": "2026-06-06T11:00:22.647Z",
+    "company": 8,
+    "name": "1.35 كغ",
+    "price": "3.20",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 21,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.650Z",
+    "updated_at": "2026-06-06T11:00:22.650Z",
+    "company": 8,
+    "name": "بلاستيك 1 كغ",
+    "price": "2.13",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 22,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.653Z",
+    "updated_at": "2026-06-06T11:00:22.653Z",
+    "company": 8,
+    "name": "بلاستيك 2 كغ",
+    "price": "3.37",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 23,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.657Z",
+    "updated_at": "2026-06-06T11:00:22.657Z",
+    "company": 9,
+    "name": "1 كغ",
+    "price": "1.74",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 24,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.662Z",
+    "updated_at": "2026-06-06T11:00:22.662Z",
+    "company": 9,
+    "name": "2 كغ",
+    "price": "2.87",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 25,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.667Z",
+    "updated_at": "2026-06-06T11:00:22.667Z",
+    "company": 10,
+    "name": "250 مل",
+    "price": "2.15",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 26,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.670Z",
+    "updated_at": "2026-06-06T11:00:22.670Z",
+    "company": 10,
+    "name": "500 مل",
+    "price": "4.07",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 27,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.675Z",
+    "updated_at": "2026-06-06T11:00:22.675Z",
+    "company": 10,
+    "name": "750 مل",
+    "price": "5.96",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 28,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.675Z",
+    "updated_at": "2026-06-06T11:00:22.675Z",
+    "company": 10,
+    "name": "1 لتر",
+    "price": "7.95",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 29,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.679Z",
+    "updated_at": "2026-06-06T11:00:22.679Z",
+    "company": 10,
+    "name": "2 لتر",
+    "price": "15.50",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 30,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.684Z",
+    "updated_at": "2026-06-06T11:00:22.684Z",
+    "company": 10,
+    "name": "5 لتر",
+    "price": "37.00",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 31,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.688Z",
+    "updated_at": "2026-06-06T11:00:22.688Z",
+    "company": 11,
+    "name": "250 مل",
+    "price": "2.13",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 32,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.693Z",
+    "updated_at": "2026-06-06T11:00:22.693Z",
+    "company": 11,
+    "name": "500 مل",
+    "price": "3.93",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 33,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.697Z",
+    "updated_at": "2026-06-06T11:00:22.697Z",
+    "company": 11,
+    "name": "1 لتر",
+    "price": "8.00",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 34,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.701Z",
+    "updated_at": "2026-06-06T11:00:22.701Z",
+    "company": 11,
+    "name": "2 لتر",
+    "price": "15.00",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 35,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.705Z",
+    "updated_at": "2026-06-06T11:00:22.705Z",
+    "company": 12,
+    "name": "250 مل",
+    "price": "2.01",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 36,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.710Z",
+    "updated_at": "2026-06-06T11:00:22.710Z",
+    "company": 12,
+    "name": "500 مل",
+    "price": "3.85",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 37,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.714Z",
+    "updated_at": "2026-06-06T11:00:22.714Z",
+    "company": 12,
+    "name": "1 لتر",
+    "price": "7.60",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 38,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.718Z",
+    "updated_at": "2026-06-06T11:00:22.718Z",
+    "company": 13,
+    "name": "سردين حد",
+    "price": "0.51",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 39,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.723Z",
+    "updated_at": "2026-06-06T11:00:22.723Z",
+    "company": 13,
+    "name": "سردين حلو",
+    "price": "0.51",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 40,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.727Z",
+    "updated_at": "2026-06-06T11:00:22.727Z",
+    "company": 14,
+    "name": "سردين مغربي",
+    "price": "0.80",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 41,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.734Z",
+    "updated_at": "2026-06-06T11:00:22.734Z",
+    "company": 15,
+    "name": "سردين 125 غ",
+    "price": "0.55",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 42,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.736Z",
+    "updated_at": "2026-06-06T11:00:22.736Z",
+    "company": 16,
+    "name": "سردين حلو",
+    "price": "0.81",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 43,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.745Z",
+    "updated_at": "2026-06-06T11:00:22.745Z",
+    "company": 16,
+    "name": "سردين حار",
+    "price": "0.81",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 44,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.749Z",
+    "updated_at": "2026-06-06T11:00:22.749Z",
+    "company": 17,
+    "name": "1 كغ",
+    "price": "2.91",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 45,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.753Z",
+    "updated_at": "2026-06-06T11:00:22.753Z",
+    "company": 17,
+    "name": "2 كغ",
+    "price": "5.50",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 46,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.757Z",
+    "updated_at": "2026-06-06T11:00:22.757Z",
+    "company": 18,
+    "name": "1 كغ",
+    "price": "2.49",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 47,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.762Z",
+    "updated_at": "2026-06-06T11:00:22.762Z",
+    "company": 19,
+    "name": "غنم 500 غ",
+    "price": "7.00",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 48,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.766Z",
+    "updated_at": "2026-06-06T11:00:22.766Z",
+    "company": 19,
+    "name": "بقري 500 غ",
+    "price": "5.87",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 49,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.770Z",
+    "updated_at": "2026-06-06T11:00:22.770Z",
+    "company": 19,
+    "name": "بقري 1 كغ",
+    "price": "10.70",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 50,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.774Z",
+    "updated_at": "2026-06-06T11:00:22.774Z",
+    "company": 20,
+    "name": "أخضر معدن 200 غ",
+    "price": "2.20",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 51,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.774Z",
+    "updated_at": "2026-06-06T11:00:22.774Z",
+    "company": 20,
+    "name": "سيلاني 25 ظرف",
+    "price": "0.81",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 52,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.782Z",
+    "updated_at": "2026-06-06T11:00:22.782Z",
+    "company": 20,
+    "name": "سيلاني 100 ظرف + 15",
+    "price": "3.02",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 53,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.782Z",
+    "updated_at": "2026-06-06T11:00:22.782Z",
+    "company": 20,
+    "name": "سيلاني فرط 500 غ",
+    "price": "5.50",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 54,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.787Z",
+    "updated_at": "2026-06-06T11:00:22.787Z",
+    "company": 21,
+    "name": "سوبر بيكو  400 غ",
+    "price": "4.35",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 55,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.794Z",
+    "updated_at": "2026-06-06T11:00:22.794Z",
+    "company": 21,
+    "name": "25 ظرف +5",
+    "price": "0.68",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 56,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.800Z",
+    "updated_at": "2026-06-06T11:00:22.800Z",
+    "company": 22,
+    "name": "سكيب جاك حار",
+    "price": "1.06",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 57,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.800Z",
+    "updated_at": "2026-06-06T11:00:22.800Z",
+    "company": 22,
+    "name": "تونغل حار",
+    "price": "1.40",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 58,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.805Z",
+    "updated_at": "2026-06-06T11:00:22.805Z",
+    "company": 22,
+    "name": "تونغل حلو",
+    "price": "1.40",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 59,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.808Z",
+    "updated_at": "2026-06-06T11:00:22.808Z",
+    "company": 23,
+    "name": "سكيب جاك",
+    "price": "0.94",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 60,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.812Z",
+    "updated_at": "2026-06-06T11:00:22.812Z",
+    "company": 23,
+    "name": "أبيض",
+    "price": "1.05",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 61,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.817Z",
+    "updated_at": "2026-06-06T11:00:22.817Z",
+    "company": 24,
+    "name": "تونا حلوة",
+    "price": "0.94",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 62,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.825Z",
+    "updated_at": "2026-06-06T11:00:22.825Z",
+    "company": 25,
+    "name": "سكيب جاك حار  140 غ",
+    "price": "0.93",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 63,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.829Z",
+    "updated_at": "2026-06-06T11:00:22.829Z",
+    "company": 25,
+    "name": "سكيب جاك حلو  140 غ",
+    "price": "0.93",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 64,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.833Z",
+    "updated_at": "2026-06-06T11:00:22.833Z",
+    "company": 25,
+    "name": "سكيب جاك حار  400 غ",
+    "price": "2.50",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 65,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.837Z",
+    "updated_at": "2026-06-06T11:00:22.837Z",
+    "company": 25,
+    "name": "سكيب جاك حلو  400 غ",
+    "price": "2.50",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 66,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.842Z",
+    "updated_at": "2026-06-06T11:00:22.842Z",
+    "company": 25,
+    "name": "فيلية",
+    "price": "1.85",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 67,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.846Z",
+    "updated_at": "2026-06-06T11:00:22.846Z",
+    "company": 25,
+    "name": "تونغل",
+    "price": "1.40",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 68,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.846Z",
+    "updated_at": "2026-06-06T11:00:22.850Z",
+    "company": 25,
+    "name": "تونغل زيت زيتون",
+    "price": "1.50",
+    "is_available": true,
+    "order": 6
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 69,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.854Z",
+    "updated_at": "2026-06-06T11:00:22.854Z",
+    "company": 26,
+    "name": "مشمش 430 غ",
+    "price": "1.25",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 70,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.859Z",
+    "updated_at": "2026-06-06T11:00:22.859Z",
+    "company": 26,
+    "name": "فراولة 430 غ",
+    "price": "1.25",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 71,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.863Z",
+    "updated_at": "2026-06-06T11:00:22.863Z",
+    "company": 27,
+    "name": "مشمش قطع  370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 72,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.866Z",
+    "updated_at": "2026-06-06T11:00:22.866Z",
+    "company": 27,
+    "name": "مشمش ناعم  370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 73,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.875Z",
+    "updated_at": "2026-06-06T11:00:22.875Z",
+    "company": 27,
+    "name": "فراولة 370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 74,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.879Z",
+    "updated_at": "2026-06-06T11:00:22.879Z",
+    "company": 27,
+    "name": "تين 370 غ",
+    "price": "1.85",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 75,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.884Z",
+    "updated_at": "2026-06-06T11:00:22.884Z",
+    "company": 27,
+    "name": "توت 370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 76,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.888Z",
+    "updated_at": "2026-06-06T11:00:22.888Z",
+    "company": 28,
+    "name": "مشمش 430 غ",
+    "price": "1.34",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 77,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.896Z",
+    "updated_at": "2026-06-06T11:00:22.896Z",
+    "company": 28,
+    "name": "مشمش 925 غ",
+    "price": "2.24",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 78,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.901Z",
+    "updated_at": "2026-06-06T11:00:22.901Z",
+    "company": 28,
+    "name": "فراولة 430 غ",
+    "price": "1.46",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 79,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.909Z",
+    "updated_at": "2026-06-06T11:00:22.909Z",
+    "company": 28,
+    "name": "فراولة 925 غ",
+    "price": "2.37",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 80,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.914Z",
+    "updated_at": "2026-06-06T11:00:22.914Z",
+    "company": 28,
+    "name": "تين 430 غ",
+    "price": "1.30",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 81,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.918Z",
+    "updated_at": "2026-06-06T11:00:22.918Z",
+    "company": 28,
+    "name": "تين 800 غ",
+    "price": "1.98",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 82,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.922Z",
+    "updated_at": "2026-06-06T11:00:22.922Z",
+    "company": 28,
+    "name": "توت 430 غ",
+    "price": "2.02",
+    "is_available": true,
+    "order": 6
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 83,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.926Z",
+    "updated_at": "2026-06-06T11:00:22.926Z",
+    "company": 28,
+    "name": "قرع 430 غ",
+    "price": "1.16",
+    "is_available": true,
+    "order": 7
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 84,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.932Z",
+    "updated_at": "2026-06-06T11:00:22.932Z",
+    "company": 28,
+    "name": "كرز 430 غ",
+    "price": "1.60",
+    "is_available": true,
+    "order": 8
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 85,
+  "fields": {
+    "created_at": "2026-06-06T11:00:22.934Z",
+    "updated_at": "2026-06-06T11:00:22.934Z",
+    "company": 29,
+    "name": "عرض 3*400 غ",
+    "price": "2.50",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 86,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.858Z",
+    "updated_at": "2026-06-08T17:47:33.858Z",
+    "company": 30,
+    "name": "200 غ",
+    "price": "1.04",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 87,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.860Z",
+    "updated_at": "2026-06-08T17:47:33.860Z",
+    "company": 30,
+    "name": "400 غ",
+    "price": "2.08",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 88,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.860Z",
+    "updated_at": "2026-06-08T17:47:33.860Z",
+    "company": 30,
+    "name": "800 غ",
+    "price": "3.87",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 89,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.866Z",
+    "updated_at": "2026-06-08T17:47:33.866Z",
+    "company": 31,
+    "name": "400 غ",
+    "price": "1.91",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 90,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.868Z",
+    "updated_at": "2026-06-08T17:47:33.868Z",
+    "company": 31,
+    "name": "800 غ",
+    "price": "3.58",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 91,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.871Z",
+    "updated_at": "2026-06-08T17:47:33.871Z",
+    "company": 32,
+    "name": "200 غ",
+    "price": "1.00",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 92,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.873Z",
+    "updated_at": "2026-06-08T17:47:33.873Z",
+    "company": 32,
+    "name": "400 غ",
+    "price": "1.81",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 93,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.875Z",
+    "updated_at": "2026-06-08T17:47:33.875Z",
+    "company": 32,
+    "name": "800 غ",
+    "price": "3.41",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 94,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.879Z",
+    "updated_at": "2026-06-08T17:47:33.879Z",
+    "company": 33,
+    "name": "400 غ",
+    "price": "2.16",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 95,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.881Z",
+    "updated_at": "2026-06-08T17:47:33.881Z",
+    "company": 33,
+    "name": "800 غ",
+    "price": "4.07",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 96,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.884Z",
+    "updated_at": "2026-06-08T17:47:33.884Z",
+    "company": 34,
+    "name": "بالفستق 400 غ",
+    "price": "1.93",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 97,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.886Z",
+    "updated_at": "2026-06-08T17:47:33.886Z",
+    "company": 34,
+    "name": "بالفستق 800 غ",
+    "price": "3.86",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 98,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.891Z",
+    "updated_at": "2026-06-08T17:47:33.891Z",
+    "company": 35,
+    "name": "375 غ",
+    "price": "0.78",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 99,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.892Z",
+    "updated_at": "2026-06-08T17:47:33.892Z",
+    "company": 35,
+    "name": "660 غ",
+    "price": "1.22",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 100,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.894Z",
+    "updated_at": "2026-06-08T17:47:33.894Z",
+    "company": 35,
+    "name": "1.35 كغ",
+    "price": "2.12",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 101,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.897Z",
+    "updated_at": "2026-06-08T17:47:33.897Z",
+    "company": 36,
+    "name": "375 غ",
+    "price": "1.09",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 102,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.899Z",
+    "updated_at": "2026-06-08T17:47:33.899Z",
+    "company": 36,
+    "name": "650 غ",
+    "price": "1.45",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 103,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.901Z",
+    "updated_at": "2026-06-08T17:47:33.901Z",
+    "company": 36,
+    "name": "1.35 كغ",
+    "price": "3.20",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 104,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.902Z",
+    "updated_at": "2026-06-08T17:47:33.902Z",
+    "company": 36,
+    "name": "بلاستيك 1 كغ",
+    "price": "2.13",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 105,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.904Z",
+    "updated_at": "2026-06-08T17:47:33.904Z",
+    "company": 36,
+    "name": "بلاستيك 2 كغ",
+    "price": "3.37",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 106,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.909Z",
+    "updated_at": "2026-06-08T17:47:33.909Z",
+    "company": 37,
+    "name": "1 كغ",
+    "price": "1.74",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 107,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.910Z",
+    "updated_at": "2026-06-08T17:47:33.910Z",
+    "company": 37,
+    "name": "2 كغ",
+    "price": "2.87",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 108,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.914Z",
+    "updated_at": "2026-06-08T17:47:33.914Z",
+    "company": 38,
+    "name": "250 مل",
+    "price": "2.15",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 109,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.914Z",
+    "updated_at": "2026-06-08T17:47:33.914Z",
+    "company": 38,
+    "name": "500 مل",
+    "price": "4.07",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 110,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.914Z",
+    "updated_at": "2026-06-08T17:47:33.914Z",
+    "company": 38,
+    "name": "750 مل",
+    "price": "5.96",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 111,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.918Z",
+    "updated_at": "2026-06-08T17:47:33.918Z",
+    "company": 38,
+    "name": "1 لتر",
+    "price": "7.95",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 112,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.918Z",
+    "updated_at": "2026-06-08T17:47:33.918Z",
+    "company": 38,
+    "name": "2 لتر",
+    "price": "15.50",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 113,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.922Z",
+    "updated_at": "2026-06-08T17:47:33.922Z",
+    "company": 38,
+    "name": "5 لتر",
+    "price": "37.00",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 114,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.926Z",
+    "updated_at": "2026-06-08T17:47:33.926Z",
+    "company": 39,
+    "name": "250 مل",
+    "price": "2.13",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 115,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.926Z",
+    "updated_at": "2026-06-08T17:47:33.926Z",
+    "company": 39,
+    "name": "500 مل",
+    "price": "3.93",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 116,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.930Z",
+    "updated_at": "2026-06-08T17:47:33.930Z",
+    "company": 39,
+    "name": "1 لتر",
+    "price": "8.00",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 117,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.930Z",
+    "updated_at": "2026-06-08T17:47:33.930Z",
+    "company": 39,
+    "name": "2 لتر",
+    "price": "15.00",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 118,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.934Z",
+    "updated_at": "2026-06-08T17:47:33.934Z",
+    "company": 40,
+    "name": "250 مل",
+    "price": "2.01",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 119,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.934Z",
+    "updated_at": "2026-06-08T17:47:33.934Z",
+    "company": 40,
+    "name": "500 مل",
+    "price": "3.85",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 120,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.939Z",
+    "updated_at": "2026-06-08T17:47:33.939Z",
+    "company": 40,
+    "name": "1 لتر",
+    "price": "7.60",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 121,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.942Z",
+    "updated_at": "2026-06-08T17:47:33.942Z",
+    "company": 41,
+    "name": "سردين حد",
+    "price": "0.51",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 122,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.944Z",
+    "updated_at": "2026-06-08T17:47:33.944Z",
+    "company": 41,
+    "name": "سردين حلو",
+    "price": "0.51",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 123,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.947Z",
+    "updated_at": "2026-06-08T17:47:33.947Z",
+    "company": 42,
+    "name": "سردين مغربي",
+    "price": "0.80",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 124,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.950Z",
+    "updated_at": "2026-06-08T17:47:33.950Z",
+    "company": 43,
+    "name": "سردين 125 غ",
+    "price": "0.55",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 125,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.954Z",
+    "updated_at": "2026-06-08T17:47:33.954Z",
+    "company": 44,
+    "name": "سردين حلو",
+    "price": "0.81",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 126,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.955Z",
+    "updated_at": "2026-06-08T17:47:33.955Z",
+    "company": 44,
+    "name": "سردين حار",
+    "price": "0.81",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 127,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.959Z",
+    "updated_at": "2026-06-08T17:47:33.959Z",
+    "company": 45,
+    "name": "1 كغ",
+    "price": "2.91",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 128,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.961Z",
+    "updated_at": "2026-06-08T17:47:33.961Z",
+    "company": 45,
+    "name": "2 كغ",
+    "price": "5.50",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 129,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.964Z",
+    "updated_at": "2026-06-08T17:47:33.964Z",
+    "company": 46,
+    "name": "1 كغ",
+    "price": "2.49",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 130,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.967Z",
+    "updated_at": "2026-06-08T17:47:33.968Z",
+    "company": 47,
+    "name": "غنم 500 غ",
+    "price": "7.00",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 131,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.969Z",
+    "updated_at": "2026-06-08T17:47:33.969Z",
+    "company": 47,
+    "name": "بقري 500 غ",
+    "price": "5.87",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 132,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.971Z",
+    "updated_at": "2026-06-08T17:47:33.971Z",
+    "company": 47,
+    "name": "بقري 1 كغ",
+    "price": "10.70",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 133,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.974Z",
+    "updated_at": "2026-06-08T17:47:33.974Z",
+    "company": 48,
+    "name": "أخضر معدن 200 غ",
+    "price": "2.20",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 134,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.976Z",
+    "updated_at": "2026-06-08T17:47:33.976Z",
+    "company": 48,
+    "name": "سيلاني 25 ظرف",
+    "price": "0.81",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 135,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.978Z",
+    "updated_at": "2026-06-08T17:47:33.978Z",
+    "company": 48,
+    "name": "سيلاني 100 ظرف + 15",
+    "price": "3.02",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 136,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.979Z",
+    "updated_at": "2026-06-08T17:47:33.979Z",
+    "company": 48,
+    "name": "سيلاني فرط 90 غ",
+    "price": "1.05",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 137,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.980Z",
+    "updated_at": "2026-06-08T17:47:33.980Z",
+    "company": 48,
+    "name": "سيلاني فرط 500 غ",
+    "price": "5.50",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 138,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.984Z",
+    "updated_at": "2026-06-08T17:47:33.984Z",
+    "company": 49,
+    "name": "سوبر بيكو  400 غ",
+    "price": "4.35",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 139,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.984Z",
+    "updated_at": "2026-06-08T17:47:33.984Z",
+    "company": 49,
+    "name": "25 ظرف +5",
+    "price": "0.68",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 140,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.988Z",
+    "updated_at": "2026-06-08T17:47:33.988Z",
+    "company": 50,
+    "name": "سكيب جاك حار",
+    "price": "1.06",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 141,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.988Z",
+    "updated_at": "2026-06-08T17:47:33.988Z",
+    "company": 50,
+    "name": "تونغل حار",
+    "price": "1.40",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 142,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.992Z",
+    "updated_at": "2026-06-08T17:47:33.992Z",
+    "company": 50,
+    "name": "تونغل حلو",
+    "price": "1.40",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 143,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.996Z",
+    "updated_at": "2026-06-08T17:47:33.996Z",
+    "company": 51,
+    "name": "سكيب جاك",
+    "price": "0.94",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 144,
+  "fields": {
+    "created_at": "2026-06-08T17:47:33.998Z",
+    "updated_at": "2026-06-08T17:47:33.998Z",
+    "company": 51,
+    "name": "أبيض",
+    "price": "1.05",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 145,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.001Z",
+    "updated_at": "2026-06-08T17:47:34.001Z",
+    "company": 52,
+    "name": "تونا حلوة",
+    "price": "0.94",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 146,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.004Z",
+    "updated_at": "2026-06-08T17:47:34.004Z",
+    "company": 53,
+    "name": "سكيب جاك حار  140 غ",
+    "price": "0.93",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 147,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.005Z",
+    "updated_at": "2026-06-08T17:47:34.006Z",
+    "company": 53,
+    "name": "سكيب جاك حلو  140 غ",
+    "price": "0.93",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 148,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.007Z",
+    "updated_at": "2026-06-08T17:47:34.007Z",
+    "company": 53,
+    "name": "سكيب جاك حار  400 غ",
+    "price": "2.50",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 149,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.009Z",
+    "updated_at": "2026-06-08T17:47:34.009Z",
+    "company": 53,
+    "name": "سكيب جاك حلو  400 غ",
+    "price": "2.50",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 150,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.010Z",
+    "updated_at": "2026-06-08T17:47:34.010Z",
+    "company": 53,
+    "name": "فيلية",
+    "price": "1.85",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 151,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.012Z",
+    "updated_at": "2026-06-08T17:47:34.012Z",
+    "company": 53,
+    "name": "تونغل",
+    "price": "1.40",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 152,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.014Z",
+    "updated_at": "2026-06-08T17:47:34.014Z",
+    "company": 53,
+    "name": "تونغل زيت زيتون",
+    "price": "1.50",
+    "is_available": true,
+    "order": 6
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 153,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.014Z",
+    "updated_at": "2026-06-08T17:47:34.014Z",
+    "company": 54,
+    "name": "مشمش 430 غ",
+    "price": "1.25",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 154,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.019Z",
+    "updated_at": "2026-06-08T17:47:34.019Z",
+    "company": 54,
+    "name": "فراولة 430 غ",
+    "price": "1.25",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 155,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.023Z",
+    "updated_at": "2026-06-08T17:47:34.023Z",
+    "company": 55,
+    "name": "مشمش قطع  370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 156,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.023Z",
+    "updated_at": "2026-06-08T17:47:34.023Z",
+    "company": 55,
+    "name": "مشمش ناعم  370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 157,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.023Z",
+    "updated_at": "2026-06-08T17:47:34.023Z",
+    "company": 55,
+    "name": "فراولة 370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 158,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.028Z",
+    "updated_at": "2026-06-08T17:47:34.028Z",
+    "company": 55,
+    "name": "تين 370 غ",
+    "price": "1.85",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 159,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.029Z",
+    "updated_at": "2026-06-08T17:47:34.029Z",
+    "company": 55,
+    "name": "توت 370 غ",
+    "price": "1.65",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 160,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.033Z",
+    "updated_at": "2026-06-08T17:47:34.033Z",
+    "company": 56,
+    "name": "مشمش 430 غ",
+    "price": "1.34",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 161,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.034Z",
+    "updated_at": "2026-06-08T17:47:34.034Z",
+    "company": 56,
+    "name": "مشمش 925 غ",
+    "price": "2.24",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 162,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.036Z",
+    "updated_at": "2026-06-08T17:47:34.036Z",
+    "company": 56,
+    "name": "فراولة 430 غ",
+    "price": "1.46",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 163,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.037Z",
+    "updated_at": "2026-06-08T17:47:34.037Z",
+    "company": 56,
+    "name": "فراولة 925 غ",
+    "price": "2.37",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 164,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.039Z",
+    "updated_at": "2026-06-08T17:47:34.039Z",
+    "company": 56,
+    "name": "تين 430 غ",
+    "price": "1.30",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 165,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.041Z",
+    "updated_at": "2026-06-08T17:47:34.041Z",
+    "company": 56,
+    "name": "تين 800 غ",
+    "price": "1.98",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 166,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.043Z",
+    "updated_at": "2026-06-08T17:47:34.043Z",
+    "company": 56,
+    "name": "توت 430 غ",
+    "price": "2.02",
+    "is_available": true,
+    "order": 6
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 167,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.045Z",
+    "updated_at": "2026-06-08T17:47:34.045Z",
+    "company": 56,
+    "name": "قرع 430 غ",
+    "price": "1.16",
+    "is_available": true,
+    "order": 7
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 168,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.046Z",
+    "updated_at": "2026-06-08T17:47:34.046Z",
+    "company": 56,
+    "name": "كرز 430 غ",
+    "price": "1.60",
+    "is_available": true,
+    "order": 8
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 169,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.050Z",
+    "updated_at": "2026-06-08T17:47:34.050Z",
+    "company": 57,
+    "name": "عرض 3*400 غ",
+    "price": "2.50",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 170,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.053Z",
+    "updated_at": "2026-06-08T17:47:34.053Z",
+    "company": 58,
+    "name": "فريش 565 غ",
+    "price": "1.67",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 171,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.056Z",
+    "updated_at": "2026-06-08T17:47:34.056Z",
+    "company": 59,
+    "name": "شرائح  565 غ",
+    "price": "1.70",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 172,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.059Z",
+    "updated_at": "2026-06-08T17:47:34.059Z",
+    "company": 60,
+    "name": "شرائح  227 غ",
+    "price": "1.08",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 173,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.061Z",
+    "updated_at": "2026-06-08T17:47:34.061Z",
+    "company": 60,
+    "name": "شرائح  567 غ",
+    "price": "1.86",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 174,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.063Z",
+    "updated_at": "2026-06-08T17:47:34.063Z",
+    "company": 60,
+    "name": "شرائح  غولد 567 غ",
+    "price": "2.00",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 175,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.066Z",
+    "updated_at": "2026-06-08T17:47:34.066Z",
+    "company": 61,
+    "name": "250 مل",
+    "price": "0.56",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 176,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.070Z",
+    "updated_at": "2026-06-08T17:47:34.070Z",
+    "company": 62,
+    "name": "250 مل",
+    "price": "0.85",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 177,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.073Z",
+    "updated_at": "2026-06-08T17:47:34.073Z",
+    "company": 63,
+    "name": "250 مل",
+    "price": "0.56",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 178,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.076Z",
+    "updated_at": "2026-06-08T17:47:34.076Z",
+    "company": 64,
+    "name": "275 مل",
+    "price": "0.67",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 179,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.080Z",
+    "updated_at": "2026-06-08T17:47:34.080Z",
+    "company": 65,
+    "name": "350 غ",
+    "price": "1.09",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 180,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.081Z",
+    "updated_at": "2026-06-08T17:47:34.081Z",
+    "company": 65,
+    "name": "700 غ",
+    "price": "1.69",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 181,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.085Z",
+    "updated_at": "2026-06-08T17:47:34.085Z",
+    "company": 66,
+    "name": "350 غ",
+    "price": "2.00",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 182,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.086Z",
+    "updated_at": "2026-06-08T17:47:34.086Z",
+    "company": 66,
+    "name": "700 غ",
+    "price": "3.00",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 183,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.089Z",
+    "updated_at": "2026-06-08T17:47:34.089Z",
+    "company": 67,
+    "name": "500 غ",
+    "price": "2.33",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 184,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.091Z",
+    "updated_at": "2026-06-08T17:47:34.091Z",
+    "company": 67,
+    "name": "1 كغ",
+    "price": "4.00",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 185,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.094Z",
+    "updated_at": "2026-06-08T17:47:34.094Z",
+    "company": 68,
+    "name": "350 غ",
+    "price": "1.54",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 186,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.096Z",
+    "updated_at": "2026-06-08T17:47:34.096Z",
+    "company": 68,
+    "name": "675 غ",
+    "price": "2.80",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 187,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.100Z",
+    "updated_at": "2026-06-08T17:47:34.100Z",
+    "company": 69,
+    "name": "650 غ",
+    "price": "1.86",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 188,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.103Z",
+    "updated_at": "2026-06-08T17:47:34.103Z",
+    "company": 70,
+    "name": "350 غ",
+    "price": "1.40",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 189,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.106Z",
+    "updated_at": "2026-06-08T17:47:34.106Z",
+    "company": 71,
+    "name": "360 غ",
+    "price": "1.05",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 190,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.107Z",
+    "updated_at": "2026-06-08T17:47:34.107Z",
+    "company": 71,
+    "name": "650 غ",
+    "price": "1.45",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 191,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.111Z",
+    "updated_at": "2026-06-08T17:47:34.111Z",
+    "company": 72,
+    "name": "فليفلة مطحونة 350 غ",
+    "price": "1.41",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 192,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.114Z",
+    "updated_at": "2026-06-08T17:47:34.114Z",
+    "company": 73,
+    "name": "رز مصري 1 كغ",
+    "price": "1.17",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 193,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.114Z",
+    "updated_at": "2026-06-08T17:47:34.114Z",
+    "company": 73,
+    "name": "بسمتي غولدن 1 كغ",
+    "price": "1.56",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 194,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.114Z",
+    "updated_at": "2026-06-08T17:47:34.118Z",
+    "company": 73,
+    "name": "بسمتي كريمي 1 كغ",
+    "price": "1.53",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 195,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.119Z",
+    "updated_at": "2026-06-08T17:47:34.119Z",
+    "company": 73,
+    "name": "رز اسباني 1 كغ",
+    "price": "1.61",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 196,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.121Z",
+    "updated_at": "2026-06-08T17:47:34.121Z",
+    "company": 73,
+    "name": "كبسة تايلندي 1 كغ",
+    "price": "0.92",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 197,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.122Z",
+    "updated_at": "2026-06-08T17:47:34.122Z",
+    "company": 73,
+    "name": "رز مصري 5 كغ",
+    "price": "5.30",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 198,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.124Z",
+    "updated_at": "2026-06-08T17:47:34.124Z",
+    "company": 73,
+    "name": "رز اسباني 5 كغ",
+    "price": "8.05",
+    "is_available": true,
+    "order": 6
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 199,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.127Z",
+    "updated_at": "2026-06-08T17:47:34.127Z",
+    "company": 74,
+    "name": "رز مصري 1 كغ",
+    "price": "1.10",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 200,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.130Z",
+    "updated_at": "2026-06-08T17:47:34.130Z",
+    "company": 75,
+    "name": "دوار الشمس 1 لتر",
+    "price": "2.20",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 201,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.132Z",
+    "updated_at": "2026-06-08T17:47:34.132Z",
+    "company": 75,
+    "name": "دوار الشمس 4 لتر",
+    "price": "8.40",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 202,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.132Z",
+    "updated_at": "2026-06-08T17:47:34.132Z",
+    "company": 76,
+    "name": "دوار الشمس 0.75 لتر",
+    "price": "2.10",
+    "is_available": true,
+    "order": 0
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 203,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.136Z",
+    "updated_at": "2026-06-08T17:47:34.136Z",
+    "company": 76,
+    "name": "دوار الشمس 1.5 لتر",
+    "price": "4.50",
+    "is_available": true,
+    "order": 1
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 204,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.141Z",
+    "updated_at": "2026-06-08T17:47:34.141Z",
+    "company": 76,
+    "name": "دوار الشمس 5 لتر",
+    "price": "14.00",
+    "is_available": true,
+    "order": 2
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 205,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.141Z",
+    "updated_at": "2026-06-08T17:47:34.141Z",
+    "company": 76,
+    "name": "الذرة 0.75 لتر",
+    "price": "2.64",
+    "is_available": true,
+    "order": 3
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 206,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.141Z",
+    "updated_at": "2026-06-08T17:47:34.141Z",
+    "company": 76,
+    "name": "الذرة 1.5 لتر",
+    "price": "5.31",
+    "is_available": true,
+    "order": 4
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 207,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.145Z",
+    "updated_at": "2026-06-08T17:47:34.145Z",
+    "company": 76,
+    "name": "الذرة 5 لتر",
+    "price": "16.13",
+    "is_available": true,
+    "order": 5
+  }
+},
+{
+  "model": "catalog.productcompanyoption",
+  "pk": 208,
+  "fields": {
+    "created_at": "2026-06-08T17:47:34.145Z",
+    "updated_at": "2026-06-08T17:47:34.145Z",
+    "company": 76,
+    "name": "كانولا 1.5 لتر",
+    "price": "4.62",
+    "is_available": true,
+    "order": 6
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.515Z",
+    "updated_at": "2026-04-19T16:06:26.515Z",
+    "order": 2,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Canned Mushrooms",
+    "category_label": "المعلبات",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per can",
+    "unit_price": "13000",
+    "line_total_min": "13000",
+    "line_total_max": "13000",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.516Z",
+    "updated_at": "2026-04-19T16:06:26.516Z",
+    "order": 2,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Mango Juice",
+    "category_label": "العصائر",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per bottle",
+    "unit_price": "12350",
+    "line_total_min": "12350",
+    "line_total_max": "12350",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.516Z",
+    "updated_at": "2026-04-19T16:06:26.516Z",
+    "order": 2,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Gala Apples",
+    "category_label": "الفواكه",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per kg",
+    "unit_price": "14300",
+    "line_total_min": "14300",
+    "line_total_max": "17875",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-04-19T16:06:26.516Z",
+    "updated_at": "2026-04-19T16:06:26.516Z",
+    "order": 2,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "Cherry Tomatoes",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per pack",
+    "unit_price": "7800",
+    "line_total_min": "7800",
+    "line_total_max": "9750",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-05-02T22:19:58.856Z",
+    "updated_at": "2026-05-02T22:19:58.856Z",
+    "order": 3,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "promotion",
+    "cart_item_id": null,
+    "title": "عرض الفول مقلى",
+    "category_label": "عرض",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "",
+    "unit_price": "400",
+    "line_total_min": "400",
+    "line_total_max": "400",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-05-03T11:08:02.679Z",
+    "updated_at": "2026-05-03T11:08:02.679Z",
+    "order": 4,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "ارضي شوكي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "180",
+    "line_total_min": "180",
+    "line_total_max": "180",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-05-03T11:08:02.679Z",
+    "updated_at": "2026-05-03T11:08:02.679Z",
+    "order": 4,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-05-03T11:09:34.685Z",
+    "updated_at": "2026-05-03T11:09:34.685Z",
+    "order": 5,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "بطاطا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "90",
+    "line_total_min": "90",
+    "line_total_max": "113",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-05-03T11:09:34.685Z",
+    "updated_at": "2026-05-03T11:09:34.685Z",
+    "order": 5,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "شوندر",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "150",
+    "line_total_min": "150",
+    "line_total_max": "188",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-05-03T11:09:34.685Z",
+    "updated_at": "2026-05-03T11:09:34.685Z",
+    "order": 5,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "زهرة",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "85",
+    "line_total_min": "85",
+    "line_total_max": "106",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 13,
+  "fields": {
+    "created_at": "2026-05-03T16:14:12.241Z",
+    "updated_at": "2026-05-03T16:14:12.241Z",
+    "order": 6,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "100",
+    "line_total_min": "100",
+    "line_total_max": "125",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 14,
+  "fields": {
+    "created_at": "2026-05-03T16:14:12.241Z",
+    "updated_at": "2026-05-03T16:14:12.241Z",
+    "order": 6,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 15,
+  "fields": {
+    "created_at": "2026-05-03T16:14:12.241Z",
+    "updated_at": "2026-05-03T16:14:12.241Z",
+    "order": 6,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 52,
+    "title": "بصل",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "2.0",
+    "unit_label": "per Kilo",
+    "unit_price": "75",
+    "line_total_min": "150",
+    "line_total_max": "188",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 16,
+  "fields": {
+    "created_at": "2026-05-03T16:20:37.454Z",
+    "updated_at": "2026-05-03T16:20:37.454Z",
+    "order": 7,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 79,
+    "title": "شوندر",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "2.0",
+    "unit_label": "per Kilo",
+    "unit_price": "150",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 17,
+  "fields": {
+    "created_at": "2026-05-03T16:20:37.454Z",
+    "updated_at": "2026-05-03T16:20:37.454Z",
+    "order": 7,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 59,
+    "title": "زهرة",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "4.0",
+    "unit_label": "per Kilo",
+    "unit_price": "85",
+    "line_total_min": "340",
+    "line_total_max": "425",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 18,
+  "fields": {
+    "created_at": "2026-05-06T20:17:00.951Z",
+    "updated_at": "2026-05-06T20:17:00.951Z",
+    "order": 8,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "100",
+    "line_total_min": "100",
+    "line_total_max": "125",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 19,
+  "fields": {
+    "created_at": "2026-05-06T20:17:00.951Z",
+    "updated_at": "2026-05-06T20:17:00.951Z",
+    "order": 8,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 20,
+  "fields": {
+    "created_at": "2026-05-06T20:17:00.951Z",
+    "updated_at": "2026-05-06T20:17:00.951Z",
+    "order": 8,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 52,
+    "title": "بصل",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "75",
+    "line_total_min": "75",
+    "line_total_max": "94",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 21,
+  "fields": {
+    "created_at": "2026-05-13T09:46:18.852Z",
+    "updated_at": "2026-05-13T09:46:18.852Z",
+    "order": 9,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": null,
+    "title": "ارضي شوكي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "180",
+    "line_total_min": "180",
+    "line_total_max": "180",
+    "is_weight_based": false
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 22,
+  "fields": {
+    "created_at": "2026-05-13T11:40:13.272Z",
+    "updated_at": "2026-05-13T11:40:13.272Z",
+    "order": 10,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "2.0",
+    "unit_label": "per Kilo",
+    "unit_price": "100",
+    "line_total_min": "200",
+    "line_total_max": "250",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 23,
+  "fields": {
+    "created_at": "2026-05-13T11:40:13.272Z",
+    "updated_at": "2026-05-13T11:40:13.272Z",
+    "order": 10,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 24,
+  "fields": {
+    "created_at": "2026-05-13T11:40:13.272Z",
+    "updated_at": "2026-05-13T11:40:13.272Z",
+    "order": 10,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 51,
+    "title": "ليمون",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 25,
+  "fields": {
+    "created_at": "2026-05-13T11:40:13.272Z",
+    "updated_at": "2026-05-13T11:40:13.272Z",
+    "order": 10,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 68,
+    "title": "كوسا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "150",
+    "line_total_min": "150",
+    "line_total_max": "188",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 26,
+  "fields": {
+    "created_at": "2026-05-27T11:36:38.013Z",
+    "updated_at": "2026-05-27T11:36:38.013Z",
+    "order": 11,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 103,
+    "title": "برتقال",
+    "category_label": "الفواكة",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "2.0",
+    "unit_label": "per item",
+    "unit_price": "300",
+    "line_total_min": "600",
+    "line_total_max": "750",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 27,
+  "fields": {
+    "created_at": "2026-05-27T11:36:38.013Z",
+    "updated_at": "2026-05-27T11:36:38.013Z",
+    "order": 11,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 105,
+    "title": "اجاص",
+    "category_label": "الفواكة",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "3.0",
+    "unit_label": "per item",
+    "unit_price": "180",
+    "line_total_min": "540",
+    "line_total_max": "675",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 28,
+  "fields": {
+    "created_at": "2026-05-29T09:31:00.434Z",
+    "updated_at": "2026-05-29T09:31:00.434Z",
+    "order": 12,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 79,
+    "title": "شوندر",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "150",
+    "line_total_min": "150",
+    "line_total_max": "188",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 29,
+  "fields": {
+    "created_at": "2026-05-29T09:31:00.434Z",
+    "updated_at": "2026-05-29T09:31:00.434Z",
+    "order": 12,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 59,
+    "title": "زهرة",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "85",
+    "line_total_min": "85",
+    "line_total_max": "106",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 30,
+  "fields": {
+    "created_at": "2026-05-29T09:31:00.434Z",
+    "updated_at": "2026-05-29T09:31:00.438Z",
+    "order": 12,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 64,
+    "title": "خيار",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "200",
+    "line_total_min": "200",
+    "line_total_max": "250",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 31,
+  "fields": {
+    "created_at": "2026-05-29T10:29:38.451Z",
+    "updated_at": "2026-05-29T10:29:38.451Z",
+    "order": 13,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 108,
+    "title": "دراق",
+    "category_label": "الفواكة",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per item",
+    "unit_price": "130",
+    "line_total_min": "130",
+    "line_total_max": "163",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 32,
+  "fields": {
+    "created_at": "2026-05-29T10:29:38.451Z",
+    "updated_at": "2026-05-29T10:29:38.451Z",
+    "order": 13,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "3.0",
+    "unit_label": "per Kilo",
+    "unit_price": "100",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 33,
+  "fields": {
+    "created_at": "2026-05-29T10:29:38.451Z",
+    "updated_at": "2026-05-29T10:29:38.451Z",
+    "order": 13,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "2.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "600",
+    "line_total_max": "750",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 34,
+  "fields": {
+    "created_at": "2026-05-29T10:29:38.451Z",
+    "updated_at": "2026-05-29T10:29:38.451Z",
+    "order": 13,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 52,
+    "title": "بصل",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "75",
+    "line_total_min": "75",
+    "line_total_max": "94",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 35,
+  "fields": {
+    "created_at": "2026-05-29T10:33:09.682Z",
+    "updated_at": "2026-05-29T10:33:09.682Z",
+    "order": 14,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "100",
+    "line_total_min": "100",
+    "line_total_max": "125",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 36,
+  "fields": {
+    "created_at": "2026-05-29T10:33:09.682Z",
+    "updated_at": "2026-05-29T10:33:09.682Z",
+    "order": 14,
+    "product": null,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "2.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "600",
+    "line_total_max": "750",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 37,
+  "fields": {
+    "created_at": "2026-06-02T21:30:23.358Z",
+    "updated_at": "2026-06-02T21:30:23.358Z",
+    "order": 16,
+    "product": 100,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 100,
+    "title": "ارضي شوكي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "بدون مايونيز",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "180",
+    "line_total_min": "180",
+    "line_total_max": "225",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 38,
+  "fields": {
+    "created_at": "2026-06-02T21:30:23.358Z",
+    "updated_at": "2026-06-02T21:30:23.358Z",
+    "order": 16,
+    "product": 80,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 80,
+    "title": "براصيا",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "100",
+    "line_total_min": "100",
+    "line_total_max": "125",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 39,
+  "fields": {
+    "created_at": "2026-06-03T15:39:15.927Z",
+    "updated_at": "2026-06-03T15:39:15.927Z",
+    "order": 18,
+    "product": 53,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "1.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "300",
+    "line_total_max": "375",
+    "is_weight_based": true
+  }
+},
+{
+  "model": "core.customerorderitem",
+  "pk": 40,
+  "fields": {
+    "created_at": "2026-06-04T19:11:26.776Z",
+    "updated_at": "2026-06-04T19:11:26.776Z",
+    "order": 20,
+    "product": 53,
+    "company": null,
+    "selected_option": null,
+    "item_type": "product",
+    "cart_item_id": 53,
+    "title": "بروكلي",
+    "category_label": "الخضار",
+    "company_label": "",
+    "selected_option_label": "",
+    "note": "",
+    "quantity": "2.0",
+    "unit_label": "per Kilo",
+    "unit_price": "300",
+    "line_total_min": "600",
+    "line_total_max": "750",
+    "is_weight_based": true
+  }
+}
+]
