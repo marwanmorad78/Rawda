@@ -153,7 +153,7 @@
                         <div class="home-shelf-header">
                             <h3>قسم {{ category.display_name }}</h3>
                             <a class="home-shelf-more" href="{{ category.get_absolute_url }}" aria-label="{{ ui.explore }} {{ category.display_name }}" style="display: inline-flex; width: 11rem; min-width: 11rem; flex: 0 0 11rem; white-space: nowrap; align-items: center; justify-content: center;">
-                                المزيد&nbsp;من&nbsp;الأصناف
+                                {% if category.home_subcategories %}{{ ui.more_categories }}{% else %}{{ ui.more_items }}{% endif %}
                             </a>
                         </div>
 

@@ -7,7 +7,7 @@
     <div class="container">
         <span class="eyebrow">{{ ui.category }}</span>
         <h1>{{ category.display_name }}</h1>
-        <p>{{ category.display_description|default:ui.category_browse }}</p>
+        <p>{% if subcategories %}{{ ui.browse_categories }}{% else %}{{ category.display_description|default:ui.category_browse }}{% endif %}</p>
     </div>
 </section>
 

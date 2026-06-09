@@ -1,5 +1,141 @@
 /* Later page-specific enhancements and mobile overrides; keep this file last. */
 
+.categories-page-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1.2rem;
+}
+
+.categories-page-card {
+    overflow: hidden;
+    min-height: 100%;
+    border: 1px solid rgba(16, 79, 157, 0.16);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 16px 38px rgba(16, 36, 77, 0.12);
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.categories-page-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(16, 79, 157, 0.3);
+    box-shadow: 0 22px 46px rgba(16, 36, 77, 0.16);
+}
+
+.categories-page-link {
+    display: grid;
+    grid-template-rows: 170px 1fr;
+    min-height: 100%;
+    color: inherit;
+}
+
+.categories-page-link:focus-visible {
+    outline: 3px solid rgba(16, 79, 157, 0.28);
+    outline-offset: -3px;
+}
+
+.categories-page-media {
+    display: block;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(16, 79, 157, 0.12), rgba(242, 139, 32, 0.12));
+}
+
+.categories-page-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.35s ease;
+}
+
+.categories-page-link:hover .categories-page-media img {
+    transform: scale(1.05);
+}
+
+.categories-page-placeholder {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    color: var(--blue-950);
+    font-family: "Tajawal", "Source Sans 3", sans-serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+}
+
+.categories-page-content {
+    display: grid;
+    align-content: start;
+    gap: 0.55rem;
+    min-height: 132px;
+    padding: 1rem;
+}
+
+.categories-page-content strong {
+    color: var(--blue-950);
+    font-family: "Tajawal", "Source Sans 3", sans-serif;
+    font-size: 1.2rem;
+    line-height: 1.25;
+}
+
+.categories-page-content small {
+    color: var(--text-700);
+    line-height: 1.5;
+}
+
+.categories-page-badge {
+    justify-self: start;
+    padding: 0.28rem 0.65rem;
+    border: 1px solid rgba(16, 79, 157, 0.14);
+    border-radius: 999px;
+    background: rgba(16, 79, 157, 0.08);
+    color: var(--blue-900);
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.categories-page-empty {
+    text-align: center;
+}
+
+.categories-page-empty p {
+    margin: 0;
+}
+
+@media (max-width: 560px) {
+    .categories-page-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .categories-page-link {
+        grid-template-rows: 120px 1fr;
+    }
+
+    .categories-page-content {
+        min-height: 126px;
+        padding: 0.75rem;
+    }
+
+    .categories-page-content strong {
+        font-size: 1rem;
+    }
+
+    .categories-page-content small {
+        display: none;
+    }
+
+    .categories-page-badge {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .categories-page-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .active-order-home {
     padding: 0.8rem 0 0.35rem;
     transition: opacity 0.24s ease, transform 0.24s ease;

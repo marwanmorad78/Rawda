@@ -1,0 +1,60 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ ui.sections }} | {{ site_settings.display_store_name|default:ui.store_name_default }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="eyebrow">{{ ui.browse_categories }}</span>
+        <h1>{{ ui.sections }}</h1>
+        <p>{{ ui.browse_heading }}</p>
+    </div>
+</section>
+
+<section class="section categories-page">
+    <div class="container">
+        {% if category_cards %}
+            <div class="categories-page-grid">
+                {% for category in category_cards %}
+                    <article class="categories-page-card">
+                        <a
+                            class="categories-page-link"
+                            href="{{ category.get_absolute_url }}"
+                            aria-label="{{ ui.explore }} {% if category.parent_id %}{{ category.page_display_name }}{% else %}{{ category.display_name }}{% endif %}"
+                        >
+                            <span class="categories-page-media">
+                                {% if category.cover_image %}
+                                    <img src="{{ category.cover_image.url }}" alt="{% if category.parent_id %}{{ category.page_display_name }}{% else %}{{ category.display_name }}{% endif %}">
+                                {% elif category.external_image_url %}
+                                    <img src="{{ category.external_image_url }}" alt="{% if category.parent_id %}{{ category.page_display_name }}{% else %}{{ category.display_name }}{% endif %}">
+                                {% else %}
+                                    <span class="categories-page-placeholder">{{ category.display_name|slice:":1" }}</span>
+                                {% endif %}
+                            </span>
+                            <span class="categories-page-content">
+                                <span class="categories-page-badge">
+                                    {% if category.parent_id %}{{ ui.subcategory_badge }}{% else %}{{ ui.main_category_badge }}{% endif %}
+                                </span>
+                                <strong>
+                                    {% if category.parent_id %}
+                                        {{ category.page_display_name }}
+                                    {% else %}
+                                        {{ category.display_name }}
+                                    {% endif %}
+                                </strong>
+                                {% if category.display_description %}
+                                    <small>{{ category.display_description }}</small>
+                                {% endif %}
+                            </span>
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="panel categories-page-empty">
+                <p>{{ ui.no_categories }}</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

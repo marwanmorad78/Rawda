@@ -7,6 +7,7 @@ from .views import (
     CartNoteUpdateView,
     CartRemoveView,
     CartUpdateView,
+    CategoriesView,
     CategoryDetailView,
     CheckoutAddressView,
     CheckoutConfirmView,
@@ -18,6 +19,7 @@ from .views import (
 app_name = "catalog"
 
 urlpatterns = [
+    path("categories/", CategoriesView.as_view(), name="categories"),
     path("cart/", CartDetailView.as_view(), name="cart"),
     path("checkout/", InvoiceView.as_view(), name="checkout"),
     path("checkout/service/", CheckoutServiceView.as_view(), name="checkout-service"),

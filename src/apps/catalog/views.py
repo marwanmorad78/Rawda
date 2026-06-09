@@ -225,6 +225,42 @@ class CategoryDetailView(DetailView):
         return context
 
 
+class CategoriesView(TemplateView):
+    template_name = "public/categories.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        language = get_language(self.request)
+        subcategory_queryset = Category.objects.filter(is_active=True).order_by(
+            "display_order",
+            "name",
+        )
+        categories = list(
+            Category.objects.filter(is_active=True, parent__isnull=True)
+            .order_by("display_order", "name")
+            .prefetch_related(
+                Prefetch(
+                    "subcategories",
+                    queryset=subcategory_queryset,
+                    to_attr="page_subcategories",
+                )
+            )
+        )
+        for category in categories:
+            localize_instance(category, language, ["name", "description"])
+            for subcategory in category.page_subcategories:
+                localize_instance(subcategory, language, ["name", "description"])
+                subcategory.page_display_name = (
+                    f"{category.display_name} - {subcategory.display_name}"
+                )
+        context["category_cards"] = [
+            item
+            for category in categories
+            for item in (category, *category.page_subcategories)
+        ]
+        return context
+
+
 class ProductDetailView(DetailView):
     model = Product
     template_name = "public/product_detail.html"

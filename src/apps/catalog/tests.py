@@ -21,6 +21,7 @@ from apps.catalog.models import (
     ProductCompanyOption,
     ProductOption,
 )
+from apps.core.localization import get_ui_strings
 
 
 class KiloCartTests(TestCase):
@@ -197,3 +198,65 @@ class CartRemovalTests(TestCase):
         )
 
         self.assertEqual(len(reload_response.context["cart"]["items"]), 2)
+
+
+class CategoriesPageTests(TestCase):
+    def setUp(self):
+        self.main_category = Category.objects.create(
+            name="Fresh Food",
+            name_ar="\u0627\u0644\u0623\u063a\u0630\u064a\u0629 \u0627\u0644\u0637\u0627\u0632\u062c\u0629",
+            display_order=1,
+        )
+        self.subcategory = Category.objects.create(
+            parent=self.main_category,
+            name="Fruit",
+            name_ar="\u0627\u0644\u0641\u0648\u0627\u0643\u0647",
+            display_order=1,
+        )
+        Category.objects.create(
+            name="Hidden",
+            is_active=False,
+            display_order=2,
+        )
+        Category.objects.create(
+            parent=self.main_category,
+            name="Hidden child",
+            is_active=False,
+            display_order=2,
+        )
+
+    def test_categories_page_lists_active_main_categories_and_subcategories(self):
+        response = self.client.get(reverse("catalog:categories"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.request["PATH_INFO"], "/categories/")
+        self.assertContains(response, self.main_category.name_ar)
+        self.assertContains(
+            response,
+            f"{self.main_category.name_ar} - {self.subcategory.name_ar}",
+        )
+        self.assertNotContains(response, "Hidden")
+        self.assertContains(response, self.main_category.get_absolute_url())
+        self.assertContains(response, self.subcategory.get_absolute_url())
+        self.assertEqual(len(response.context["category_cards"]), 2)
+        self.assertContains(response, 'class="categories-page-card"', count=2)
+        self.assertNotContains(response, "categories-page-subcategory")
+
+    def test_categories_nav_link_is_active(self):
+        response = self.client.get(reverse("catalog:categories"))
+
+        self.assertContains(
+            response,
+            f'href="{reverse("catalog:categories")}" class="tab-link is-active"',
+            html=False,
+        )
+
+    def test_parent_category_uses_category_browsing_labels(self):
+        labels = get_ui_strings("ar")
+
+        home_response = self.client.get(reverse("core:home"))
+        detail_response = self.client.get(self.main_category.get_absolute_url())
+
+        self.assertContains(home_response, labels["more_categories"])
+        self.assertContains(detail_response, labels["browse_categories"])
+        self.assertNotContains(detail_response, labels["category_browse"])
