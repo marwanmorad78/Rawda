@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, time
 from io import BytesIO
@@ -71,6 +72,8 @@ from apps.core.services import mark_order_accepted, sync_center_status_and_auto_
 from apps.promotions.models import Promotion
 
 
+logger = logging.getLogger(__name__)
+
 PRODUCT_EXCEL_HEADERS = [
     "product_name",
     "category",
@@ -128,6 +131,11 @@ CATEGORY_IMAGE_EXCEL_HEADERS = [
     "external_image_url",
 ]
 MAX_EXCEL_IMAGE_BYTES = 10 * 1024 * 1024
+EXCEL_IMAGE_IMPORT_DIRECTORIES = {
+    "products": "products",
+    "categories": "categories",
+    "companies": "companies",
+}
 BOOLEAN_COLUMNS = ["is_price_linked_to_dollar", "sold_by_weight", "has_options", "is_available", "is_featured"]
 PRODUCT_MODE_COLUMNS = {
     "price_link_mode": {Product.BEHAVIOR_INHERIT, Product.BEHAVIOR_CUSTOM},
@@ -218,7 +226,11 @@ def validate_excel_image_content(content, filename):
     return {"name": safe_name, "content": content}
 
 
-def load_excel_image(value, search_paths):
+class ExcelImageNotFoundError(ValueError):
+    pass
+
+
+def load_excel_image(value, search_paths=None, import_directory=None):
     source = normalize_excel_text(value)
     if not source:
         return None
@@ -240,19 +252,43 @@ def load_excel_image(value, search_paths):
         filename = Path(unquote(urlparse(final_url).path)).name or "excel-image"
         return validate_excel_image_content(content, filename)
 
+    search_paths = search_paths or []
     source_path = Path(source).expanduser()
-    candidates = [source_path] if source_path.is_absolute() else [
-        base_path / source_path
-        for base_path in search_paths
-    ]
+    candidates = []
+    if import_directory:
+        source_filename = Path(source.replace("\\", "/")).name
+        safe_filename = validate_file_name(source_filename, allow_relative_path=False)
+        candidates.append(
+            Path(settings.MEDIA_ROOT)
+            / "import"
+            / EXCEL_IMAGE_IMPORT_DIRECTORIES[import_directory]
+            / safe_filename
+        )
+    if source_path.is_absolute():
+        candidates.append(source_path)
+    else:
+        candidates.extend(base_path / source_path for base_path in search_paths)
+    candidates = list(dict.fromkeys(candidate.resolve() for candidate in candidates))
     image_path = next((candidate for candidate in candidates if candidate.is_file()), None)
     if image_path is None:
-        raise ValueError(f"Image file not found: {source}")
+        raise ExcelImageNotFoundError(f"Image file not found: {source}")
     try:
         content = image_path.read_bytes()
     except OSError as exc:
         raise ValueError(f"Image file could not be read: {source}") from exc
     return validate_excel_image_content(content, image_path.name)
+
+
+def load_excel_image_or_warn(value, search_paths, import_directory, row_label):
+    try:
+        return load_excel_image(
+            value,
+            search_paths=search_paths,
+            import_directory=import_directory,
+        )
+    except ExcelImageNotFoundError as exc:
+        logger.warning("%s: %s", row_label, exc)
+        return None
 
 
 def save_imported_image(instance, field_name, image_data):
@@ -592,7 +628,12 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
         image_data = None
         if image_source:
             try:
-                image_data = load_excel_image(image_source, image_search_paths)
+                image_data = load_excel_image_or_warn(
+                    image_source,
+                    image_search_paths,
+                    "categories",
+                    f"Categories row {row_number}: image",
+                )
             except ValueError as exc:
                 errors.append(f"Categories row {row_number}: image: {exc}")
                 continue
@@ -677,7 +718,12 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
         image_source = normalize_excel_text(row.get("image") or row.get("primary_image"))
         if image_source and not row_errors:
             try:
-                image_data = load_excel_image(image_source, image_search_paths)
+                image_data = load_excel_image_or_warn(
+                    image_source,
+                    image_search_paths,
+                    "products",
+                    f"Products row {row_number}: image",
+                )
             except ValueError as exc:
                 row_errors.append(f"image: {exc}")
 
@@ -822,7 +868,12 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             logo_source = normalize_excel_text(row.get("logo") or row.get("logo_url"))
             if logo_source and not row_errors:
                 try:
-                    logo_data = load_excel_image(logo_source, image_search_paths)
+                    logo_data = load_excel_image_or_warn(
+                        logo_source,
+                        image_search_paths,
+                        "companies",
+                        f"Companies row {row_number}: logo",
+                    )
                 except ValueError as exc:
                     row_errors.append(f"logo: {exc}")
 
@@ -2137,7 +2188,7 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                 "piece",
                 "true",
                 "false",
-                "https://example.com/product.jpg",
+                "sample-product.jpg",
                 "",
                 "SAMPLE-001",
             ]
@@ -2158,7 +2209,7 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                 "piece",
                 "true",
                 "false",
-                "https://example.com/shoes.jpg",
+                "running-shoes.jpg",
                 "",
                 "SHOES-001",
             ]
@@ -2171,10 +2222,10 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
         companies_sheet = workbook.create_sheet("Companies")
         companies_sheet.append(PRODUCT_COMPANY_EXCEL_HEADERS)
         companies_sheet.append(
-            ["adidas", "Adidas", "https://example.com/adidas-logo.png", "", "0", "true"]
+            ["adidas", "Adidas", "adidas-logo.png", "", "0", "true"]
         )
         companies_sheet.append(
-            ["nike", "Nike", "https://example.com/nike-logo.png", "", "1", "true"]
+            ["nike", "Nike", "nike-logo.png", "", "1", "true"]
         )
 
         company_options_sheet = workbook.create_sheet("CompanyOptions")
@@ -2193,7 +2244,7 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
                     format_category_path(category.parent, language) if category.parent_id else "",
                     format_category_path(category, language),
                     category.slug,
-                    category.cover_image.name if category.cover_image else "",
+                    Path(category.cover_image.name).name if category.cover_image else "",
                     category.external_image_url,
                 ]
             )
@@ -2203,18 +2254,21 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
         help_sheet.append(["Use the category column for the category or subcategory slug."])
         help_sheet.append(["For products under a parent section, use the subcategory slug, not the parent slug."])
         help_sheet.append(["product_type accepts normal or company_grouped. Leave blank for normal."])
-        help_sheet.append(["Use image for a local image path or image URL saved into the primary image field."])
+        help_sheet.append(["Upload product images to media/import/products, then use only the filename in image."])
+        help_sheet.append(["The image column also accepts http:// or https:// URLs for backward compatibility."])
         help_sheet.append(["Use external_image_url only when the storefront should keep using an external URL."])
         help_sheet.append(["You can copy valid values from the Categories sheet."])
         help_sheet.append(["Options sheet"])
         help_sheet.append(["Use product_sku to connect normal product options to a product row in the Products sheet."])
         help_sheet.append(["Companies sheet"])
         help_sheet.append(["Use company_id and company_name to define reusable companies. Do not add product_sku here."])
-        help_sheet.append(["Use logo for a local image path or image URL saved into the logo field."])
+        help_sheet.append(["Upload company logos to media/import/companies, then use only the filename in logo."])
+        help_sheet.append(["The logo column also accepts http:// or https:// URLs for backward compatibility."])
         help_sheet.append(["Use external_logo_url only when the storefront should keep using an external URL."])
         help_sheet.append(["CompanyOptions sheet"])
         help_sheet.append(["Use product_sku, company_id, and option_name for variants under a company."])
         help_sheet.append(["Categories sheet"])
+        help_sheet.append(["Upload category images to media/import/categories, then use only the filename in image."])
         help_sheet.append(["For an existing category row, image updates its cover image before products import."])
         help_sheet.append(["Dollar-linked prices can use decimals such as 1.08 or 2.48."])
 

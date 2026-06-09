@@ -175,7 +175,15 @@ class ExcelImageImportTests(TestCase):
     def append_dict_row(worksheet, headers, values):
         worksheet.append([values.get(header, "") for header in headers])
 
-    def build_workbook(self, image_value, external_url=""):
+    def build_workbook(
+        self,
+        image_value,
+        external_url="",
+        company_logo=None,
+        category_image=None,
+    ):
+        company_logo = image_value if company_logo is None else company_logo
+        category_image = image_value if category_image is None else category_image
         workbook = Workbook()
         products_sheet = workbook.active
         products_sheet.title = "Products"
@@ -203,7 +211,7 @@ class ExcelImageImportTests(TestCase):
             {
                 "company_id": "Com-1",
                 "company_name": "Company One",
-                "logo": image_value,
+                "logo": company_logo,
                 "external_logo_url": external_url,
                 "is_active": "true",
             },
@@ -232,7 +240,7 @@ class ExcelImageImportTests(TestCase):
                 "category": "shoes",
                 "name": "Footwear",
                 "slug": "shoes",
-                "image": image_value,
+                "image": category_image,
                 "external_image_url": external_url,
             },
         )
@@ -242,12 +250,20 @@ class ExcelImageImportTests(TestCase):
         output.seek(0)
         return output
 
-    def test_local_image_path_populates_main_image_fields(self):
+    def test_server_import_folders_populate_main_image_fields(self):
         with TemporaryDirectory() as temporary_directory:
             media_root = Path(temporary_directory) / "media"
-            image_path = Path(temporary_directory) / "sample.png"
-            image_path.write_bytes(self.png_bytes())
-            workbook = self.build_workbook(str(image_path))
+            product_image = media_root / "import" / "products" / "apple.png"
+            company_logo = media_root / "import" / "companies" / "adidas.png"
+            category_image = media_root / "import" / "categories" / "vegetables.png"
+            for image_path in (product_image, company_logo, category_image):
+                image_path.parent.mkdir(parents=True, exist_ok=True)
+                image_path.write_bytes(self.png_bytes())
+            workbook = self.build_workbook(
+                "apple.png",
+                company_logo="adidas.png",
+                category_image="vegetables.png",
+            )
 
             with override_settings(MEDIA_ROOT=media_root):
                 valid_rows, errors = validate_product_excel_workbook(workbook)
@@ -267,6 +283,30 @@ class ExcelImageImportTests(TestCase):
                 self.assertTrue((media_root / product.primary_image.name).is_file())
                 self.assertTrue((media_root / company.logo.name).is_file())
                 self.assertTrue((media_root / self.category.cover_image.name).is_file())
+
+    def test_missing_server_images_log_warnings_and_do_not_stop_import(self):
+        with TemporaryDirectory() as temporary_directory:
+            media_root = Path(temporary_directory) / "media"
+            workbook = self.build_workbook(
+                "missing-product.png",
+                company_logo="missing-company.png",
+                category_image="missing-category.png",
+            )
+
+            with override_settings(MEDIA_ROOT=media_root):
+                with self.assertLogs("apps.dashboard.views", level="WARNING") as captured:
+                    valid_rows, errors = validate_product_excel_workbook(workbook)
+                self.assertEqual(errors, [])
+                self.assertEqual(len(captured.output), 3)
+                import_product_excel_rows(valid_rows)
+
+                product = Product.objects.get(sku="SHOES-001")
+                company = Company.objects.get(code="Com-1")
+                self.category.refresh_from_db()
+
+                self.assertFalse(product.primary_image)
+                self.assertFalse(company.logo)
+                self.assertFalse(self.category.cover_image)
 
     def test_explicit_external_columns_remain_external_fallbacks(self):
         external_url = "https://example.com/external.png"
@@ -303,7 +343,11 @@ class ExcelImageImportTests(TestCase):
                 self.close()
 
         with patch("apps.dashboard.views.urlopen", return_value=FakeResponse(content)):
-            image_data = load_excel_image("https://example.com/logo.png", [])
+            image_data = load_excel_image(
+                "https://example.com/logo.png",
+                [],
+                import_directory="companies",
+            )
 
         self.assertEqual(image_data["name"], "logo.png")
         self.assertEqual(image_data["content"], content)

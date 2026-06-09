@@ -27,6 +27,14 @@ src/media/*
 src/media/utils/*
 !src/media/utils/__init__.py
 !src/media/utils/image_optimizer.py
+!src/media/import/
+src/media/import/*
+!src/media/import/products/
+!src/media/import/categories/
+!src/media/import/companies/
+!src/media/import/products/**
+!src/media/import/categories/**
+!src/media/import/companies/**
 staticfiles/
 src/staticfiles/
 uploads/
