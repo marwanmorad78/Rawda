@@ -36,7 +36,7 @@
 
 .categories-page-media {
     display: grid;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 1;
     overflow: hidden;
     place-items: center;
     background: #fff;
