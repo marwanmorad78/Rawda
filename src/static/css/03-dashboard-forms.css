@@ -1,7 +1,7 @@
 /* Dashboard, authentication, forms, tables, controls, utilities, and RTL rules. */
 
 .dashboard-body, .auth-body { background: linear-gradient(180deg, #eef6ff, #f8fbff); }
-.dashboard-shell { min-height: 100vh; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
+.dashboard-shell { min-height: 100dvh; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
 .dashboard-drawer-toggle,
 .dashboard-drawer-close,
 .dashboard-drawer-backdrop {
@@ -970,7 +970,7 @@ th, td { padding: 0.85rem 0.75rem; border-bottom: 1px solid var(--border); text-
     padding: 2rem;
 }
 .auth-page-section {
-    min-height: calc(100vh - 220px);
+    min-height: calc(100dvh - 220px);
     display: grid;
     align-items: center;
 }

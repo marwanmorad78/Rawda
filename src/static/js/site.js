@@ -138,7 +138,8 @@ const syncViewportHeightVariable = () => {
 
 const getAnyOpenModal = () =>
     Boolean(
-        (offerModal && !offerModal.hidden) ||
+        (siteHeader?.classList.contains("is-mobile-nav-open") && mobileNavMediaQuery.matches) ||
+            (offerModal && !offerModal.hidden) ||
             (productModal && !productModal.hidden) ||
             (productPhotoViewer && !productPhotoViewer.hidden) ||
             (excelModal && !excelModal.hidden) ||
@@ -258,6 +259,7 @@ const setMobileNavOpen = (isOpen) => {
     } else {
         mobileNavMenu.removeAttribute("aria-hidden");
     }
+    syncModalOpenState();
 };
 
 const syncDashboardProductOptionsPanel = () => {
