@@ -22,6 +22,7 @@ from apps.catalog.models import (
     ProductOption,
 )
 from apps.core.localization import get_ui_strings
+from apps.core.models import CustomerOrder
 
 
 class KiloCartTests(TestCase):
@@ -198,6 +199,48 @@ class CartRemovalTests(TestCase):
         )
 
         self.assertEqual(len(reload_response.context["cart"]["items"]), 2)
+
+
+class CheckoutHistoryTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="checkout-history",
+            password="test-password",
+        )
+        self.client.force_login(self.user)
+        category = Category.objects.create(name="Checkout")
+        self.product = Product.objects.create(
+            category=category,
+            name="Checkout Product",
+            price=Decimal("100"),
+            sold_by_weight_mode=Product.BEHAVIOR_CUSTOM,
+            sold_by_weight=False,
+        )
+        session = self.client.session
+        session[CART_SESSION_KEY] = {
+            f"product:{self.product.pk}": {"quantity": "1", "note": ""}
+        }
+        session.save()
+
+    def test_checkout_replaces_history_with_home_and_disables_caching(self):
+        response = self.client.get(reverse("catalog:checkout"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'data-checkout-return-url="{reverse("core:home")}"',
+        )
+        self.assertIn("no-store", response.headers["Cache-Control"])
+
+    def test_successful_checkout_clears_cart_and_redirects_to_tracking_cart(self):
+        response = self.client.post(
+            reverse("catalog:checkout-confirm"),
+            {"service_type": CustomerOrder.SERVICE_PICKUP},
+        )
+
+        self.assertRedirects(response, reverse("catalog:cart"))
+        self.assertEqual(CustomerOrder.objects.filter(profile__user=self.user).count(), 1)
+        self.assertEqual(self.client.session.get(CART_SESSION_KEY, {}), {})
 
 
 class CategoriesPageTests(TestCase):

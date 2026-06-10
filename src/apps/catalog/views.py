@@ -5,7 +5,9 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, TemplateView
 
 from apps.catalog.cart import (
@@ -699,6 +701,7 @@ class CheckoutAddressView(LoginRequiredMixin, View):
         )
 
 
+@method_decorator(never_cache, name="dispatch")
 class InvoiceView(LoginRequiredMixin, TemplateView):
     template_name = "public/invoice.html"
     login_url = "core:login"

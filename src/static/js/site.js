@@ -2124,6 +2124,32 @@ const replaceCheckoutHistoryEntry = () => {
     checkoutConfirmForm.dataset.historyReplaced = "true";
 };
 
+const resetCheckoutConfirmationState = () => {
+    if (!checkoutConfirmForm) {
+        return;
+    }
+
+    delete checkoutConfirmForm.dataset.confirmed;
+    delete checkoutConfirmForm.dataset.submitting;
+    delete checkoutConfirmForm.dataset.historyReplaced;
+    setCheckoutSubmitting(false);
+    setCheckoutConfirmModalOpen(false);
+};
+
+const handleRestoredCheckoutPage = () => {
+    if (!checkoutConfirmForm) {
+        return;
+    }
+
+    const returnUrl = checkoutConfirmForm.dataset.checkoutReturnUrl;
+    if (window.history.state?.checkoutSubmitted && returnUrl) {
+        window.location.replace(returnUrl);
+        return;
+    }
+
+    resetCheckoutConfirmationState();
+};
+
 const getFieldLabel = (field) => {
     const wrapper = field.closest("[data-field-wrapper], label");
     return wrapper?.querySelector(".field-label, span")?.textContent?.trim() || field.name || "Field";
@@ -2905,6 +2931,7 @@ checkoutConfirmForm?.addEventListener("submit", (event) => {
             return;
         }
         checkoutConfirmForm.dataset.submitting = "true";
+        setCheckoutConfirmModalOpen(false);
         replaceCheckoutHistoryEntry();
         setCheckoutSubmitting(true);
         return;
@@ -2919,9 +2946,9 @@ checkoutConfirmApprove?.addEventListener("click", () => {
     }
 
     checkoutConfirmForm.dataset.confirmed = "true";
-    setCheckoutSubmitting(true);
     checkoutConfirmForm.requestSubmit();
 });
+window.addEventListener("pageshow", handleRestoredCheckoutPage);
 syncModalOpenState();
 
 window.addEventListener("popstate", () => {
