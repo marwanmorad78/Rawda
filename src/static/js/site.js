@@ -125,6 +125,7 @@ let lockedRootScrollBehavior = "";
 let lockedBodyScrollRestoreTimer = null;
 let productModalUnitPriceText = "";
 let activeCartNoteCard = null;
+const PRODUCT_MODAL_HISTORY_KEY = "rawdaProductModal";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const tabTargetCache = new WeakMap();
@@ -1719,15 +1720,23 @@ const openProductModal = (card) => {
         }
     }
 
+    const wasOpen = !productModal.hidden;
     productModal.hidden = false;
+    if (!wasOpen) {
+        window.history.pushState(
+            {
+                ...(window.history.state || {}),
+                [PRODUCT_MODAL_HISTORY_KEY]: true,
+            },
+            "",
+            window.location.href,
+        );
+    }
     syncProductModalTotal();
     syncModalOpenState();
 };
 
-const closeProductModal = (event) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-
+const hideProductModal = () => {
     if (!productModal) {
         return;
     }
@@ -1735,6 +1744,20 @@ const closeProductModal = (event) => {
     closeProductPhotoViewer();
     productModal.hidden = true;
     syncModalOpenState();
+};
+
+const closeProductModal = (event) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (!productModal || productModal.hidden) {
+        return;
+    }
+
+    hideProductModal();
+    if (window.history.state?.[PRODUCT_MODAL_HISTORY_KEY]) {
+        window.history.back();
+    }
 };
 
 const closeModals = () => {
@@ -2079,6 +2102,27 @@ const setCheckoutSubmitting = (isSubmitting) => {
     }
 };
 
+const replaceCheckoutHistoryEntry = () => {
+    if (!checkoutConfirmForm || checkoutConfirmForm.dataset.historyReplaced === "true") {
+        return;
+    }
+
+    const returnUrl = checkoutConfirmForm.dataset.checkoutReturnUrl;
+    if (!returnUrl) {
+        return;
+    }
+
+    window.history.replaceState(
+        {
+            ...(window.history.state || {}),
+            checkoutSubmitted: true,
+        },
+        "",
+        returnUrl,
+    );
+    checkoutConfirmForm.dataset.historyReplaced = "true";
+};
+
 const getFieldLabel = (field) => {
     const wrapper = field.closest("[data-field-wrapper], label");
     return wrapper?.querySelector(".field-label, span")?.textContent?.trim() || field.name || "Field";
@@ -2114,14 +2158,12 @@ const collectRegisterNameErrors = () => {
     }
 
     const messages = getCurrentMessages();
-    const nameInput = registerForm.querySelector('[name="full_name"]');
-    const name = String(nameInput?.value || "").trim();
-
-    if (name && !isArabicNameValue(name)) {
-        return [{ field: nameInput, message: messages.nameArabicOnly }];
-    }
-
-    return [];
+    return Array.from(registerForm.querySelectorAll("[data-register-name-part]"))
+        .filter((nameInput) => {
+            const name = String(nameInput.value || "").trim();
+            return name && !isArabicNameValue(name);
+        })
+        .map((field) => ({ field, message: messages.nameArabicOnly }));
 };
 
 const collectRegisterRequiredErrors = () => {
@@ -2190,7 +2232,7 @@ const enhanceRegisterForm = () => {
     }
 
     const messages = getCurrentMessages();
-    const nameInput = registerForm.querySelector('[name="full_name"]');
+    const nameInputs = Array.from(registerForm.querySelectorAll("[data-register-name-part]"));
     const phoneInput = registerForm.querySelector('[name="username"]');
     const passwordInputs = Array.from(registerForm.querySelectorAll('[name="password1"], [name="password2"]'));
     let lastLiveNameErrorMessage = "";
@@ -2221,16 +2263,18 @@ const enhanceRegisterForm = () => {
     };
 
     const updateNameValidationState = () => {
-        if (!nameInput || !isArabicLanguage()) {
+        if (!nameInputs.length || !isArabicLanguage()) {
             return;
         }
 
-        const name = String(nameInput.value || "").trim();
-        setFieldValidationState(nameInput, name ? (isArabicNameValue(name) ? "valid" : "invalid") : null);
+        nameInputs.forEach((nameInput) => {
+            const name = String(nameInput.value || "").trim();
+            setFieldValidationState(nameInput, name ? (isArabicNameValue(name) ? "valid" : "invalid") : null);
+        });
     };
 
     const showLiveNameError = debounce(() => {
-        if (!nameInput || !isArabicLanguage()) {
+        if (!nameInputs.length || !isArabicLanguage()) {
             return;
         }
 
@@ -2326,17 +2370,19 @@ const enhanceRegisterForm = () => {
     showRegisterServerErrors();
     updateNameValidationState();
     updatePasswordValidationStates();
-    nameInput?.addEventListener("input", () => {
-        updateNameValidationState();
-        showLiveNameError();
-    });
-    nameInput?.addEventListener("blur", () => {
-        updateNameValidationState();
-        const errors = collectRegisterNameErrors();
-        if (errors.length) {
-            showRegisterError(errors[0]);
-            lastLiveNameErrorMessage = errors[0].message;
-        }
+    nameInputs.forEach((nameInput) => {
+        nameInput.addEventListener("input", () => {
+            updateNameValidationState();
+            showLiveNameError();
+        });
+        nameInput.addEventListener("blur", () => {
+            updateNameValidationState();
+            const errors = collectRegisterNameErrors();
+            if (errors.length) {
+                showRegisterError(errors[0]);
+                lastLiveNameErrorMessage = errors[0].message;
+            }
+        });
     });
     passwordInputs.forEach((input) =>
         input.addEventListener("input", () => {
@@ -2414,6 +2460,17 @@ syncViewportHeightVariable();
 window.visualViewport?.addEventListener("resize", syncViewportHeightVariable);
 window.visualViewport?.addEventListener("scroll", syncViewportHeightVariable);
 window.addEventListener("resize", syncViewportHeightVariable);
+
+if (registerForm) {
+    if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+    }
+    const resetRegisterScrollPosition = () => {
+        window.requestAnimationFrame(() => window.scrollTo(0, 0));
+    };
+    resetRegisterScrollPosition();
+    window.addEventListener("pageshow", resetRegisterScrollPosition);
+}
 
 passwordVisibilityToggles.forEach(enhancePasswordVisibilityToggle);
 syrianPhoneInputs.forEach(enhanceSyrianPhoneInput);
@@ -2842,6 +2899,12 @@ checkoutConfirmClosers.forEach((closer) => {
 });
 checkoutConfirmForm?.addEventListener("submit", (event) => {
     if (checkoutConfirmForm.dataset.confirmed === "true") {
+        if (checkoutConfirmForm.dataset.submitting === "true") {
+            event.preventDefault();
+            return;
+        }
+        checkoutConfirmForm.dataset.submitting = "true";
+        replaceCheckoutHistoryEntry();
         setCheckoutSubmitting(true);
         return;
     }
@@ -2859,6 +2922,12 @@ checkoutConfirmApprove?.addEventListener("click", () => {
     checkoutConfirmForm.requestSubmit();
 });
 syncModalOpenState();
+
+window.addEventListener("popstate", () => {
+    if (productModal && !productModal.hidden) {
+        hideProductModal();
+    }
+});
 
 homeTabs.forEach((tab) => {
     tab.addEventListener("click", () => {

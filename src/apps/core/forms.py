@@ -92,6 +92,9 @@ class LocalizedCustomerFormMixin:
     def apply_localized_labels(self):
         label_map = {
             "full_name": "full_name",
+            "name": "full_name",
+            "father_name": "father_name",
+            "last_name": "last_name",
             "username": "phone_number",
             "phone_number": "phone_number",
             "area": "area_name",
@@ -109,6 +112,9 @@ class LocalizedCustomerFormMixin:
         }
         placeholder_map = {
             "full_name": "full_name_placeholder",
+            "name": "name_placeholder",
+            "father_name": "father_name_placeholder",
+            "last_name": "last_name_placeholder",
             "username": "phone_number_placeholder",
             "phone_number": "phone_number_placeholder",
             "street_address": "street_address_placeholder",
@@ -204,7 +210,10 @@ class DeliverySubAreaSelectionMixin:
 
 
 class CustomerRegistrationForm(DeliverySubAreaSelectionMixin, LocalizedCustomerFormMixin, UserCreationForm):
-    full_name = forms.CharField(max_length=150)
+    name = forms.CharField(max_length=50)
+    father_name = forms.CharField(max_length=50)
+    last_name = forms.CharField(max_length=50)
+    full_name = forms.CharField(required=False, widget=forms.HiddenInput)
     username = forms.CharField(max_length=30)
     area = forms.ModelChoiceField(queryset=DeliveryArea.objects.none(), empty_label=None)
     sub_area = forms.ModelChoiceField(queryset=DeliverySubArea.objects.none(), required=False)
@@ -217,10 +226,38 @@ class CustomerRegistrationForm(DeliverySubAreaSelectionMixin, LocalizedCustomerF
 
     class Meta(UserCreationForm.Meta):
         model = get_user_model()
-        fields = ("full_name", "username", "area", "street_address", "building", "floor", "apartment")
+        fields = ("name", "father_name", "last_name", "username", "area", "street_address", "building", "floor", "apartment")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.order_fields(
+            (
+                "name",
+                "father_name",
+                "last_name",
+                "username",
+                "password1",
+                "password2",
+                "area",
+                "sub_area",
+                "street_address",
+                "building",
+                "floor",
+                "apartment",
+                "nearby_landmark",
+                "notes",
+                "full_name",
+            )
+        )
+        autocomplete_map = {
+            "name": "given-name",
+            "father_name": "additional-name",
+            "last_name": "family-name",
+        }
+        for field_name, autocomplete in autocomplete_map.items():
+            self.fields[field_name].widget.attrs["data-register-name-part"] = "true"
+            self.fields[field_name].widget.attrs["autocomplete"] = autocomplete
+        self.fields["username"].widget.attrs.pop("autofocus", None)
         self.fields["area"].queryset = DeliveryArea.objects.filter(is_active=True)
         self.fields["area"].empty_label = self.ui["area_name_placeholder"]
         self.configure_sub_area_field()
@@ -231,14 +268,29 @@ class CustomerRegistrationForm(DeliverySubAreaSelectionMixin, LocalizedCustomerF
             raise forms.ValidationError(self.ui["phone_number_taken"])
         return phone_number
 
-    def clean_full_name(self):
-        full_name = " ".join((self.cleaned_data.get("full_name") or "").split())
-        if self.language == "ar" and full_name and not ARABIC_NAME_RE.fullmatch(full_name):
+    def clean_name_part(self, field_name):
+        name_part = " ".join((self.cleaned_data.get(field_name) or "").split())
+        if self.language == "ar" and name_part and not ARABIC_NAME_RE.fullmatch(name_part):
             raise forms.ValidationError(self.ui["full_name_arabic_only"])
-        return full_name
+        return name_part
+
+    def clean_name(self):
+        return self.clean_name_part("name")
+
+    def clean_father_name(self):
+        return self.clean_name_part("father_name")
+
+    def clean_last_name(self):
+        return self.clean_name_part("last_name")
 
     def clean(self):
         cleaned_data = super().clean()
+        name_parts = (
+            cleaned_data.get("name"),
+            cleaned_data.get("father_name"),
+            cleaned_data.get("last_name"),
+        )
+        cleaned_data["full_name"] = " ".join(part for part in name_parts if part)
         return self.clean_sub_area_selection(cleaned_data)
 
     def save(self, commit=True):

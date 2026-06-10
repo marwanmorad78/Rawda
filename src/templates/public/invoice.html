@@ -20,6 +20,7 @@
                 class="checkout-flow"
                 data-checkout-flow
                 data-checkout-confirm-form
+                data-checkout-return-url="{% url 'catalog:cart' %}"
                 data-pickup-total="{% if cart.has_weight_items %}{{ cart.display_subtotal_range }}{% else %}{{ cart.display_subtotal }}{% endif %}"
                 data-pickup-fee="{{ ui.free_delivery }}"
             >

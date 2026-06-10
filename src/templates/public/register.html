@@ -11,16 +11,27 @@
         <form method="post" class="stack-form" data-register-form data-phone-check-url="{% url 'core:register-check-phone' %}" novalidate>
             {% csrf_token %}
             {{ form.non_field_errors }}
-            <div class="inline-field-grid">
+            {{ form.full_name }}
+            <div class="inline-field-grid register-name-grid">
                 <label>
-                    <span>{{ form.full_name.label }}</span>
-                    {{ form.full_name }}
-                    {{ form.full_name.errors }}
+                    <span>{{ form.name.label }}</span>
+                    {{ form.name }}
+                    {{ form.name.errors }}
                 </label>
-                {% with field=form.username %}
-                    {% include "partials/syrian_phone_field.html" %}
-                {% endwith %}
+                <label>
+                    <span>{{ form.father_name.label }}</span>
+                    {{ form.father_name }}
+                    {{ form.father_name.errors }}
+                </label>
+                <label>
+                    <span>{{ form.last_name.label }}</span>
+                    {{ form.last_name }}
+                    {{ form.last_name.errors }}
+                </label>
             </div>
+            {% with field=form.username %}
+                {% include "partials/syrian_phone_field.html" %}
+            {% endwith %}
             <div class="inline-field-grid">
                 {% with field=form.password1 %}
                     {% include "partials/password_field.html" %}

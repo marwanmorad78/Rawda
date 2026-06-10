@@ -9,7 +9,9 @@ from django.test import TestCase, override_settings
 from PIL import Image
 
 from apps.catalog.models import Category, Company, Product
+from apps.core.forms import CustomerRegistrationForm
 from apps.promotions.models import Promotion
+from apps.core.models import DeliveryArea
 from apps.core.management.commands.optimize_images import get_optimized_image_fields
 from media.utils.image_optimizer import optimize_image_file
 
@@ -27,6 +29,47 @@ def make_image_bytes(
     save_kwargs = {"exif": exif} if exif is not None else {}
     image.save(output, format=image_format, **save_kwargs)
     return output.getvalue()
+
+
+class CustomerRegistrationFormTests(TestCase):
+    def setUp(self):
+        self.area = DeliveryArea.objects.create(name="Damascus")
+
+    def test_name_fields_come_before_phone_and_password_fields(self):
+        form = CustomerRegistrationForm(language="en")
+
+        self.assertEqual(
+            list(form.fields)[:6],
+            ["name", "father_name", "last_name", "username", "password1", "password2"],
+        )
+        self.assertNotIn("autofocus", form.fields["username"].widget.attrs)
+
+    def test_registration_combines_name_parts_for_existing_profile_contract(self):
+        form = CustomerRegistrationForm(
+            data={
+                "name": "Ahmad",
+                "father_name": "Mahmoud",
+                "last_name": "Saleh",
+                "username": "944444444",
+                "password1": "secure-pass-2026",
+                "password2": "secure-pass-2026",
+                "area": self.area.pk,
+                "sub_area": "",
+                "street_address": "Main street",
+                "building": "",
+                "floor": "",
+                "apartment": "",
+                "nearby_landmark": "",
+                "notes": "",
+            },
+            language="en",
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        user = form.save()
+
+        self.assertEqual(user.first_name, "Ahmad Mahmoud Saleh")
+        self.assertEqual(user.customer_profile.full_name, "Ahmad Mahmoud Saleh")
 
 
 class ImageOptimizerUtilityTests(TestCase):
