@@ -429,8 +429,12 @@
 
 @media (max-width: 560px) {
     .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 70;
         padding: 0.45rem 0 0.65rem;
         margin-bottom: 0.55rem;
+        background: rgba(248, 251, 255, 0.96);
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
     }
@@ -586,10 +590,6 @@
         flex: 0 0 3rem;
         min-width: 0;
         width: 100%;
-    }
-
-    .nav-logout-form {
-        margin-top: auto;
     }
 
     .tab-form .nav-link-button {
