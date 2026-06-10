@@ -30,7 +30,11 @@ This template is intentionally not included by public/home.html.
                 <a href="{% url 'core:login' %}">{{ ui.login }}</a>
                 <a href="{% url 'core:register' %}">{{ ui.register }}</a>
             {% endif %}
-            <a href="{% url 'core:set-language' %}?lang={% if current_language == 'ar' %}en{% else %}ar{% endif %}" class="immersive-top-lang">{{ ui.language_toggle }}</a>
+            <a
+                href="{% url 'core:set-language' %}?lang={% if current_language == 'ar' %}en{% else %}ar{% endif %}"
+                class="immersive-top-lang language-toggle-control"
+                hidden
+            >{{ ui.language_toggle }}</a>
         </nav>
     </div>
 </div>

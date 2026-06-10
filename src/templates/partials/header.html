@@ -28,16 +28,22 @@
                 <a href="{% url 'catalog:cart' %}" class="tab-link{% if request.resolver_match.url_name == 'cart' %} is-active{% endif %}">{{ ui.cart }}{% if cart_count %} <span class="tab-count">{{ cart_count }}</span>{% endif %}</a>
                 <a href="{% url 'core:orders' %}" class="tab-link{% if request.resolver_match.url_name == 'orders' %} is-active{% endif %}">{{ ui.previous_orders }}</a>
                 <a href="{% url 'core:settings' %}" class="tab-link{% if request.resolver_match.url_name == 'settings' %} is-active{% endif %}">{{ ui.settings }}</a>
-                <form action="{% url 'core:logout' %}" method="post" class="tab-form">
-                    {% csrf_token %}
-                    <button type="submit" class="tab-link nav-link-button">{{ ui.logout }}</button>
-                </form>
             {% else %}
                 <a href="{% url 'core:login' %}" class="tab-link{% if request.resolver_match.url_name == 'login' %} is-active{% endif %}">{{ ui.login }}</a>
                 <a href="{% url 'core:register' %}" class="tab-link{% if request.resolver_match.url_name == 'register' %} is-active{% endif %}">{{ ui.register }}</a>
             {% endif %}
             <a href="{% url 'core:about' %}" class="tab-link{% if request.resolver_match.url_name == 'about' %} is-active{% endif %}">{{ ui.about }}</a>
-            <a href="{% url 'core:set-language' %}?lang={% if current_language == 'ar' %}en{% else %}ar{% endif %}" class="tab-link lang-toggle">{{ ui.language_toggle }}</a>
+            <a
+                href="{% url 'core:set-language' %}?lang={% if current_language == 'ar' %}en{% else %}ar{% endif %}"
+                class="tab-link lang-toggle language-toggle-control"
+                hidden
+            >{{ ui.language_toggle }}</a>
+            {% if request.user.is_authenticated %}
+                <form action="{% url 'core:logout' %}" method="post" class="tab-form nav-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="tab-link nav-link-button">{{ ui.logout }}</button>
+                </form>
+            {% endif %}
         </nav>
     </div>
 </header>

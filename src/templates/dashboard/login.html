@@ -12,7 +12,8 @@
     <main class="auth-card">
         <a
             href="{% if current_language == 'ar' %}{{ switch_to_en_url }}{% else %}{{ switch_to_ar_url }}{% endif %}"
-            class="auth-language-toggle"
+            class="auth-language-toggle language-toggle-control"
+            hidden
         >
             {{ dashboard_ui.language_toggle }}
         </a>

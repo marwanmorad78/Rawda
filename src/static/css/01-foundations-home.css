@@ -193,6 +193,10 @@ img { max-width: 100%; display: block; }
     display: none;
 }
 
+.language-toggle-control {
+    display: none !important;
+}
+
 .tab-form {
     margin: 0;
     display: flex;
@@ -215,7 +219,7 @@ img { max-width: 100%; display: block; }
     transition: background 0.24s ease, color 0.24s ease, transform 0.24s ease, border-color 0.24s ease;
 }
 .nav-link-button {
-    border: none;
+    border: 1px solid transparent;
     background: transparent;
     cursor: pointer;
     font: inherit;

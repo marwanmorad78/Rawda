@@ -588,6 +588,14 @@
         width: 100%;
     }
 
+    .nav-logout-form {
+        margin-top: auto;
+    }
+
+    .tab-form .nav-link-button {
+        flex: 1 1 auto;
+    }
+
     .tab-link,
     .nav-link-button {
         flex: 0 0 3rem;
