@@ -131,6 +131,13 @@ def mark_order_accepted(order, expected_time_minutes=None, print_invoice=False):
     return order
 
 
+def mark_order_cancelled(order):
+    order.status = CustomerOrder.STATUS_CANCELLED
+    order.completed_at = timezone.now()
+    order.save(update_fields=["status", "completed_at", "updated_at"])
+    return order
+
+
 def move_accepted_orders_to_preparing():
     updated_count = CustomerOrder.objects.filter(status=CustomerOrder.STATUS_ACCEPTED).update(
         status=CustomerOrder.STATUS_BEING_PREPARED,

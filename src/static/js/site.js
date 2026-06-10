@@ -114,6 +114,7 @@ const checkoutConfirmModal = document.querySelector("[data-checkout-confirm-moda
 const checkoutConfirmClosers = Array.from(document.querySelectorAll("[data-checkout-confirm-close]"));
 const checkoutConfirmApprove = document.querySelector("[data-checkout-confirm-approve]");
 const dashboardColumnFilters = Array.from(document.querySelectorAll("[data-column-filter]"));
+const confirmationForms = Array.from(document.querySelectorAll("form[data-confirm-submit]"));
 
 const cartState = {
     count: Number.parseInt(floatingCart?.dataset.cartCount || "0", 10) || 0,
@@ -2927,6 +2928,14 @@ window.addEventListener("popstate", () => {
     if (productModal && !productModal.hidden) {
         hideProductModal();
     }
+});
+
+confirmationForms.forEach((form) => {
+    form.addEventListener("submit", (event) => {
+        if (!window.confirm(form.dataset.confirmSubmit || "")) {
+            event.preventDefault();
+        }
+    });
 });
 
 homeTabs.forEach((tab) => {

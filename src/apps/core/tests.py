@@ -2,16 +2,18 @@ from io import BytesIO, StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from PIL import Image
 
 from apps.catalog.models import Category, Company, Product
 from apps.core.forms import CustomerRegistrationForm
 from apps.promotions.models import Promotion
-from apps.core.models import DeliveryArea
+from apps.core.models import CustomerOrder, CustomerProfile, DeliveryArea
 from apps.core.management.commands.optimize_images import get_optimized_image_fields
 from media.utils.image_optimizer import optimize_image_file
 
@@ -70,6 +72,84 @@ class CustomerRegistrationFormTests(TestCase):
 
         self.assertEqual(user.first_name, "Ahmad Mahmoud Saleh")
         self.assertEqual(user.customer_profile.full_name, "Ahmad Mahmoud Saleh")
+
+
+class CustomerOrderCancellationTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="customer-cancel",
+            password="test-password",
+        )
+        self.profile = CustomerProfile.objects.create(
+            user=self.user,
+            full_name="Customer Cancel",
+            phone_number="944444441",
+        )
+        self.client.force_login(self.user)
+        session = self.client.session
+        session["site_language"] = "en"
+        session.save()
+
+    def create_order(self, status=CustomerOrder.STATUS_BEING_PREPARED, invoice_number="AR-CANCEL-1"):
+        return CustomerOrder.objects.create(
+            profile=self.profile,
+            invoice_number=invoice_number,
+            service_type=CustomerOrder.SERVICE_PICKUP,
+            status=status,
+            address_snapshot="Pickup",
+        )
+
+    def test_customer_can_cancel_own_submitted_order(self):
+        order = self.create_order()
+
+        response = self.client.post(reverse("core:order-cancel", kwargs={"pk": order.pk}))
+
+        self.assertRedirects(response, reverse("catalog:cart"))
+        order.refresh_from_db()
+        self.assertEqual(order.status, CustomerOrder.STATUS_CANCELLED)
+        self.assertIsNotNone(order.completed_at)
+
+    def test_customer_cannot_cancel_order_after_delivery_started(self):
+        order = self.create_order(status=CustomerOrder.STATUS_OUT_FOR_DELIVERY)
+
+        response = self.client.post(reverse("core:order-cancel", kwargs={"pk": order.pk}))
+
+        self.assertRedirects(response, reverse("catalog:cart"))
+        order.refresh_from_db()
+        self.assertEqual(order.status, CustomerOrder.STATUS_OUT_FOR_DELIVERY)
+        self.assertIsNone(order.completed_at)
+
+    def test_customer_cannot_cancel_another_customers_order(self):
+        other_user = get_user_model().objects.create_user(
+            username="other-customer",
+            password="test-password",
+        )
+        other_profile = CustomerProfile.objects.create(
+            user=other_user,
+            full_name="Other Customer",
+            phone_number="944444442",
+        )
+        order = CustomerOrder.objects.create(
+            profile=other_profile,
+            invoice_number="AR-CANCEL-OTHER",
+            service_type=CustomerOrder.SERVICE_PICKUP,
+            status=CustomerOrder.STATUS_BEING_PREPARED,
+            address_snapshot="Pickup",
+        )
+
+        response = self.client.post(reverse("core:order-cancel", kwargs={"pk": order.pk}))
+
+        self.assertEqual(response.status_code, 404)
+        order.refresh_from_db()
+        self.assertEqual(order.status, CustomerOrder.STATUS_BEING_PREPARED)
+
+    def test_active_order_tracker_renders_cancel_action(self):
+        order = self.create_order()
+
+        response = self.client.get(reverse("core:home"))
+
+        self.assertContains(response, reverse("core:order-cancel", kwargs={"pk": order.pk}))
+        self.assertContains(response, "Cancel order")
 
 
 class ImageOptimizerUtilityTests(TestCase):

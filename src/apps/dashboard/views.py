@@ -68,7 +68,11 @@ from apps.dashboard.forms import (
 from apps.dashboard.localization import get_dashboard_strings
 from apps.dashboard.mixins import DashboardLocalizationMixin, StaffRequiredMixin
 from apps.core.order_status import attach_order_display, attach_orders_display, suggested_expected_minutes
-from apps.core.services import mark_order_accepted, sync_center_status_and_auto_accept_waiting_orders
+from apps.core.services import (
+    mark_order_accepted,
+    mark_order_cancelled,
+    sync_center_status_and_auto_accept_waiting_orders,
+)
 from apps.promotions.models import Promotion
 
 
@@ -1899,6 +1903,22 @@ class DashboardOrderAdvanceView(DashboardLocalizationMixin, StaffRequiredMixin, 
         if order.status == CustomerOrder.STATUS_DONE:
             return redirect("dashboard:orders")
         return redirect("dashboard:pending-order-detail", pk=order.pk)
+
+
+class DashboardOrderRejectView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    @transaction.atomic
+    def post(self, request, pk, *args, **kwargs):
+        order = get_object_or_404(
+            CustomerOrder.objects.select_for_update(),
+            pk=pk,
+        )
+        if not order.can_staff_reject:
+            messages.error(request, self.get_dashboard_ui()["order_reject_unavailable"])
+            return redirect("dashboard:pending-order-detail", pk=order.pk)
+
+        mark_order_cancelled(order)
+        messages.success(request, self.get_dashboard_ui()["order_rejected"])
+        return redirect("dashboard:pending-orders")
 
 
 class CategoryManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateView):

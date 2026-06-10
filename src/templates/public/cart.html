@@ -15,7 +15,7 @@
     <div class="container">
         {% if active_order %}
             <div data-active-order-status-region data-active-order-status-url="{% url 'core:active-order-status' %}">
-                {% include "partials/order_status_tracker.html" with order=active_order labels=ui heading=ui.active_order_heading %}
+                {% include "partials/order_status_tracker.html" with order=active_order labels=ui heading=ui.active_order_heading allow_customer_cancel=True %}
             </div>
         {% endif %}
 

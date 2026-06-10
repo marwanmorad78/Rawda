@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.db import transaction
 from django.db.models import Q
 from django.db.models import Prefetch
 from django.http import JsonResponse
@@ -43,7 +44,7 @@ from apps.core.pricing import (
     set_product_display_price,
     set_promotion_display_price,
 )
-from apps.core.services import sync_center_status_and_auto_accept_waiting_orders
+from apps.core.services import mark_order_cancelled, sync_center_status_and_auto_accept_waiting_orders
 from apps.promotions.models import Promotion
 
 
@@ -228,6 +229,7 @@ class ActiveOrderStatusView(LoginRequiredMixin, View):
                 "heading": get_ui_strings(language)["active_order_heading"],
                 "action_url": reverse("catalog:cart"),
                 "action_label": get_ui_strings(language)["view_order"],
+                "allow_customer_cancel": True,
             },
             request=request,
         )
@@ -461,6 +463,24 @@ class PreviousOrdersView(CustomerContextMixin, LoginRequiredMixin, TemplateView)
         attach_orders_display(orders, get_ui_strings(language), language)
         context["orders"] = orders
         return context
+
+
+class CancelOrderView(CustomerContextMixin, LoginRequiredMixin, View):
+    @transaction.atomic
+    def post(self, request, pk, *args, **kwargs):
+        profile = self.get_customer_profile()
+        order = get_object_or_404(
+            profile.orders.select_for_update(),
+            pk=pk,
+        )
+        ui = get_ui_strings(self.get_language())
+        if not order.can_customer_cancel:
+            messages.error(request, ui["order_cancel_unavailable"])
+            return redirect("catalog:cart")
+
+        mark_order_cancelled(order)
+        messages.success(request, ui["order_cancelled_success"])
+        return redirect("catalog:cart")
 
 
 class ReorderView(CustomerContextMixin, LoginRequiredMixin, View):

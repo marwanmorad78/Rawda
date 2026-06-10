@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     AboutView,
     ActiveOrderStatusView,
+    CancelOrderView,
     CustomerAddressCreateView,
     CustomerAddressDeleteView,
     DeliverySubAreaListView,
@@ -36,6 +37,7 @@ urlpatterns = [
     path("delivery-areas/<int:area_id>/subareas/", DeliverySubAreaListView.as_view(), name="delivery-subareas"),
     path("orders/", PreviousOrdersView.as_view(), name="orders"),
     path("orders/active-status/", ActiveOrderStatusView.as_view(), name="active-order-status"),
+    path("orders/<int:pk>/cancel/", CancelOrderView.as_view(), name="order-cancel"),
     path("orders/<int:pk>/reorder/", ReorderView.as_view(), name="order-reorder"),
     path("language/", SetLanguageView.as_view(), name="set-language"),
 ]

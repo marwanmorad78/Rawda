@@ -4,7 +4,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from openpyxl import Workbook
 from PIL import Image
 
@@ -15,6 +17,7 @@ from apps.catalog.models import (
     ProductCompany,
     ProductCompanyOption,
 )
+from apps.core.models import CustomerOrder, CustomerProfile
 
 from .views import (
     CATEGORY_IMAGE_EXCEL_HEADERS,
@@ -159,6 +162,90 @@ class CompanyExcelImportTests(TestCase):
         self.assertEqual(ProductCompany.objects.filter(product=product).count(), 1)
         self.assertEqual(relation.options.count(), 1)
         self.assertEqual(relation.options.get().price, Decimal("15.50"))
+
+
+class DashboardOrderRejectionTests(TestCase):
+    def setUp(self):
+        self.staff_user = get_user_model().objects.create_user(
+            username="order-manager",
+            password="test-password",
+            is_staff=True,
+        )
+        customer_user = get_user_model().objects.create_user(
+            username="rejected-customer",
+            password="test-password",
+        )
+        self.profile = CustomerProfile.objects.create(
+            user=customer_user,
+            full_name="Rejected Customer",
+            phone_number="944444443",
+        )
+        self.client.force_login(self.staff_user)
+        session = self.client.session
+        session["site_language"] = "en"
+        session.save()
+
+    def create_order(self, status=CustomerOrder.STATUS_BEING_PREPARED, invoice_number="AR-REJECT-1"):
+        return CustomerOrder.objects.create(
+            profile=self.profile,
+            invoice_number=invoice_number,
+            service_type=CustomerOrder.SERVICE_PICKUP,
+            status=status,
+            address_snapshot="Pickup",
+        )
+
+    def test_staff_can_reject_active_order(self):
+        order = self.create_order()
+
+        response = self.client.post(
+            reverse("dashboard:pending-order-reject", kwargs={"pk": order.pk})
+        )
+
+        self.assertRedirects(response, reverse("dashboard:pending-orders"))
+        order.refresh_from_db()
+        self.assertEqual(order.status, CustomerOrder.STATUS_CANCELLED)
+        self.assertIsNotNone(order.completed_at)
+
+    def test_staff_cannot_reject_completed_order(self):
+        order = self.create_order(status=CustomerOrder.STATUS_DONE)
+
+        response = self.client.post(
+            reverse("dashboard:pending-order-reject", kwargs={"pk": order.pk})
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("dashboard:pending-order-detail", kwargs={"pk": order.pk}),
+        )
+        order.refresh_from_db()
+        self.assertEqual(order.status, CustomerOrder.STATUS_DONE)
+
+    def test_non_staff_cannot_reject_order(self):
+        non_staff = get_user_model().objects.create_user(
+            username="not-manager",
+            password="test-password",
+        )
+        self.client.force_login(non_staff)
+        order = self.create_order()
+
+        response = self.client.post(
+            reverse("dashboard:pending-order-reject", kwargs={"pk": order.pk})
+        )
+
+        self.assertEqual(response.status_code, 403)
+        order.refresh_from_db()
+        self.assertEqual(order.status, CustomerOrder.STATUS_BEING_PREPARED)
+
+    def test_pending_orders_render_reject_action(self):
+        order = self.create_order()
+
+        response = self.client.get(reverse("dashboard:pending-orders"))
+
+        self.assertContains(
+            response,
+            reverse("dashboard:pending-order-reject", kwargs={"pk": order.pk}),
+        )
+        self.assertContains(response, "Reject order")
 
 
 class ExcelImageImportTests(TestCase):

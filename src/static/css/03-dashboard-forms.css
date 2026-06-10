@@ -380,6 +380,20 @@
     padding: 0.65rem 0.85rem;
     border-radius: 12px;
 }
+.btn.btn-danger {
+    border-color: #b42318;
+    background: linear-gradient(135deg, #d92d20, #b42318);
+    color: var(--white);
+    box-shadow: 0 12px 26px rgba(180, 35, 24, 0.2);
+}
+.btn.btn-danger:hover,
+.btn.btn-danger:focus-visible {
+    border-color: #8f1f17;
+    background: linear-gradient(135deg, #c4261b, #8f1f17);
+    color: var(--white);
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px rgba(180, 35, 24, 0.28);
+}
 .invoice-panel { display: grid; gap: 1.5rem; }
 .invoice-meta { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .invoice-total { display: flex; justify-content: flex-end; font-size: 1.1rem; }
@@ -603,6 +617,27 @@
     transform: translateY(-1px);
     background: var(--blue-950);
     box-shadow: 0 16px 34px rgba(6, 48, 111, 0.22);
+}
+.order-status-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+.order-status-actions form,
+.order-reject-form {
+    margin: 0;
+}
+.order-status-actions .btn,
+.order-reject-form .btn {
+    min-height: 2.65rem;
+    border-radius: 999px;
+}
+.order-reject-form {
+    display: flex;
+    justify-content: flex-start;
+    margin: 0 0 1.2rem;
 }
 .order-status-action-form {
     display: grid;

@@ -16,9 +16,21 @@
             <span>{% if order.service_type == "delivery" %}{{ labels.delivery }}{% else %}{{ labels.pickup }}{% endif %}</span>
             <span>{{ order.display_total }}</span>
         </div>
-        {% if action_url %}
-            <a href="{{ action_url }}" class="order-status-action-link">{{ action_label|default:labels.view_order }}</a>
-        {% endif %}
+        <div class="order-status-actions">
+            {% if action_url %}
+                <a href="{{ action_url }}" class="order-status-action-link">{{ action_label|default:labels.view_order }}</a>
+            {% endif %}
+            {% if allow_customer_cancel and order.can_customer_cancel %}
+                <form
+                    method="post"
+                    action="{% url 'core:order-cancel' order.pk %}"
+                    data-confirm-submit="{{ labels.cancel_order_confirm }}"
+                >
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">{{ labels.cancel_order }}</button>
+                </form>
+            {% endif %}
+        </div>
     </div>
     <ol class="order-status-track" style="--status-step-count: {{ order.status_steps|length }};">
         {% for step in order.status_steps %}

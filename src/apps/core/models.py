@@ -305,6 +305,12 @@ class CustomerOrder(TimeStampedModel):
         STATUS_OUT_FOR_DELIVERY,
         STATUS_READY_TO_PICKUP,
     ]
+    CUSTOMER_CANCELLABLE_STATUSES = [
+        STATUS_WAITING_BUSY_CENTER,
+        STATUS_ACCEPTED,
+        STATUS_WAITING_ACCEPT,
+        STATUS_BEING_PREPARED,
+    ]
     DELIVERY_STATUS_FLOW = [
         STATUS_ACCEPTED,
         STATUS_BEING_PREPARED,
@@ -366,6 +372,14 @@ class CustomerOrder(TimeStampedModel):
 
     @property
     def is_active(self):
+        return self.status in self.ACTIVE_STATUSES
+
+    @property
+    def can_customer_cancel(self):
+        return self.status in self.CUSTOMER_CANCELLABLE_STATUSES
+
+    @property
+    def can_staff_reject(self):
         return self.status in self.ACTIVE_STATUSES
 
     def get_status_flow(self):

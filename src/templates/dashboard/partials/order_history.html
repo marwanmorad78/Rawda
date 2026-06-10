@@ -87,6 +87,17 @@
                             </button>
                         </form>
                     {% endif %}
+                    {% if order.can_staff_reject %}
+                        <form
+                            method="post"
+                            action="{% url 'dashboard:pending-order-reject' order.pk %}"
+                            class="order-reject-form"
+                            data-confirm-submit="{{ dashboard_ui.reject_order_confirm }}"
+                        >
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">{{ dashboard_ui.reject_order }}</button>
+                        </form>
+                    {% endif %}
 
                     <div class="table-wrap">
                         <table>
