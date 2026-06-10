@@ -440,7 +440,13 @@ img { max-width: 100%; display: block; }
     width: min(52vw, 520px);
     aspect-ratio: 1.72 / 1;
     border-radius: 22px;
-    background: var(--cream-50);
+    background: var(--white);
+}
+
+.home-offers-carousel .offer-slide img {
+    object-fit: contain;
+    object-position: center;
+    background: var(--white);
 }
 
 .home-offers-carousel .offer-slide.is-active {
