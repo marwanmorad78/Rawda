@@ -21,6 +21,13 @@
                         </label>
                         {{ block.company_form.company.errors }}
                     </div>
+                    <div>
+                        <label>
+                            <span>{{ dashboard_ui.company_dollar_pricing }}</span>
+                            {{ block.company_form.is_price_linked_to_dollar }}
+                        </label>
+                        {{ block.company_form.is_price_linked_to_dollar.errors }}
+                    </div>
                     {% if block.company_form.DELETE %}
                         <label class="compact-checkbox">
                             {{ block.company_form.DELETE }}
@@ -130,6 +137,13 @@
                         {{ company_formset.empty_form.company }}
                     </label>
                     {{ company_formset.empty_form.company.errors }}
+                </div>
+                <div>
+                    <label>
+                        <span>{{ dashboard_ui.company_dollar_pricing }}</span>
+                        {{ company_formset.empty_form.is_price_linked_to_dollar }}
+                    </label>
+                    {{ company_formset.empty_form.is_price_linked_to_dollar.errors }}
                 </div>
                 {% if company_formset.empty_form.DELETE %}
                     <label class="compact-checkbox">

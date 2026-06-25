@@ -13,9 +13,9 @@ from django.core.files.base import ContentFile
 from django.core.files.utils import validate_file_name
 from django.db import transaction
 from django.db.models import ProtectedError, Q, Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, DeleteView, TemplateView, UpdateView
@@ -31,7 +31,7 @@ from apps.catalog.models import (
     ProductCompanyOption,
     ProductOption,
 )
-from apps.core.localization import DEFAULT_LANGUAGE, format_syp, localize_instance, localize_queryset
+from apps.core.localization import DEFAULT_LANGUAGE, format_price_range, format_syp, localize_instance, localize_queryset
 from apps.core.models import (
     CenterStatus,
     CustomerOrder,
@@ -119,6 +119,7 @@ PRODUCT_COMPANY_EXCEL_REQUIRED_HEADERS = ["company_id", "company_name"]
 PRODUCT_COMPANY_OPTION_EXCEL_HEADERS = [
     "product_sku",
     "company_id",
+    "is_price_linked_to_dollar",
     "option_name",
     "price",
     "is_available",
@@ -374,6 +375,12 @@ def parse_excel_boolean(value, default=False):
     return default, "Use true or false."
 
 
+def parse_excel_nullable_boolean(value):
+    if value is None or value == "":
+        return None, None
+    return parse_excel_boolean(value)
+
+
 def parse_excel_decimal(value, allow_decimals=False):
     if value is None or value == "":
         return None, "This field is required."
@@ -600,6 +607,7 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                 for _, row in company_option_sheet_rows
                 if normalize_excel_text(row.get("product_sku"))
             }
+    company_option_price_link_header_present = "is_price_linked_to_dollar" in company_option_header_positions
     if "Categories" in workbook.sheetnames:
         _, category_sheet_rows = build_sheet_rows(workbook["Categories"])
     missing_headers = [
@@ -908,6 +916,7 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                 )
 
         seen_company_option_keys = set()
+        seen_company_pricing_overrides = {}
         for row_number, row in company_option_sheet_rows:
             row_errors = []
             product_sku = normalize_excel_text(row.get("product_sku"))
@@ -931,6 +940,14 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
             if price_error:
                 row_errors.append(f"price: {price_error}")
 
+            is_price_linked_to_dollar = None
+            if company_option_price_link_header_present:
+                is_price_linked_to_dollar, dollar_error = parse_excel_nullable_boolean(
+                    row.get("is_price_linked_to_dollar")
+                )
+                if dollar_error:
+                    row_errors.append(f"is_price_linked_to_dollar: {dollar_error}")
+
             is_available, available_error = parse_excel_boolean(row.get("is_available"), True)
             if available_error:
                 row_errors.append(f"is_available: {available_error}")
@@ -945,20 +962,29 @@ def validate_product_excel_workbook(excel_file, language=DEFAULT_LANGUAGE):
                     row_errors.append("This company option appears more than once for the same company in this file.")
                 seen_company_option_keys.add(option_key)
 
+            if company_key and is_price_linked_to_dollar is not None:
+                previous_override = seen_company_pricing_overrides.get(company_key)
+                if previous_override is not None and previous_override != is_price_linked_to_dollar:
+                    row_errors.append(
+                        "Use the same is_price_linked_to_dollar value for every option under the same product_sku and company_id."
+                    )
+                seen_company_pricing_overrides[company_key] = is_price_linked_to_dollar
+
             if row_errors:
                 errors.append(f"CompanyOptions row {row_number}: {' '.join(row_errors)}")
                 continue
 
-            valid_company_options.append(
-                {
-                    "product_key": product_key,
-                    "company_id": company_id,
-                    "name": option_name,
-                    "price": price,
-                    "is_available": is_available,
-                    "order": display_order,
-                }
-            )
+            company_option_data = {
+                "product_key": product_key,
+                "company_id": company_id,
+                "name": option_name,
+                "price": price,
+                "is_available": is_available,
+                "order": display_order,
+            }
+            if company_option_price_link_header_present:
+                company_option_data["is_price_linked_to_dollar"] = is_price_linked_to_dollar
+            valid_company_options.append(company_option_data)
 
     if not valid_rows and not errors:
         errors.append("The uploaded workbook has no product rows.")
@@ -1034,6 +1060,7 @@ def import_product_excel_rows(valid_rows):
 
         merge_duplicate_products_for_import()
         product_lookup = {}
+        product_row_products = {}
         for row in product_rows:
             product_data = row.copy()
             import_keys = product_data.pop("_import_keys", [])
@@ -1052,13 +1079,19 @@ def import_product_excel_rows(valid_rows):
                 product.save()
                 created += 1
             save_imported_image(product, "primary_image", image_data)
+            product_row_products[product.pk] = product
             if product.is_company_grouped:
                 product.options.all().delete()
                 Product.objects.filter(pk=product.pk).update(has_options=False, price=Decimal("0"), updated_at=now)
+            else:
+                product.companies.all().delete()
+                if not product.has_options:
+                    product.options.all().delete()
             for import_key in import_keys:
                 product_lookup[import_key] = product
 
         option_products = set()
+        synced_option_ids = {}
         for row in option_rows:
             product = resolve_imported_product(product_lookup, row["product_key"])
             if product is None:
@@ -1077,8 +1110,10 @@ def import_product_excel_rows(valid_rows):
             option = product.options.filter(name__iexact=row["name"]).first()
             if option:
                 ProductOption.objects.filter(pk=option.pk).update(name=row["name"], **option_data)
+                synced_option_ids.setdefault(product.pk, set()).add(option.pk)
             else:
-                ProductOption.objects.create(product=product, name=row["name"], **option_data)
+                option = ProductOption.objects.create(product=product, name=row["name"], **option_data)
+                synced_option_ids.setdefault(product.pk, set()).add(option.pk)
 
         if option_products:
             Product.objects.filter(pk__in=option_products).update(
@@ -1086,6 +1121,10 @@ def import_product_excel_rows(valid_rows):
                 product_type=Product.PRODUCT_TYPE_NORMAL,
                 updated_at=now,
             )
+            for product_id in option_products:
+                ProductOption.objects.filter(product_id=product_id).exclude(
+                    pk__in=synced_option_ids.get(product_id, set())
+                ).delete()
 
         company_lookup = {}
         for row in company_rows:
@@ -1108,6 +1147,16 @@ def import_product_excel_rows(valid_rows):
 
         product_company_lookup = {}
         company_products = set()
+        company_price_link_overrides = {}
+        synced_product_company_ids = {}
+        synced_company_option_ids = {}
+        for row in company_option_rows:
+            if "is_price_linked_to_dollar" not in row:
+                continue
+            company_key = (row["product_key"], row["company_id"].lower())
+            company_price_link_overrides.setdefault(company_key, None)
+            if row.get("is_price_linked_to_dollar") is not None:
+                company_price_link_overrides[company_key] = row["is_price_linked_to_dollar"]
 
         for row in company_option_rows:
             product = resolve_imported_product(product_lookup, row["product_key"])
@@ -1128,6 +1177,17 @@ def import_product_excel_rows(valid_rows):
                     company=company,
                 )
                 product_company_lookup[company_key] = product_company
+            synced_product_company_ids.setdefault(product.pk, set()).add(product_company.pk)
+            if (
+                company_key in company_price_link_overrides
+                and product_company.is_price_linked_to_dollar != company_price_link_overrides[company_key]
+            ):
+                price_link_override = company_price_link_overrides[company_key]
+                ProductCompany.objects.filter(pk=product_company.pk).update(
+                    is_price_linked_to_dollar=price_link_override,
+                    updated_at=now,
+                )
+                product_company.is_price_linked_to_dollar = price_link_override
             option_data = {
                 "price": row["price"],
                 "is_available": row["is_available"],
@@ -1136,12 +1196,14 @@ def import_product_excel_rows(valid_rows):
             option = product_company.options.filter(name__iexact=row["name"]).first()
             if option:
                 ProductCompanyOption.objects.filter(pk=option.pk).update(name=row["name"], **option_data)
+                synced_company_option_ids.setdefault(product_company.pk, set()).add(option.pk)
             else:
-                ProductCompanyOption.objects.create(
+                option = ProductCompanyOption.objects.create(
                     company=product_company,
                     name=row["name"],
                     **option_data,
                 )
+                synced_company_option_ids.setdefault(product_company.pk, set()).add(option.pk)
 
         if company_products:
             Product.objects.filter(pk__in=company_products).update(
@@ -1151,6 +1213,22 @@ def import_product_excel_rows(valid_rows):
                 updated_at=now,
             )
             ProductOption.objects.filter(product_id__in=company_products).delete()
+
+        for product_company_id, option_ids in synced_company_option_ids.items():
+            ProductCompanyOption.objects.filter(company_id=product_company_id).exclude(
+                pk__in=option_ids
+            ).delete()
+
+        company_sync_product_ids = set(company_products)
+        company_sync_product_ids.update(
+            product.pk
+            for product in product_row_products.values()
+            if product.product_type == Product.PRODUCT_TYPE_COMPANY_GROUPED
+        )
+        for product_id in company_sync_product_ids:
+            ProductCompany.objects.filter(product_id=product_id).exclude(
+                pk__in=synced_product_company_ids.get(product_id, set())
+            ).delete()
 
     return created, updated
 
@@ -1839,6 +1917,9 @@ class DashboardOrderDetailView(DashboardLocalizationMixin, StaffRequiredMixin, T
             CustomerOrder.objects.select_related("profile", "address").prefetch_related("items"),
             pk=kwargs["pk"],
         )
+        if not self.order.manager_seen:
+            CustomerOrder.objects.filter(pk=self.order.pk, manager_seen=False).update(manager_seen=True)
+            self.order.manager_seen = True
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -1876,6 +1957,7 @@ class DashboardOrderAcceptView(DashboardLocalizationMixin, StaffRequiredMixin, V
             expected_time_minutes=form.cleaned_data["expected_time_minutes"],
             print_invoice=True,
         )
+        CustomerOrder.objects.filter(pk=order.pk, manager_seen=False).update(manager_seen=True)
         messages.success(request, self.get_dashboard_ui()["order_accepted"])
         return redirect("dashboard:pending-order-detail", pk=order.pk)
 
@@ -1899,6 +1981,8 @@ class DashboardOrderAdvanceView(DashboardLocalizationMixin, StaffRequiredMixin, 
             order.completed_at = timezone.now()
             update_fields.append("completed_at")
         order.save(update_fields=update_fields)
+        if not order.manager_seen:
+            CustomerOrder.objects.filter(pk=order.pk, manager_seen=False).update(manager_seen=True)
         messages.success(request, self.get_dashboard_ui()["order_status_updated"])
         if order.status == CustomerOrder.STATUS_DONE:
             return redirect("dashboard:orders")
@@ -1917,8 +2001,51 @@ class DashboardOrderRejectView(DashboardLocalizationMixin, StaffRequiredMixin, V
             return redirect("dashboard:pending-order-detail", pk=order.pk)
 
         mark_order_cancelled(order)
+        if not order.manager_seen:
+            CustomerOrder.objects.filter(pk=order.pk, manager_seen=False).update(manager_seen=True)
         messages.success(request, self.get_dashboard_ui()["order_rejected"])
         return redirect("dashboard:pending-orders")
+
+
+class ManagerNewOrdersView(DashboardLocalizationMixin, StaffRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        language = self.get_language()
+        dashboard_ui = self.get_dashboard_ui()
+        orders = (
+            CustomerOrder.objects.select_related("profile")
+            .filter(manager_seen=False, status__in=CustomerOrder.ACTIVE_STATUSES)
+            .order_by("-created_at", "-id")[:10]
+        )
+        payload = []
+        for order in orders:
+            payload.append(
+                {
+                    "order_id": order.pk,
+                    "order_number": order.invoice_number,
+                    "customer_name": order.profile.full_name,
+                    "order_type": (
+                        dashboard_ui["delivery"]
+                        if order.service_type == CustomerOrder.SERVICE_DELIVERY
+                        else dashboard_ui["pickup"]
+                    ),
+                    "total": format_price_range(order.total_min, order.total_max, language),
+                    "detail_url": reverse("dashboard:pending-order-detail", kwargs={"pk": order.pk}),
+                }
+            )
+        return JsonResponse({"orders": payload})
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        order_id = request.POST.get("order_id")
+        if not order_id:
+            return JsonResponse({"ok": False, "message": "Missing order_id."}, status=400)
+        try:
+            order_id = int(order_id)
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "message": "Invalid order_id."}, status=400)
+
+        updated = CustomerOrder.objects.select_for_update().filter(pk=order_id).update(manager_seen=True)
+        return JsonResponse({"ok": bool(updated)})
 
 
 class CategoryManageView(DashboardLocalizationMixin, StaffRequiredMixin, CreateView):
@@ -2250,9 +2377,9 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
 
         company_options_sheet = workbook.create_sheet("CompanyOptions")
         company_options_sheet.append(PRODUCT_COMPANY_OPTION_EXCEL_HEADERS)
-        company_options_sheet.append(["SHOES-001", "adidas", "Size 42 Black", "15.50", "true", "0"])
-        company_options_sheet.append(["SHOES-001", "adidas", "Size 43 White", "16.00", "true", "1"])
-        company_options_sheet.append(["SHOES-001", "nike", "Size 42 Blue", "18.00", "true", "0"])
+        company_options_sheet.append(["SHOES-001", "adidas", "true", "Size 42 Black", "15.50", "true", "0"])
+        company_options_sheet.append(["SHOES-001", "adidas", "true", "Size 43 White", "16.00", "true", "1"])
+        company_options_sheet.append(["SHOES-001", "nike", "false", "Size 42 Blue", "180000", "true", "0"])
 
         categories_sheet = workbook.create_sheet("Categories")
         categories_sheet.append(CATEGORY_IMAGE_EXCEL_HEADERS)
@@ -2287,6 +2414,7 @@ class ProductExcelTemplateView(DashboardLocalizationMixin, StaffRequiredMixin, V
         help_sheet.append(["Use external_logo_url only when the storefront should keep using an external URL."])
         help_sheet.append(["CompanyOptions sheet"])
         help_sheet.append(["Use product_sku, company_id, and option_name for variants under a company."])
+        help_sheet.append(["CompanyOptions is_price_linked_to_dollar accepts true, false, or blank to inherit from the product/category."])
         help_sheet.append(["Categories sheet"])
         help_sheet.append(["Upload category images to media/import/categories, then use only the filename in image."])
         help_sheet.append(["For an existing category row, image updates its cover image before products import."])

@@ -17,7 +17,7 @@ class ProductOptionInline(admin.TabularInline):
 class ProductCompanyInline(admin.TabularInline):
     model = ProductCompany
     extra = 1
-    fields = ("company",)
+    fields = ("company", "is_price_linked_to_dollar")
 
 
 class ProductCompanyOptionInline(admin.TabularInline):
@@ -96,8 +96,8 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductCompany)
 class ProductCompanyAdmin(admin.ModelAdmin):
-    list_display = ("company", "product", "updated_at")
-    list_filter = ("company__is_active", "product__category")
+    list_display = ("company", "product", "is_price_linked_to_dollar", "updated_at")
+    list_filter = ("company__is_active", "is_price_linked_to_dollar", "product__category")
     search_fields = ("company__code", "company__name", "product__name", "product__name_ar")
     inlines = [ProductCompanyOptionInline]
 

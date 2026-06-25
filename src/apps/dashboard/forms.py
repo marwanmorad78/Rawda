@@ -275,7 +275,7 @@ ProductOptionFormSet = inlineformset_factory(
 ProductCompanyFormSet = inlineformset_factory(
     Product,
     ProductCompany,
-    fields=("company",),
+    fields=("company", "is_price_linked_to_dollar"),
     extra=3,
     can_delete=True,
 )

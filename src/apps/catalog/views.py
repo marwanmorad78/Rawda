@@ -43,6 +43,7 @@ from apps.core.pricing import (
 from apps.promotions.models import Promotion
 
 from .models import Category, Product, ProductCompany, ProductCompanyOption, ProductOption
+from .sorting import sort_category_products
 
 
 def attach_product_selection_data(product, language, site_settings):
@@ -201,7 +202,7 @@ class CategoryDetailView(DetailView):
         )
         for subcategory in subcategories:
             localize_instance(subcategory, language, ["name", "description"])
-        products = [] if subcategories else list(
+        products = [] if subcategories else sort_category_products(
             self.object.products.prefetch_related(
                 "options",
                 Prefetch(

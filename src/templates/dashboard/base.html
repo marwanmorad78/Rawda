@@ -68,10 +68,57 @@
         </aside>
         <section class="dashboard-main">
             {% include "partials/messages.html" %}
+            <div class="dashboard-alerts-toolbar">
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-small"
+                    data-new-order-enable
+                    data-enabled-label="التنبيهات مفعلة"
+                >
+                    تفعيل التنبيهات
+                </button>
+            </div>
             {% block content %}{% endblock %}
         </section>
     </div>
+    <audio id="newOrderSound" loop preload="auto">
+        <source src="{% static 'sounds/new-order.mp3' %}" type="audio/mpeg">
+    </audio>
+    <div
+        class="new-order-alert"
+        data-new-order-alert
+        data-check-url="{% url 'dashboard:orders-check-new' %}"
+        hidden
+    >
+        <button type="button" class="new-order-alert-backdrop" data-new-order-silence aria-label="إيقاف التنبيه"></button>
+        <section class="new-order-alert-dialog" role="dialog" aria-modal="true" aria-labelledby="new-order-alert-title">
+            <div class="new-order-alert-kicker">تنبيه عاجل</div>
+            <h2 id="new-order-alert-title">طلب جديد</h2>
+            <dl class="new-order-alert-details">
+                <div>
+                    <dt>رقم الطلب:</dt>
+                    <dd data-new-order-number></dd>
+                </div>
+                <div>
+                    <dt>اسم العميل:</dt>
+                    <dd data-new-order-customer></dd>
+                </div>
+                <div>
+                    <dt>نوع الطلب:</dt>
+                    <dd data-new-order-type></dd>
+                </div>
+                <div>
+                    <dt>المجموع:</dt>
+                    <dd data-new-order-total></dd>
+                </div>
+            </dl>
+            <div class="new-order-alert-actions">
+                <button type="button" class="btn btn-primary" data-new-order-open>فتح الطلب</button>
+                <button type="button" class="btn btn-secondary" data-new-order-silence>إيقاف التنبيه</button>
+            </div>
+        </section>
+    </div>
     {% block extra_scripts %}{% endblock %}
-    <script src="{% static 'js/site.js' %}?v=order-cancel-reject-20260610"></script>
+    <script src="{% static 'js/site.js' %}?v=new-order-alert-20260617"></script>
 </body>
 </html>

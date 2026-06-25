@@ -56,8 +56,11 @@ def get_effective_product_option_price(option, site_settings=None):
 
 def get_effective_product_company_option_price(option, site_settings=None):
     base_price = getattr(option, "price", Decimal("0")) or Decimal("0")
-    product = option.company.product
-    if product_uses_dollar_price(product):
+    company = option.company
+    company_uses_dollar = getattr(company, "is_price_linked_to_dollar", None)
+    if company_uses_dollar is None:
+        company_uses_dollar = product_uses_dollar_price(company.product)
+    if company_uses_dollar:
         return round_money(base_price * get_dollar_price(site_settings))
     return round_money(base_price)
 

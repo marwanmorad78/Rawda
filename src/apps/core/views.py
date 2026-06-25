@@ -22,6 +22,7 @@ from apps.catalog.cart import (
     set_checkout_service_type,
 )
 from apps.catalog.models import Category, Product, ProductCompany, ProductCompanyOption, ProductOption
+from apps.catalog.sorting import sort_category_products
 from apps.core.forms import (
     CustomerAddressForm,
     CustomerLoginForm,
@@ -122,7 +123,6 @@ class HomeView(TemplateView):
     def get_home_categories(self, language, site_content):
         product_queryset = (
             Product.objects.all()
-            .order_by("name", "id")
             .prefetch_related(
                 "options",
                 Prefetch(
@@ -138,7 +138,7 @@ class HomeView(TemplateView):
                     ),
                     to_attr="prefetched_companies",
                 ),
-            )[:8]
+            )
         )
         subcategory_queryset = Category.objects.filter(is_active=True).order_by("display_order", "name")
         categories = list(
@@ -156,6 +156,7 @@ class HomeView(TemplateView):
             if category.home_subcategories:
                 category.home_products = []
                 continue
+            category.home_products = sort_category_products(category.home_products)[:8]
             for product in category.home_products:
                 product.category = category
                 if product.is_company_grouped:

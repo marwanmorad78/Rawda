@@ -115,10 +115,26 @@ const checkoutConfirmClosers = Array.from(document.querySelectorAll("[data-check
 const checkoutConfirmApprove = document.querySelector("[data-checkout-confirm-approve]");
 const dashboardColumnFilters = Array.from(document.querySelectorAll("[data-column-filter]"));
 const confirmationForms = Array.from(document.querySelectorAll("form[data-confirm-submit]"));
+const newOrderAlert = document.querySelector("[data-new-order-alert]");
+const newOrderSound = document.querySelector("#newOrderSound");
+const newOrderEnableButton = document.querySelector("[data-new-order-enable]");
+const newOrderNumber = newOrderAlert?.querySelector("[data-new-order-number]");
+const newOrderCustomer = newOrderAlert?.querySelector("[data-new-order-customer]");
+const newOrderType = newOrderAlert?.querySelector("[data-new-order-type]");
+const newOrderTotal = newOrderAlert?.querySelector("[data-new-order-total]");
+const newOrderOpenButton = newOrderAlert?.querySelector("[data-new-order-open]");
+const newOrderSilenceButtons = Array.from(document.querySelectorAll("[data-new-order-silence]"));
 
 const cartState = {
     count: Number.parseInt(floatingCart?.dataset.cartCount || "0", 10) || 0,
     total: floatingCart?.dataset.cartTotal || "0",
+};
+const newOrderAlertState = {
+    activeOrder: null,
+    audioEnabled: false,
+    isPolling: false,
+    knownOrderIds: new Set(),
+    queue: [],
 };
 const ARABIC_NAME_PATTERN = /^[\u0621-\u064A\u064B-\u065F]+(?:\s+[\u0621-\u064A\u064B-\u065F]+)*$/;
 let lockedBodyScrollY = 0;
@@ -130,6 +146,19 @@ const PRODUCT_MODAL_HISTORY_KEY = "rawdaProductModal";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const tabTargetCache = new WeakMap();
+
+const getCookieValue = (name) => {
+    const cookies = document.cookie ? document.cookie.split(";") : [];
+    const prefix = `${name}=`;
+    const cookie = cookies.find((item) => item.trim().startsWith(prefix));
+    if (!cookie) {
+        return "";
+    }
+    return decodeURIComponent(cookie.trim().slice(prefix.length));
+};
+
+const getCsrfToken = () =>
+    getCookieValue("csrftoken") || document.querySelector("input[name='csrfmiddlewaretoken']")?.value || "";
 
 const syncViewportHeightVariable = () => {
     const viewportHeight = window.visualViewport?.height || window.innerHeight;
@@ -710,6 +739,218 @@ const enhanceActiveOrderStatusRegion = (region) => {
     };
 
     window.setInterval(refresh, 25000);
+};
+
+const stopNewOrderAlarm = () => {
+    if (!newOrderSound) {
+        return;
+    }
+    newOrderSound.pause();
+    newOrderSound.currentTime = 0;
+};
+
+const playNewOrderAlarm = async () => {
+    if (!newOrderSound || !newOrderAlertState.audioEnabled) {
+        return;
+    }
+
+    try {
+        newOrderSound.currentTime = 0;
+        await newOrderSound.play();
+    } catch (error) {
+        return;
+    }
+};
+
+const setNewOrderEnableButtonActive = () => {
+    if (!newOrderEnableButton) {
+        return;
+    }
+    newOrderEnableButton.classList.add("is-enabled");
+    newOrderEnableButton.textContent = newOrderEnableButton.dataset.enabledLabel || newOrderEnableButton.textContent;
+};
+
+const enableNewOrderAudio = async () => {
+    newOrderAlertState.audioEnabled = true;
+    try {
+        window.sessionStorage?.setItem("rawdaNewOrderAudioEnabled", "true");
+    } catch (error) {
+        // Alerts still work if browser storage is unavailable.
+    }
+    setNewOrderEnableButtonActive();
+
+    if (!newOrderSound) {
+        return;
+    }
+
+    const previousVolume = newOrderSound.volume;
+    try {
+        newOrderSound.volume = 0;
+        await newOrderSound.play();
+        stopNewOrderAlarm();
+    } catch (error) {
+        return;
+    } finally {
+        newOrderSound.volume = previousVolume;
+    }
+};
+
+const renderNewOrderAlert = (order) => {
+    if (!newOrderAlert || !order) {
+        return;
+    }
+    newOrderAlertState.activeOrder = order;
+    if (newOrderNumber) {
+        newOrderNumber.textContent = order.order_number || "";
+    }
+    if (newOrderCustomer) {
+        newOrderCustomer.textContent = order.customer_name || "";
+    }
+    if (newOrderType) {
+        newOrderType.textContent = order.order_type || "";
+    }
+    if (newOrderTotal) {
+        newOrderTotal.textContent = order.total || "";
+    }
+    newOrderAlert.hidden = false;
+    document.body.classList.add("is-new-order-alert-open");
+    playNewOrderAlarm();
+};
+
+const showNextNewOrderAlert = () => {
+    if (newOrderAlertState.activeOrder || !newOrderAlertState.queue.length) {
+        return;
+    }
+    renderNewOrderAlert(newOrderAlertState.queue.shift());
+};
+
+const enqueueNewOrders = (orders) => {
+    if (!Array.isArray(orders)) {
+        return;
+    }
+
+    orders.forEach((order) => {
+        const orderId = String(order.order_id || "");
+        if (!orderId || newOrderAlertState.knownOrderIds.has(orderId)) {
+            return;
+        }
+        newOrderAlertState.knownOrderIds.add(orderId);
+        newOrderAlertState.queue.push(order);
+    });
+    showNextNewOrderAlert();
+};
+
+const acknowledgeNewOrder = async (order) => {
+    if (!newOrderAlert || !order?.order_id) {
+        return false;
+    }
+
+    const formData = new FormData();
+    formData.set("order_id", order.order_id);
+    const csrfToken = getCsrfToken();
+    const headers = {
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+    };
+    if (csrfToken) {
+        headers["X-CSRFToken"] = csrfToken;
+    }
+
+    try {
+        const response = await window.fetch(newOrderAlert.dataset.checkUrl, {
+            method: "POST",
+            body: formData,
+            headers,
+        });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+};
+
+const closeNewOrderAlert = () => {
+    stopNewOrderAlarm();
+    if (newOrderAlert) {
+        newOrderAlert.hidden = true;
+    }
+    document.body.classList.remove("is-new-order-alert-open");
+    newOrderAlertState.activeOrder = null;
+};
+
+const silenceNewOrderAlert = async () => {
+    const order = newOrderAlertState.activeOrder;
+    closeNewOrderAlert();
+    await acknowledgeNewOrder(order);
+    showNextNewOrderAlert();
+};
+
+const openNewOrder = async () => {
+    const order = newOrderAlertState.activeOrder;
+    if (!order) {
+        return;
+    }
+    closeNewOrderAlert();
+    await acknowledgeNewOrder(order);
+    if (order.detail_url) {
+        window.location.href = order.detail_url;
+    }
+};
+
+const pollNewOrders = async () => {
+    if (!newOrderAlert || !newOrderAlert.dataset.checkUrl || document.visibilityState === "hidden") {
+        return;
+    }
+    if (newOrderAlertState.isPolling) {
+        return;
+    }
+
+    newOrderAlertState.isPolling = true;
+    try {
+        const response = await window.fetch(newOrderAlert.dataset.checkUrl, {
+            headers: {
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
+        if (!response.ok) {
+            return;
+        }
+        const payload = await response.json();
+        enqueueNewOrders(payload.orders);
+    } catch (error) {
+        return;
+    } finally {
+        newOrderAlertState.isPolling = false;
+    }
+};
+
+const enhanceNewOrderAlerts = () => {
+    if (!newOrderAlert) {
+        return;
+    }
+
+    try {
+        if (window.sessionStorage?.getItem("rawdaNewOrderAudioEnabled") === "true") {
+            newOrderAlertState.audioEnabled = true;
+            setNewOrderEnableButtonActive();
+        }
+    } catch (error) {
+        // Alerts still work if browser storage is unavailable.
+    }
+
+    newOrderEnableButton?.addEventListener("click", enableNewOrderAudio);
+    newOrderOpenButton?.addEventListener("click", openNewOrder);
+    newOrderSilenceButtons.forEach((button) => {
+        button.addEventListener("click", silenceNewOrderAlert);
+    });
+
+    window.setInterval(pollNewOrders, 10000);
+    window.setTimeout(pollNewOrders, 1200);
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            pollNewOrders();
+        }
+    });
 };
 
 const enhanceBusyCountdowns = (scope = document) => {
@@ -2716,6 +2957,7 @@ productPhotoViewer?.querySelectorAll("[data-product-photo-viewer-close]").forEac
 
 enhanceBusyCountdowns();
 enhanceDashboardCenterCountdown();
+enhanceNewOrderAlerts();
 activeOrderStatusRegions.forEach(enhanceActiveOrderStatusRegion);
 categoryProductSearches.forEach(enhanceCategoryProductSearch);
 homeShelfRows.forEach(enhanceHomeShelfRow);

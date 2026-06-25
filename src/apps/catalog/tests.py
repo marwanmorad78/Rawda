@@ -1,4 +1,5 @@
 from decimal import Decimal
+from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -21,8 +22,9 @@ from apps.catalog.models import (
     ProductCompanyOption,
     ProductOption,
 )
+from apps.catalog.sorting import normalize_arabic_sort_text, sort_category_products
 from apps.core.localization import get_ui_strings
-from apps.core.models import CustomerOrder
+from apps.core.models import CustomerOrder, SiteSettings
 
 
 class KiloCartTests(TestCase):
@@ -114,6 +116,52 @@ class KiloCartTests(TestCase):
         self.assertEqual(item["line_total_min"], Decimal("150"))
         self.assertEqual(item["line_total_max"], Decimal("165"))
         self.assertEqual(item["display_quantity"], "1 \u0643\u063a")
+
+    def test_company_grouped_options_can_mix_dollar_and_local_prices(self):
+        SiteSettings.objects.create(
+            store_name="Store",
+            about_text="About",
+            address="Address",
+            primary_phone="000",
+            hero_title="Store",
+            dollar_price=Decimal("10000"),
+        )
+        product = self.weighted_product(
+            product_type=Product.PRODUCT_TYPE_COMPANY_GROUPED,
+            sold_by_weight=False,
+        )
+        dollar_company = ProductCompany.objects.create(
+            product=product,
+            company=Company.objects.create(code="usd", name="USD Company"),
+            is_price_linked_to_dollar=True,
+        )
+        local_company = ProductCompany.objects.create(
+            product=product,
+            company=Company.objects.create(code="syp", name="SYP Company"),
+            is_price_linked_to_dollar=False,
+        )
+        dollar_option = ProductCompanyOption.objects.create(
+            company=dollar_company,
+            name="Dollar option",
+            price=Decimal("2"),
+        )
+        local_option = ProductCompanyOption.objects.create(
+            company=local_company,
+            name="Local option",
+            price=Decimal("15000"),
+        )
+        request = self.request_with_session()
+
+        add_product_company_option(request, dollar_option.pk, Decimal("1"))
+        add_product_company_option(request, local_option.pk, Decimal("1"))
+        cart = build_cart(request)
+
+        prices_by_option = {
+            item["option_label"]: item["unit_price"]
+            for item in cart["items"]
+        }
+        self.assertEqual(prices_by_option["Dollar option"], Decimal("20000"))
+        self.assertEqual(prices_by_option["Local option"], Decimal("15000"))
 
     def test_accumulated_weight_cannot_exceed_ten_kilos(self):
         product = self.weighted_product()
@@ -303,3 +351,81 @@ class CategoriesPageTests(TestCase):
         self.assertContains(home_response, labels["more_categories"])
         self.assertContains(detail_response, labels["browse_categories"])
         self.assertNotContains(detail_response, labels["category_browse"])
+
+
+class ArabicProductSortingTests(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(name="Produce", name_ar="\u062e\u0636\u0627\u0631")
+
+    def create_product(self, name_ar, name):
+        return Product.objects.create(
+            category=self.category,
+            name=name,
+            name_ar=name_ar,
+            price=Decimal("100"),
+        )
+
+    def test_normalizes_arabic_sort_text(self):
+        self.assertEqual(
+            normalize_arabic_sort_text("  \u0623\u0650\u0622\u0625\u0649\u0629"),
+            "\u0627\u0627\u0627\u064a\u0647",
+        )
+
+    def test_category_page_sorts_products_by_arabic_name(self):
+        self.create_product("\u062e\u064a\u0627\u0631", "Cucumber")
+        self.create_product("\u0623\u0631\u0632", "Rice")
+        self.create_product("\u0645\u0648\u0632", "Banana")
+        self.create_product("\u062a\u0641\u0627\u062d", "Apple")
+        self.create_product("\u062c\u0632\u0631", "Carrot")
+        self.create_product("\u0628\u0631\u062a\u0642\u0627\u0644", "Orange")
+
+        response = self.client.get(self.category.get_absolute_url())
+
+        self.assertEqual(
+            [product.name_ar for product in response.context["products"]],
+            [
+                "\u0623\u0631\u0632",
+                "\u0628\u0631\u062a\u0642\u0627\u0644",
+                "\u062a\u0641\u0627\u062d",
+                "\u062c\u0632\u0631",
+                "\u062e\u064a\u0627\u0631",
+                "\u0645\u0648\u0632",
+            ],
+        )
+
+    def test_home_category_shelf_sorts_products_by_arabic_name(self):
+        self.create_product("\u0645\u0648\u0632", "Banana")
+        self.create_product("\u0623\u0631\u0632", "Rice")
+        self.create_product("\u0628\u0631\u062a\u0642\u0627\u0644", "Orange")
+
+        response = self.client.get(reverse("core:home"))
+        category = next(
+            item
+            for item in response.context["categories"]
+            if item.pk == self.category.pk
+        )
+
+        self.assertEqual(
+            [product.name_ar for product in category.home_products],
+            [
+                "\u0623\u0631\u0632",
+                "\u0628\u0631\u062a\u0642\u0627\u0644",
+                "\u0645\u0648\u0632",
+            ],
+        )
+
+    def test_display_order_takes_precedence_when_available(self):
+        products = [
+            SimpleNamespace(name_ar="\u0623\u0631\u0632", display_order=2, pk=1),
+            SimpleNamespace(name_ar="\u0645\u0648\u0632", display_order=1, pk=2),
+            SimpleNamespace(name_ar="\u0628\u0631\u062a\u0642\u0627\u0644", display_order=2, pk=3),
+        ]
+
+        self.assertEqual(
+            [product.name_ar for product in sort_category_products(products)],
+            [
+                "\u0645\u0648\u0632",
+                "\u0623\u0631\u0632",
+                "\u0628\u0631\u062a\u0642\u0627\u0644",
+            ],
+        )

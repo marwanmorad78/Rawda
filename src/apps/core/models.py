@@ -352,6 +352,7 @@ class CustomerOrder(TimeStampedModel):
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=0, default=0)
     total_min = models.DecimalField(max_digits=12, decimal_places=0, default=0)
     total_max = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    manager_seen = models.BooleanField(default=False)
     print_status = models.CharField(
         max_length=20,
         choices=PRINT_STATUS_CHOICES,

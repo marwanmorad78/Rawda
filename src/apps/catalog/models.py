@@ -260,6 +260,7 @@ class Company(TimeStampedModel):
 class ProductCompany(TimeStampedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="companies")
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="products")
+    is_price_linked_to_dollar = models.BooleanField(null=True, blank=True, default=None)
 
     class Meta:
         verbose_name = "Product company"
@@ -296,6 +297,14 @@ class ProductCompany(TimeStampedModel):
     @property
     def order(self):
         return self.company.display_order
+
+    @property
+    def effective_is_price_linked_to_dollar(self):
+        if self.is_price_linked_to_dollar is not None:
+            return self.is_price_linked_to_dollar
+        from apps.core.pricing import product_uses_dollar_price
+
+        return product_uses_dollar_price(self.product)
 
     def __str__(self) -> str:
         return f"{self.product.name} - {self.company.name}"
